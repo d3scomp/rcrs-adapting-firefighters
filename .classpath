@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/meta-adaptation-manager"/>
+	<classpathentry kind="lib" path="lib/clear.jar"/>
+	<classpathentry kind="lib" path="lib/collapse.jar"/>
+	<classpathentry kind="lib" path="lib/gis2.jar"/>
+	<classpathentry kind="lib" path="lib/handy.jar"/>
+	<classpathentry kind="lib" path="lib/human.jar"/>
+	<classpathentry kind="lib" path="lib/ignition.jar"/>
+	<classpathentry kind="lib" path="lib/jsi-1.0b2p1.jar"/>
+	<classpathentry kind="lib" path="lib/kernel.jar"/>
+	<classpathentry kind="lib" path="lib/log4j-1.2.15.jar"/>
+	<classpathentry kind="lib" path="lib/maps.jar"/>
+	<classpathentry kind="lib" path="lib/misc.jar"/>
+	<classpathentry kind="lib" path="lib/rescuecore2.jar" sourcepath="lib/sources/rescuecore2-sources.jar"/>
+	<classpathentry kind="lib" path="lib/resq-fire.jar"/>
+	<classpathentry kind="lib" path="lib/standard.jar"/>
+	<classpathentry kind="lib" path="lib/traffic3.jar"/>
+	<classpathentry kind="lib" path="lib/uncommons-maths-1.2.jar"/>
+	<classpathentry kind="lib" path="lib/trove-0.1.8.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
