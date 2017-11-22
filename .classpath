@@ -10,13 +10,13 @@
 	<classpathentry kind="lib" path="lib/human.jar"/>
 	<classpathentry kind="lib" path="lib/ignition.jar"/>
 	<classpathentry kind="lib" path="lib/jsi-1.0b2p1.jar"/>
-	<classpathentry kind="lib" path="lib/kernel.jar"/>
+	<classpathentry kind="lib" path="lib/kernel.jar" sourcepath="lib/sources/kernel-sources.jar"/>
 	<classpathentry kind="lib" path="lib/log4j-1.2.15.jar"/>
 	<classpathentry kind="lib" path="lib/maps.jar"/>
 	<classpathentry kind="lib" path="lib/misc.jar"/>
 	<classpathentry kind="lib" path="lib/rescuecore2.jar" sourcepath="lib/sources/rescuecore2-sources.jar"/>
 	<classpathentry kind="lib" path="lib/resq-fire.jar"/>
-	<classpathentry kind="lib" path="lib/standard.jar"/>
+	<classpathentry kind="lib" path="lib/standard.jar" sourcepath="lib/sources/standard-sources.jar"/>
 	<classpathentry kind="lib" path="lib/traffic3.jar"/>
 	<classpathentry kind="lib" path="lib/uncommons-maths-1.2.jar"/>
 	<classpathentry kind="lib" path="lib/trove-0.1.8.jar"/>
