@@ -20,5 +20,6 @@
 	<classpathentry kind="lib" path="lib/traffic3.jar"/>
 	<classpathentry kind="lib" path="lib/uncommons-maths-1.2.jar"/>
 	<classpathentry kind="lib" path="lib/trove-0.1.8.jar"/>
+	<classpathentry kind="src" path="/TimeSeriesStatistics4J"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

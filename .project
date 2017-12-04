@@ -3,6 +3,7 @@
 	<name>rcrs-adapting-firefighters</name>
 	<comment></comment>
 	<projects>
+		<project>TimeSeriesStatistics4J</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

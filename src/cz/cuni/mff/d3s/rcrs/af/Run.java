@@ -11,6 +11,7 @@ import rescuecore2.config.ConfigException;
 
 import java.io.IOException;
 
+import cz.cuni.mff.d3s.tss.TTable;
 import rescuecore2.Constants;
 import rescuecore2.log.Logger;
 
@@ -20,6 +21,15 @@ import rescuecore2.standard.messages.StandardMessageFactory;
 
 public class Run {
 
+	public static final int TS_WINDOW_CNT = 50;
+	public static final int TS_WINDOW_SIZE = 10;
+	public static final TTable.ALPHAS TS_ALPHA = TTable.ALPHAS.ALPHA_0_025;
+	public static final double NOISE_MEAN = 200;
+	public static final double NOISE_VARIANCE = 600;
+	
+	private static final boolean useExtendedModes = true;
+	
+	
 	public static void main(String[] args) {
 		try {
 
@@ -54,7 +64,7 @@ public class Run {
 			while (true) {
 				unit_number++;
 				Logger.info("Connecting fire brigade " + (unit_number) + "...");
-				launcher.connect(new FireFighter(unit_number));
+				launcher.connect(new FireFighter(unit_number, useExtendedModes));
 				Logger.info("success");
 			}
 		} catch (ComponentConnectionException e) {
