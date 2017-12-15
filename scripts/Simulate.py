@@ -50,6 +50,7 @@ def signal_handler(signal, frame):
         for server in servers:
             server.send_signal(signal)
             #server.terminate()
+        sleep(2)
         print('done.')
         sys.exit(0)
 
@@ -111,6 +112,10 @@ def spawnSimulation(params, iteration, serverLogs):
     runAgentsCmd.extend(params)
     runAgentsCmd.extend([AGENTS_PORT_PARAM + "=" + port])
 
+    # Remove the kernel log file to be able to wait for its existence
+    if os.path.exists(kernelLog(serverLogs)):
+        os.remove(kernelLog(serverLogs))
+
     scriptDir = os.getcwd()
     os.chdir(RCRS_SERVER_BOOT)
     runServerCmd = ['./start-comprun.sh', '-p ', port, '-l', serverLogs]
@@ -118,7 +123,11 @@ def spawnSimulation(params, iteration, serverLogs):
     print(runServerCmd)
     server = Popen(runServerCmd, preexec_fn=os.setpgrp)
     servers.append(server)
-    sleep(5)
+    
+    # Wait for the server to start listening
+    while not clientCanConnect(serverLogs): 
+        print("waiting before connecting agents")
+        sleep(1)
     
     os.chdir(scriptDir)
     print(runAgentsCmd)
@@ -127,6 +136,19 @@ def spawnSimulation(params, iteration, serverLogs):
     simulation = Popen(runAgentsCmd, preexec_fn=os.setpgrp)
     simulated.append(simulation)
     
+
+def clientCanConnect(serverLogs):
+    if not os.path.exists(kernelLog(serverLogs)):
+        return False
+    
+    res = call(["grep", "-q", "--binary-files=text",
+                "-e", "Waiting for [0-9]\+ entities of type urn:rescuecore2.standard:entity:firebrigade",
+                kernelLog(serverLogs)])
+    return (res == 0)
+
+
+def kernelLog(serverLogs):
+    return serverLogs + "/kernel.log"
     
 def prepareParameters(scenario, iteration):
     # Prepare parameters
