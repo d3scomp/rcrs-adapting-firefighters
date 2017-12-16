@@ -32,7 +32,6 @@ from signal import SIGINT
 from subprocess import *
 from Scenarios import *
 from Configuration import *
-from twisted.test.test_tcp import StartStopFactory
 
 
 ENABLE_SEED = True # Seed usage

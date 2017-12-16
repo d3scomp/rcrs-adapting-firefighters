@@ -6,6 +6,6 @@
 /test-results/
 /scripts/test-results/
 /bin/
-/lib
+/lib/*.jar
 /target/
 /results
