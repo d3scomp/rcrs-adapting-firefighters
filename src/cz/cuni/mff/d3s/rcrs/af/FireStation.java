@@ -49,9 +49,6 @@ public class FireStation extends StandardAgent<Building> {
 		if(H1_MECHANISM) {
 			correlationManager = new CorrelationHolder(this);
 			correlationManager.registerAt(adaptationManager);
-			
-			KnowledgeMetadataHolder.setBoundAndMetric(KNOWLEDGE_POSITION, 30_000, new DistanceMetric(model), 0.9);
-			KnowledgeMetadataHolder.setBoundAndMetric(KNOWLEDGE_BURNING_BUILDINGS, 2, new SurroundingMetric(), 0.9);
 					
 		} else {
 			correlationManager = null;
@@ -67,6 +64,12 @@ public class FireStation extends StandardAgent<Building> {
 		Logger.info(sid + " connected");
 
 		ensembles.add(TargetFireZoneEnsemble.getInstance(model));
+
+		if(H1_MECHANISM) {
+			// Register metrics
+			KnowledgeMetadataHolder.setBoundAndMetric(KNOWLEDGE_POSITION, 30_000, new DistanceMetric(model), 0.9);
+			KnowledgeMetadataHolder.setBoundAndMetric(KNOWLEDGE_BURNING_BUILDINGS, 2, new SurroundingMetric(), 0.9);
+		}
 	}
 	
 	@Override

@@ -148,7 +148,7 @@ def clientCanConnect(serverLogs):
 
 
 def kernelLog(serverLogs):
-    return serverLogs + "/kernel.log"
+    return serverLogs + "/" + KERNEL_LOG_FILE
     
 def prepareParameters(scenario, iteration):
     # Prepare parameters

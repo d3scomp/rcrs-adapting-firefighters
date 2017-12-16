@@ -17,11 +17,6 @@ class ArgError(Exception):
     def __str__(self):
         return repr(self.value)
     
-class Method(Enum):
-    PERCENTILE = 1
-    MEAN = 2
-    SAMPLES = 3
-    
 
 ###############################################################################
 # HW RESOURCES
@@ -45,18 +40,10 @@ RESULTS_DIR = os.path.realpath(os.path.join('..','results'))
 LOGS_DIR = os.path.join(RESULTS_DIR,'logs')
 ''' The directory where the logs produced by simulations are placed. '''
 
-UMS_LOGS = "UMS_logs"
-
-CSV_DIR = os.path.join(RESULTS_DIR,'csv')
-''' The directory where values computed by analysis are placed. '''
-
 FIGURES_DIR = os.path.join(RESULTS_DIR,'figures')
 ''' The directory where plots are placed. '''
 
-LOGGING_PROPERTIES_PATH = "src\logging.properties"
-''' The location of logging properties file. '''
-
-RUNTIME_LOG_FILE = "runtimeData.xml"
+KERNEL_LOG_FILE = "kernel.log"
 ''' The name of the file containing runtime logs produced by a simulation. '''
 
 ###############################################################################
@@ -72,7 +59,7 @@ RCRS_PORT_BASE = 7100
 
 AGENTS_PORT_PARAM = "PORT"
 
-SIMULATION_ITERATIONS = 2
+SIMULATION_ITERATIONS = 1
 ''' The number of simulation iterations '''
 
 ###############################################################################
@@ -82,18 +69,8 @@ SIMULATION_ITERATIONS = 2
 # ANALYSIS CONFIGURATION
 ###############################################################################
 
-METHOD = Method.MEAN
-
-PERCENTILE = 90
-''' The percentile to use for analysis. '''
-
-TIME_DIVISOR = 1000
-''' A number to be used to divide the times to plot. '''
-
 PLOT_LABELS = False
 ''' Indicates whether the produced plot should contain signature labels. '''
-
-UMS_BASELINE = 1
 
 PROJECT_VERSION = "0.0.1"
 

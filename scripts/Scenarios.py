@@ -37,7 +37,7 @@ H1_INTRODUCE_FAILURE = "H1_INTRODUCE_FAILURE" # Building detection failure
 H1_FAILURE_TIME = "H1_FAILURE_TIME"
 H1_FAILURE_IDS = "H1_FAILURE_IDS"
 H1_MECHANISM = "H1_MECHANISM" # Collaborative sensing
-H1_DEFAULT_TIME = 50
+H1_DEFAULT_TIME = 30
 ''' The default time of building detection failure in seconds. '''
 
 H2_INTRODUFE_FAILURE = "H2_INTRODUFE_FAILURE" # Movement failure
@@ -82,12 +82,14 @@ scenarios.append({SCENARIO_NAME:"Baseline\t",
 # Building detection failure
 scenarios.append({SCENARIO_NAME:"H1 failure\t",
                   H1_INTRODUCE_FAILURE:True,
+                  H1_FAILURE_TIME:H1_DEFAULT_TIME,
                   H1_MECHANISM:False,
                   H2_INTRODUFE_FAILURE:False,
                   H3_MECHANISM:False,
                   H4_MECHANISM:False})
 scenarios.append({SCENARIO_NAME:"H1 remedy\t",
                   H1_INTRODUCE_FAILURE:True,
+                  H1_FAILURE_TIME:H1_DEFAULT_TIME,
                   H1_MECHANISM:True,
                   H2_INTRODUFE_FAILURE:False,
                   H3_MECHANISM:False,

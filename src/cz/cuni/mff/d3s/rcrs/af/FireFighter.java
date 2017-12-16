@@ -312,6 +312,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 	private void findBurningBuildings() {
 		if(!canDetectBuildings) {
 			// Search for burning buildings no longer works due to malfunction
+			Logger.info(formatLog(0, "Sensing buildings failed."));
 			return;
 		}
 		
