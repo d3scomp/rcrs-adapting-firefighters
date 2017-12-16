@@ -33,7 +33,7 @@
 				</executions>
 				<configuration>
 					<mainClass>cz.cuni.mff.d3s.rcrs.af.Run</mainClass>
-					<addClasspath>../lib</addClasspath>
+					<addClasspath>${basedir}/lib</addClasspath>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -47,7 +47,7 @@
 					<archive>
 						<manifest>
 							<mainClass>cz.cuni.mff.d3s.rcrs.af.Run</mainClass>
-							<addClasspath>../lib</addClasspath>
+							<addClasspath>${basedir}/lib</addClasspath>
 						</manifest>
 					</archive>
 				</configuration>

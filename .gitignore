@@ -1,11 +1,7 @@
-/*.class
 /log/
 *.log
 *.pyc
 /.settings
 /test-results/
 /scripts/test-results/
-/bin/
-/lib/*.jar
-/target/
 /results
