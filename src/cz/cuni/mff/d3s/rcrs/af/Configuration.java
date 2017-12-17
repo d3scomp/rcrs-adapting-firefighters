@@ -38,7 +38,7 @@ public class Configuration {
 
 	// FAULTY COMPONENT ISOLATION
 
-	public static boolean H2_INTRODUFE_FAILURE = false;
+	public static boolean H2_INTRODUCE_FAILURE = false;
 	public static long H2_FAILURE_TIME = 50;
 	public static final String H2_FAILURE_IDS = "FF2 FF3";
 	public static boolean H2_MECHANISM = false;

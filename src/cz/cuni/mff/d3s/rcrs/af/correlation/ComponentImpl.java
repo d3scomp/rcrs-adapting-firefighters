@@ -2,12 +2,7 @@ package cz.cuni.mff.d3s.rcrs.af.correlation;
 
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_BURNING_BUILDINGS;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_CAN_DETECT_BUILDINGS;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_CAN_MOVE;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_EXTINGUISHING;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_FIRE_TARGET;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ID;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_POSITION;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_WATER;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,60 +10,50 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import cz.cuni.mff.d3s.metaadaptation.correlation.Component;
 import cz.cuni.mff.d3s.metaadaptation.correlation.ComponentPort;
 import cz.cuni.mff.d3s.metaadaptation.correlation.CorrelationMetadataWrapper;
-import cz.cuni.mff.d3s.rcrs.af.comm.KnowledgeMsg;
+import cz.cuni.mff.d3s.rcrs.af.Component;
 import rescuecore2.worldmodel.EntityID;
 
-public class ComponentImpl implements Component {
+public class ComponentImpl implements cz.cuni.mff.d3s.metaadaptation.correlation.Component {
 	
-	private int id = -1;
-	private Set<String> faultyKnowledge = new HashSet<>();
-	
+	private final Component component;
 	private Set<ComponentPort> ports;
-	private Map<String, Object> knowledge;
 	
-	public ComponentImpl() {
-		knowledge = new HashMap<>();
+	public ComponentImpl(Component component) {
+		this.component = component;
 		ports = new HashSet<>();
-	}
-
-	public void loadKnowledge(KnowledgeMsg msg, int time) {
-		// Load with time and wrap
-		// Convert time from s to ms
-		this.id = msg.id;
-		knowledge.put(KNOWLEDGE_ID, msg.id);
-		knowledge.put(KNOWLEDGE_FIRE_TARGET, msg.target);
-		CorrelationMetadataWrapper<EntityID> position = new CorrelationMetadataWrapper<>(msg.position, KNOWLEDGE_POSITION, time*1000);
-		knowledge.put(KNOWLEDGE_POSITION, position);
-		knowledge.put(KNOWLEDGE_WATER, msg.water);
-		knowledge.put(KNOWLEDGE_EXTINGUISHING, msg.extinguishing);
-		knowledge.put(KNOWLEDGE_CAN_MOVE, msg.canMove);
-		CorrelationMetadataWrapper<List<EntityID>> buildings = new CorrelationMetadataWrapper<>(msg.burningBuildings, KNOWLEDGE_BURNING_BUILDINGS, time*1000);
-		if(!msg.canDetectBuildings) {
-			buildings.malfunction();
-		}
-		knowledge.put(KNOWLEDGE_BURNING_BUILDINGS, buildings);
-		knowledge.put(KNOWLEDGE_CAN_DETECT_BUILDINGS, msg.canDetectBuildings);
-		
 	}
 
 	@Override
 	public Map<String, Object> getKnowledge() {
-		return knowledge;
+		Map<String, Object> correlationKnowledge = new HashMap<>(component.getKnowledge());
+		// Wrap knowledge with correlation wrapper
+		correlationKnowledge.put(KNOWLEDGE_POSITION, 
+				new CorrelationMetadataWrapper<>(
+						component.getKnowledge().get(KNOWLEDGE_POSITION),
+						KNOWLEDGE_POSITION, component.getTime()*1000) /* convert to ms */);
+		CorrelationMetadataWrapper<List<EntityID>> buildings = 
+				new CorrelationMetadataWrapper<>(
+						(List<EntityID>) component.getKnowledge().get(KNOWLEDGE_BURNING_BUILDINGS),
+						KNOWLEDGE_BURNING_BUILDINGS, component.getTime()*1000 /* convert to ms */);
+		if(!((Boolean) component.getKnowledge().get(KNOWLEDGE_CAN_DETECT_BUILDINGS))) {
+			buildings.malfunction();
+		}
+		correlationKnowledge.put(KNOWLEDGE_BURNING_BUILDINGS, buildings);
+		return correlationKnowledge;
 	}
 
 	@Override
 	public Set<String> getFaultyKnowledge() {		
-		if(knowledge.containsKey(KNOWLEDGE_CAN_DETECT_BUILDINGS)
-				&& !(boolean)knowledge.get(KNOWLEDGE_CAN_DETECT_BUILDINGS)) {
+		if(component.getKnowledge().containsKey(KNOWLEDGE_CAN_DETECT_BUILDINGS)
+				&& !(boolean)component.getKnowledge().get(KNOWLEDGE_CAN_DETECT_BUILDINGS)) {
 			// Search for burning buildings no longer works due to malfunction
-			if(!faultyKnowledge.contains(KNOWLEDGE_BURNING_BUILDINGS)) {
-				faultyKnowledge.add(KNOWLEDGE_BURNING_BUILDINGS);
+			if(!component.getFaultyKnowledge().contains(KNOWLEDGE_BURNING_BUILDINGS)) {
+				component.getFaultyKnowledge().add(KNOWLEDGE_BURNING_BUILDINGS);
 			}
 		}
-		return faultyKnowledge;
+		return component.getFaultyKnowledge();
 	}
 
 	@Override
@@ -87,9 +72,10 @@ public class ComponentImpl implements Component {
 	@Override
 	public String toString() {
 		StringBuilder buffer = new StringBuilder();
-		buffer.append("FF" + id + " [");
+		buffer.append("FF" + component.getId() + " [");
 		
-		for(EntityID building : ((CorrelationMetadataWrapper<List<EntityID>>)knowledge.get(KNOWLEDGE_BURNING_BUILDINGS)).getValue()) {
+		for(EntityID building : ((CorrelationMetadataWrapper<List<EntityID>>)component.getKnowledge()
+				.get(KNOWLEDGE_BURNING_BUILDINGS)).getValue()) {
 			buffer.append(building + ", ");
 		}
 		buffer.append("]");

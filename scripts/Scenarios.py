@@ -8,7 +8,7 @@ folders and files produced by simulating and analyzing the scenario.
 Explanations of used shortcuts:
     H1_INTRODUCE_FAILURE - Dirt detection failure
     H1_MECHANISM - Collaborative sensing
-    H2_INTRODUFE_FAILURE - Dock failure
+    H2_INTRODUCE_FAILURE - Dock failure
     H2_MECHANISM - Faulty component isolation
     H3_MECHANISM - Unspecified mode switching
 
@@ -40,7 +40,7 @@ H1_MECHANISM = "H1_MECHANISM" # Collaborative sensing
 H1_DEFAULT_TIME = 30
 ''' The default time of building detection failure in seconds. '''
 
-H2_INTRODUFE_FAILURE = "H2_INTRODUFE_FAILURE" # Movement failure
+H2_INTRODUCE_FAILURE = "H2_INTRODUCE_FAILURE" # Movement failure
 H2_FAILURE_TIME = "H2_FAILURE_TIME"
 H2_FAILURE_IDS = "H2_FAILURE_IDS"
 H2_MECHANISM = "H2_MECHANISM" # Faulty component isolation
@@ -76,7 +76,7 @@ scenarios = []
 # Baseline 3 docks
 scenarios.append({SCENARIO_NAME:"Baseline\t",
                   H1_INTRODUCE_FAILURE:False,
-                  H2_INTRODUFE_FAILURE:False,
+                  H2_INTRODUCE_FAILURE:False,
                   H3_MECHANISM:False,
                   H4_MECHANISM:False})
 # Building detection failure
@@ -84,33 +84,33 @@ scenarios.append({SCENARIO_NAME:"H1 failure\t",
                   H1_INTRODUCE_FAILURE:True,
                   H1_FAILURE_TIME:H1_DEFAULT_TIME,
                   H1_MECHANISM:False,
-                  H2_INTRODUFE_FAILURE:False,
+                  H2_INTRODUCE_FAILURE:False,
                   H3_MECHANISM:False,
                   H4_MECHANISM:False})
 scenarios.append({SCENARIO_NAME:"H1 remedy\t",
                   H1_INTRODUCE_FAILURE:True,
                   H1_FAILURE_TIME:H1_DEFAULT_TIME,
                   H1_MECHANISM:True,
-                  H2_INTRODUFE_FAILURE:False,
+                  H2_INTRODUCE_FAILURE:False,
                   H3_MECHANISM:False,
                   H4_MECHANISM:False})
 # Movement failure
 scenarios.append({SCENARIO_NAME:"H2 failure\t",
                   H1_INTRODUCE_FAILURE:False,
-                  H2_INTRODUFE_FAILURE:True,
+                  H2_INTRODUCE_FAILURE:True,
                   H2_MECHANISM:False,
                   H3_MECHANISM:False,
                   H4_MECHANISM:False})
 scenarios.append({SCENARIO_NAME:"H2 remedy\t",
                   H1_INTRODUCE_FAILURE:False,
-                  H2_INTRODUFE_FAILURE:True,
+                  H2_INTRODUCE_FAILURE:True,
                   H2_MECHANISM:True,
                   H3_MECHANISM:False,
                   H4_MECHANISM:False})
 # Enhanced mode switching
 scenarios.append({SCENARIO_NAME:"H3 p=0.001 deg=1",
                   H1_INTRODUCE_FAILURE:False,
-                  H2_INTRODUFE_FAILURE:False,
+                  H2_INTRODUCE_FAILURE:False,
                   H3_MECHANISM:True,
                   H3_TRAINING:True,
                   H3_TRAINING_DEGREE:1,
@@ -119,7 +119,7 @@ scenarios.append({SCENARIO_NAME:"H3 p=0.001 deg=1",
                   H4_MECHANISM:False})
 scenarios.append({SCENARIO_NAME:"H3 p=0.01 deg=1",
                   H1_INTRODUCE_FAILURE:False,
-                  H2_INTRODUFE_FAILURE:False,
+                  H2_INTRODUCE_FAILURE:False,
                   H3_MECHANISM:True,
                   H3_TRAINING:True,
                   H3_TRAINING_DEGREE:1,
@@ -128,7 +128,7 @@ scenarios.append({SCENARIO_NAME:"H3 p=0.01 deg=1",
                   H4_MECHANISM:False})
 scenarios.append({SCENARIO_NAME:"H3 p=0.001 deg=2",
                   H1_INTRODUCE_FAILURE:False,
-                  H2_INTRODUFE_FAILURE:False,
+                  H2_INTRODUCE_FAILURE:False,
                   H3_MECHANISM:True,
                   H3_TRAINING:True,
                   H3_TRAINING_DEGREE:2,
@@ -137,7 +137,7 @@ scenarios.append({SCENARIO_NAME:"H3 p=0.001 deg=2",
                   H4_MECHANISM:False})
 scenarios.append({SCENARIO_NAME:"EMS p=0.01 deg=2",
                   H1_INTRODUCE_FAILURE:False,
-                  H2_INTRODUFE_FAILURE:False,
+                  H2_INTRODUCE_FAILURE:False,
                   H3_MECHANISM:True,
                   H3_TRAINING:True,
                   H3_TRAINING_DEGREE:2,
@@ -147,14 +147,14 @@ scenarios.append({SCENARIO_NAME:"EMS p=0.01 deg=2",
 # Mode Switch Properties
 scenarios.append({SCENARIO_NAME:"H4 deg=1\t",
                   H1_INTRODUCE_FAILURE:False,
-                  H2_INTRODUFE_FAILURE:False,
+                  H2_INTRODUCE_FAILURE:False,
                   H3_MECHANISM:False,
                   H4_MECHANISM:True,
                   H4_TRAINING:True,
                   H4_TRAINING_DEGREE:1})
 scenarios.append({SCENARIO_NAME:"H4 deg=2\t",
                   H1_INTRODUCE_FAILURE:False,
-                  H2_INTRODUFE_FAILURE:False,
+                  H2_INTRODUCE_FAILURE:False,
                   H3_MECHANISM:False,
                   H4_MECHANISM:True,
                   H4_TRAINING:True,
@@ -186,7 +186,7 @@ def getSignature(scenario, iterations = 0, detailed = False):
         outputSignature.append("H1M-" if (scenario[H1_MECHANISM]) else "noH1M-")
     else:
         outputSignature.append("noH1F-")
-    if scenario[H2_INTRODUFE_FAILURE]:
+    if scenario[H2_INTRODUCE_FAILURE]:
         outputSignature.append("H2F-")
         if detailed:
             if H2_FAILURE_TIME in scenario:
