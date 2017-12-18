@@ -11,15 +11,19 @@ import java.util.function.Predicate;
 import cz.cuni.mff.d3s.metaadaptation.modeswitch.Mode;
 import cz.cuni.mff.d3s.metaadaptation.modeswitch.ModeChart;
 import cz.cuni.mff.d3s.metaadaptation.modeswitch.Transition;
-import cz.cuni.mff.d3s.rcrs.af.FireFighter;;
+import cz.cuni.mff.d3s.rcrs.af.IComponent;;
 
 public class ModeChartImpl implements ModeChart {
 
 	private Mode currentMode;
 	private Set<Mode> modes;
 	private Set<Transition> transitions;
+	private IComponent component;
 
-	public ModeChartImpl(FireFighter ff) {
+	public ModeChartImpl(IComponent ff) {
+		
+		component = ff;
+		
 		// INIT ###############################################################
 
 		modes = new HashSet<>();
@@ -163,12 +167,19 @@ public class ModeChartImpl implements ModeChart {
 	}
 
 	public Transition addTransition(Mode from, Mode to, Predicate<Void> guard) {
-		Transition t = new TransitionImpl(from, to, guard);
+		TransitionImpl t = new TransitionImpl(from, to, guard);
 		transitions.add(t);
+		
+		// Callback
+		component.addTransition(t);
+		
 		return t;
 	}
 
 	public void removeTransition(Transition transition) {
+		// Callback
+		component.removeTransition((TransitionImpl) transition); 
+		
 		transitions.remove(transition);
 	}
 

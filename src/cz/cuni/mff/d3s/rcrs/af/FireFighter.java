@@ -1,12 +1,12 @@
 package cz.cuni.mff.d3s.rcrs.af;
 
-import static rescuecore2.standard.entities.StandardEntityURN.HYDRANT;
-import static cz.cuni.mff.d3s.rcrs.af.Configuration.H1_INTRODUCE_FAILURE;
-import static cz.cuni.mff.d3s.rcrs.af.Configuration.H1_FAILURE_TIME;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.H1_FAILURE_IDS;
-import static cz.cuni.mff.d3s.rcrs.af.Configuration.H2_INTRODUCE_FAILURE;
-import static cz.cuni.mff.d3s.rcrs.af.Configuration.H2_FAILURE_TIME;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.H1_FAILURE_TIME;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.H1_INTRODUCE_FAILURE;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.H2_FAILURE_IDS;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.H2_FAILURE_TIME;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.H2_INTRODUCE_FAILURE;
+import static rescuecore2.standard.entities.StandardEntityURN.HYDRANT;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,12 +18,14 @@ import cz.cuni.mff.d3s.rcrs.af.comm.BuildingsMsg;
 import cz.cuni.mff.d3s.rcrs.af.comm.KnowledgeMsg;
 import cz.cuni.mff.d3s.rcrs.af.comm.Msg;
 import cz.cuni.mff.d3s.rcrs.af.comm.TargetMsg;
+import cz.cuni.mff.d3s.rcrs.af.comm.TransitionMsg;
 import cz.cuni.mff.d3s.rcrs.af.modes.ExtinguishMode;
 import cz.cuni.mff.d3s.rcrs.af.modes.ModeChartImpl;
 import cz.cuni.mff.d3s.rcrs.af.modes.MoveToFireMode;
 import cz.cuni.mff.d3s.rcrs.af.modes.MoveToRefillMode;
 import cz.cuni.mff.d3s.rcrs.af.modes.RefillMode;
 import cz.cuni.mff.d3s.rcrs.af.modes.SearchMode;
+import cz.cuni.mff.d3s.rcrs.af.modes.TransitionImpl;
 import rescuecore2.log.Logger;
 import rescuecore2.messages.Command;
 import rescuecore2.standard.entities.Building;
@@ -37,7 +39,7 @@ import rescuecore2.worldmodel.Entity;
 import rescuecore2.worldmodel.EntityID;
 import sample.AbstractSampleAgent;
 
-public class FireFighter extends AbstractSampleAgent<FireBrigade> {
+public class FireFighter extends AbstractSampleAgent<FireBrigade> implements IComponent {
 
 	private static final String MAX_WATER_KEY = "fire.tank.maximum";
 	private static final String MAX_DISTANCE_KEY = "fire.extinguish.max-distance";
@@ -60,6 +62,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 	public final static String KNOWLEDGE_FIRE_TARGET = "fireTarget";
 
 	private EntityID refillTarget; // updated by mode switch
+	public final static String KNOWLEDGE_REFILL_TARGET = "refillTarget";
 
 	private EntityID searchTarget;
 
@@ -140,7 +143,8 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			if (nextCom instanceof AKSpeak) {
 				AKSpeak message = (AKSpeak) nextCom;
 				Msg command = Msg.fromBytes(message.getContent());
-				// Logger.info(formatLog(time, "heard " + message));
+				Logger.debug(formatLog(time, "heard " + message));
+				
 				if (command instanceof TargetMsg) {
 					TargetMsg targetMsg = (TargetMsg) command;
 					if (targetMsg.id == id) {
@@ -157,6 +161,26 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 						Logger.debug(formatLog(time, "received " + buildingsMsg));
 						burningBuildings = buildingsMsg.burningBuildings;
 						Logger.info(formatLog(time, "injected with burning buildings"));
+					}
+				}
+				if(command instanceof TransitionMsg) {
+					TransitionMsg transitionMsg = (TransitionMsg) command;
+					if(transitionMsg.id == id) {
+						Logger.debug(formatLog(time, "received " + transitionMsg));
+						TransitionImpl transition = transitionMsg.transition;
+						switch(transitionMsg.action) {
+						case ADD:
+							modeChart.addTransition(transition.getFrom(), transition.getTo(), transition.getGuard());
+							break;
+						case REMOVE:
+							modeChart.removeTransition(transition);
+							break;
+						default:
+							Logger.error(formatLog(time, "The operation \"" + transitionMsg.action +"\" is not supported"));
+							break;
+						}
+						
+						Logger.info(formatLog(time, "injected with transition " + transition));
 					}
 				}
 			}
@@ -232,10 +256,15 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 		}
 
 		// Send knowledge
-		Msg msg = new KnowledgeMsg(id, location().getID(), fireTarget, getWater(), extinguishing(), canMove,
-				burningBuildings, canDetectBuildings);
+		Msg msg = new KnowledgeMsg(id, location().getID(), fireTarget, refillTarget,
+				getWater(), extinguishing(), canMove, burningBuildings, canDetectBuildings);
 		sendSpeak(time, CHANNEL_OUT, msg.getBytes());
 
+	}
+	
+	@Override
+	public int getId() {
+		return id;
 	}
 
 	public int getWater() {
@@ -377,6 +406,17 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 	@Override
 	public String toString() {
 		return sid;
+	}
+
+	@Override
+	public void addTransition(TransitionImpl transition) {
+		// This is relevant only on the fire station side
+	}
+
+	@Override
+	public void removeTransition(TransitionImpl transition) {
+		// This is relevant only on the fire station side
+		
 	}
 
 }

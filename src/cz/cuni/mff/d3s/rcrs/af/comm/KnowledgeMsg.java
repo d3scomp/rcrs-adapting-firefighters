@@ -9,6 +9,7 @@ import rescuecore2.worldmodel.EntityID;
 
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ID;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_FIRE_TARGET;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_REFILL_TARGET;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_POSITION;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_WATER;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_EXTINGUISHING;
@@ -25,7 +26,8 @@ public class KnowledgeMsg extends Msg {
 	
 	public final int id;
 	public final EntityID position;
-	public final EntityID target;
+	public final EntityID fireTarget;
+	public final EntityID refillTarget;
 	public final int water;
 	public final boolean extinguishing;
 	public final boolean canMove;
@@ -33,11 +35,12 @@ public class KnowledgeMsg extends Msg {
 	public final boolean canDetectBuildings;
 	
 	
-	public KnowledgeMsg(int id, EntityID position, EntityID target, int water,
+	public KnowledgeMsg(int id, EntityID position, EntityID fireTarget, EntityID refillTarget, int water,
 			boolean extinguishing, boolean canMove, List<EntityID> burningBuildings, boolean canDetectBuildings) {
 		this.id = id;
 		this.position = position;
-		this.target = target;
+		this.fireTarget = fireTarget;
+		this.refillTarget = refillTarget;
 		this.water = water;
 		this.extinguishing = extinguishing;
 		this.canMove = canMove;
@@ -48,7 +51,8 @@ public class KnowledgeMsg extends Msg {
 	private KnowledgeMsg() {
 		id = Integer.MIN_VALUE;
 		position = null;
-		target = null;
+		fireTarget = null;
+		refillTarget = null;
 		water = Integer.MIN_VALUE;
 		extinguishing = false;
 		canMove = false;
@@ -58,8 +62,8 @@ public class KnowledgeMsg extends Msg {
 	
 	@Override
 	protected ByteBuffer getMsgBytes() {
-		// int id, int position, int target, int water,
-		int size = Integer.BYTES * 4
+		// int id, int position, int fireTarget, int refilTarget, int water,
+		int size = Integer.BYTES * 5
 		// boolean extinguishing, boolean canMove, boolean canDetectBuildings,
 				 + 3
 		// 1 byte burningBuildings.size,
@@ -78,9 +82,15 @@ public class KnowledgeMsg extends Msg {
 		} else {
 			data.putInt(-1);
 		}
-		if(target != null) {
-			data.putInt(target.getValue());
-			entityBuffer.put(target.getValue(), target);
+		if(fireTarget != null) {
+			data.putInt(fireTarget.getValue());
+			entityBuffer.put(fireTarget.getValue(), fireTarget);
+		} else {
+			data.putInt(-1);
+		}
+		if(refillTarget != null) {
+			data.putInt(refillTarget.getValue());
+			entityBuffer.put(refillTarget.getValue(), refillTarget);
 		} else {
 			data.putInt(-1);
 		}
@@ -106,9 +116,14 @@ public class KnowledgeMsg extends Msg {
 			position = entityBuffer.get(positionInt);
 		}
 		int targetInt = data.getInt();
-		EntityID target = null;
+		EntityID fireTarget = null;
 		if(targetInt != -1) {
-			target = entityBuffer.get(targetInt);
+			fireTarget = entityBuffer.get(targetInt);
+		}
+		targetInt = data.getInt();
+		EntityID refillTarget = null;
+		if(targetInt != -1) {
+			refillTarget = entityBuffer.get(targetInt);
 		}
 		int water = data.getInt();
 		boolean extinguishing = data.get() == 0 ? false : true;
@@ -119,7 +134,8 @@ public class KnowledgeMsg extends Msg {
 		}
 		boolean canDetectBuildings = data.get() == 0 ? false : true;
 		
-		return new KnowledgeMsg(id, position, target, water, extinguishing, canMove, burningBuildings, canDetectBuildings);
+		return new KnowledgeMsg(id, position, fireTarget, refillTarget, water,
+				extinguishing, canMove, burningBuildings, canDetectBuildings);
 	}
 
 	@Override
@@ -141,7 +157,8 @@ public class KnowledgeMsg extends Msg {
 		return super.toString()
 				+ " " + KNOWLEDGE_ID + "=" + id
 				+ " " + KNOWLEDGE_POSITION + "=" + (position != null ? position.getValue() : -1)
-				+ " " + KNOWLEDGE_FIRE_TARGET + "=" + (target != null ? target.getValue() : -1)
+				+ " " + KNOWLEDGE_FIRE_TARGET + "=" + (fireTarget != null ? fireTarget.getValue() : -1)
+				+ " " + KNOWLEDGE_REFILL_TARGET + "=" + (refillTarget != null ? refillTarget.getValue() : -1)
 				+ " " + KNOWLEDGE_WATER + "=" + water
 				+ " " + KNOWLEDGE_EXTINGUISHING + "=" + extinguishing
 				+ " " + KNOWLEDGE_CAN_MOVE + "=" + canMove

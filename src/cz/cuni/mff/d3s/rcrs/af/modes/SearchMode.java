@@ -1,7 +1,13 @@
 package cz.cuni.mff.d3s.rcrs.af.modes;
 
-import cz.cuni.mff.d3s.metaadaptation.modeswitch.Mode;
-
-public class SearchMode implements Mode {
-
+public class SearchMode extends ModeImpl {
+	
+	public SearchMode() {
+		super("SearchMode");
+	}
+	
+	@Override
+	public int hashCode() {
+		return 5;
+	}
 }

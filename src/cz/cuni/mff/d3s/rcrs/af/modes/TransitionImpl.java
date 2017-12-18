@@ -1,7 +1,7 @@
 package cz.cuni.mff.d3s.rcrs.af.modes;
 
-import java.util.function.Predicate;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import cz.cuni.mff.d3s.metaadaptation.modeswitch.Mode;
 import cz.cuni.mff.d3s.metaadaptation.modeswitch.Transition;
@@ -55,6 +55,18 @@ public class TransitionImpl implements Transition {
 		if(action != null) {
 			action.apply(null);
 		}
+	}
+	
+	@Override
+	public int hashCode() {
+		return from.hashCode() + 3*to.hashCode() + 7*priority + 11*guard.hashCode();
+	}
+	@Override
+	public String toString() {
+		return String.format("%s -> %s (%d)",
+				from.getClass().getSimpleName(),
+				to.getClass().getSimpleName(),
+				priority);
 	}
 
 }

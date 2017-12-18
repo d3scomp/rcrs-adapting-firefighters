@@ -7,28 +7,35 @@ import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_EXTINGUISHING;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_FIRE_TARGET;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ID;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_POSITION;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_REFILL_TARGET;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_WATER;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import cz.cuni.mff.d3s.rcrs.af.comm.KnowledgeMsg;
+import cz.cuni.mff.d3s.rcrs.af.modes.TransitionImpl;
+import rescuecore2.worldmodel.EntityID;
 
-public class Component {
+public class Component implements IComponent {
 	
 	protected int id = -1;
 	protected int time = -1;
+	protected FireStation fireStation;
 	
 	protected Map<String, Object> knowledge;
 	protected Set<String> exposedKnowledge;
 	protected Set<String> faultyKnowledge;
 	
-	public Component() {
+	public Component(FireStation fireStation) {
 		knowledge = new HashMap<>();
 		exposedKnowledge = new HashSet<>();
 		faultyKnowledge = new HashSet<>();
+		
+		this.fireStation = fireStation;
 	}
 
 	public void loadKnowledge(KnowledgeMsg msg, int time) {
@@ -38,7 +45,8 @@ public class Component {
 		this.time = time;
 		
 		knowledge.put(KNOWLEDGE_ID, msg.id);
-		knowledge.put(KNOWLEDGE_FIRE_TARGET, msg.target);
+		knowledge.put(KNOWLEDGE_FIRE_TARGET, msg.fireTarget);
+		knowledge.put(KNOWLEDGE_REFILL_TARGET, msg.refillTarget);
 		knowledge.put(KNOWLEDGE_POSITION, msg.position);
 		knowledge.put(KNOWLEDGE_WATER, msg.water);
 		knowledge.put(KNOWLEDGE_EXTINGUISHING, msg.extinguishing);
@@ -65,5 +73,61 @@ public class Component {
 	
 	public Set<String> getFaultyKnowledge(){
 		return faultyKnowledge;
+	}
+
+	@Override
+	public int getWater() {
+		return (int) knowledge.get(KNOWLEDGE_WATER);
+	}
+
+	@Override
+	public int getMaxWater() {
+		return fireStation.getMaxWater();
+	}
+
+	@Override
+	public List<EntityID> getBurningBuildings() {
+		return (List<EntityID>) knowledge.get(KNOWLEDGE_BURNING_BUILDINGS);
+	}
+
+	@Override
+	public EntityID getFireTarget() {
+		return (EntityID) knowledge.get(KNOWLEDGE_FIRE_TARGET);
+	}
+
+	@Override
+	public EntityID getRefillTarget() {
+		return (EntityID) knowledge.get(KNOWLEDGE_REFILL_TARGET);
+	}
+
+	@Override
+	public EntityID getLocation() {
+		return (EntityID) knowledge.get(KNOWLEDGE_POSITION);
+	}
+
+	@Override
+	public EntityID findCloseBurningBuilding() {
+		// Relevant only for fire fighter object
+		return null;
+	}
+
+	@Override
+	public void setFireTarget(boolean set) {
+		// Relevant only for fire fighter object
+	}
+
+	@Override
+	public void setRefillTarget(boolean set) {
+		// Relevant only for fire fighter object
+	}
+
+	@Override
+	public void addTransition(TransitionImpl transition) {
+		fireStation.addTransitionCallback(transition, id);
+	}
+
+	@Override
+	public void removeTransition(TransitionImpl transition) {
+		fireStation.removeTransitionCallback(transition, id);
 	}
 }

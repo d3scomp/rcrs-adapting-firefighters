@@ -2,6 +2,7 @@ package cz.cuni.mff.d3s.rcrs.af;
 
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.H1_MECHANISM;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.H2_MECHANISM;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.H3_MECHANISM;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_BURNING_BUILDINGS;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_POSITION;
 
@@ -16,10 +17,14 @@ import cz.cuni.mff.d3s.metaadaptation.MetaAdaptationManager;
 import cz.cuni.mff.d3s.metaadaptation.correlation.KnowledgeMetadataHolder;
 import cz.cuni.mff.d3s.rcrs.af.comm.KnowledgeMsg;
 import cz.cuni.mff.d3s.rcrs.af.comm.Msg;
+import cz.cuni.mff.d3s.rcrs.af.comm.TransitionMsg;
+import cz.cuni.mff.d3s.rcrs.af.comm.TransitionMsg.Action;
 import cz.cuni.mff.d3s.rcrs.af.componentisolation.IsolationHolder;
 import cz.cuni.mff.d3s.rcrs.af.correlation.CorrelationHolder;
 import cz.cuni.mff.d3s.rcrs.af.correlation.DistanceMetric;
 import cz.cuni.mff.d3s.rcrs.af.correlation.SurroundingMetric;
+import cz.cuni.mff.d3s.rcrs.af.modes.TransitionImpl;
+import cz.cuni.mff.d3s.rcrs.af.modeswitch.ModeSwitchHolder;
 import rescuecore2.log.Logger;
 import rescuecore2.messages.Command;
 import rescuecore2.standard.components.StandardAgent;
@@ -29,6 +34,8 @@ import rescuecore2.standard.messages.AKSpeak;
 import rescuecore2.worldmodel.ChangeSet;
 
 public class FireStation extends StandardAgent<Building> {
+
+	private static final String MAX_WATER_KEY = "fire.tank.maximum";
 
 	private final String sid;
 	private final int CHANNEL_IN = 1;
@@ -40,6 +47,9 @@ public class FireStation extends StandardAgent<Building> {
 	private final MetaAdaptationManager adaptationManager;
 	private final CorrelationHolder correlationManager;
 	private final IsolationHolder isolationManager;
+	private final ModeSwitchHolder modeSwitchManager;
+	
+	private int time;
 	
 	public FireStation(int id) {
 		this.sid = String.format("FS%d", id);
@@ -60,6 +70,12 @@ public class FireStation extends StandardAgent<Building> {
 			isolationManager.registerAt(adaptationManager);
 		} else {
 			isolationManager = null;
+		}
+		if(H3_MECHANISM) {
+			modeSwitchManager = new ModeSwitchHolder();
+			modeSwitchManager.registerAt(adaptationManager);
+		} else {
+			modeSwitchManager = null;
 		}
 
 	}
@@ -91,6 +107,7 @@ public class FireStation extends StandardAgent<Building> {
             sendSubscribe(time, CHANNEL_IN);
             Logger.info(sid + " subscribed to channel " + CHANNEL_IN);
         }
+		this.time = time;
 		System.out.println(time);
 		
 		// Receive messages from fire fighters
@@ -137,7 +154,7 @@ public class FireStation extends StandardAgent<Building> {
 	}
 	
 	private Component newComponent(KnowledgeMsg msg, int time) {
-		Component c = new Component();
+		Component c = new Component(this);
 		c.loadKnowledge(msg, time);
 		
 		if(H1_MECHANISM) {
@@ -150,9 +167,20 @@ public class FireStation extends StandardAgent<Building> {
 		return c;
 	}
 
-	@Override
-	public String toString() {
-		return sid;
+	public int getMaxWater() {
+		return config.getIntValue(MAX_WATER_KEY);
+	}
+	
+	public void addTransitionCallback(TransitionImpl transition, int id) {
+		Msg msg = new TransitionMsg(id, transition, Action.ADD);
+		sendSpeak(time, CHANNEL_OUT, msg.getBytes());
+		Logger.debug(String.format("at %d %s sending msg %s", time, sid, msg));
+	}
+	
+	public void removeTransitionCallback(TransitionImpl transition, int id) {
+		Msg msg = new TransitionMsg(id, transition, Action.REMOVE);
+		sendSpeak(time, CHANNEL_OUT, msg.getBytes());
+		Logger.debug(String.format("at %d %s sending msg %s", time, sid, msg));
 	}
 	
 	public Set<Ensemble> getEnsembles() {
@@ -162,4 +190,10 @@ public class FireStation extends StandardAgent<Building> {
 	public void addEnsemble(Ensemble ensemble) {
 		ensembles.add(ensemble);
 	}
+
+	@Override
+	public String toString() {
+		return sid;
+	}
+
 }

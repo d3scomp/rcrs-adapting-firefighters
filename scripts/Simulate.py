@@ -120,7 +120,8 @@ def spawnSimulation(params, iteration, serverLogs):
     runServerCmd = ['./start-comprun.sh', '-p ', port, '-l', serverLogs]
         
     print(runServerCmd)
-    server = Popen(runServerCmd, preexec_fn=os.setpgrp)
+    with open(serverLogs + "_srvout_" + str(iteration)) as out:
+        server = Popen(runServerCmd, preexec_fn=os.setpgrp, stdout=out)
     servers.append(server)
     
     # Wait for the server to start listening
@@ -131,8 +132,8 @@ def spawnSimulation(params, iteration, serverLogs):
     os.chdir(scriptDir)
     print(runAgentsCmd)
     print("Iteration {}".format(iteration))
-    
-    simulation = Popen(runAgentsCmd, preexec_fn=os.setpgrp)
+    with open(serverLogs + "_cliout_" + str(iteration)) as out:
+        simulation = Popen(runAgentsCmd, preexec_fn=os.setpgrp, stdout=out)
     simulated.append(simulation)
     
 

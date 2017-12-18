@@ -1,8 +1,13 @@
 package cz.cuni.mff.d3s.rcrs.af.modes;
 
-
-import cz.cuni.mff.d3s.metaadaptation.modeswitch.Mode;
-
-public class ExtinguishMode implements Mode {
-
+public class ExtinguishMode extends ModeImpl {
+	
+	public ExtinguishMode() {
+		super("ExtinguishMode");
+	}
+	
+	@Override
+	public int hashCode() {
+		return 1;
+	}
 }

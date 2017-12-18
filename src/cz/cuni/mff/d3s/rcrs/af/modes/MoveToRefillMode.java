@@ -1,8 +1,13 @@
 package cz.cuni.mff.d3s.rcrs.af.modes;
 
-
-import cz.cuni.mff.d3s.metaadaptation.modeswitch.Mode;
-
-public class MoveToRefillMode implements Mode {
-
+public class MoveToRefillMode extends ModeImpl {
+	
+	public MoveToRefillMode() {
+		super("MoveToRefillMode");
+	}
+	
+	@Override
+	public int hashCode() {
+		return 3;
+	}
 }
