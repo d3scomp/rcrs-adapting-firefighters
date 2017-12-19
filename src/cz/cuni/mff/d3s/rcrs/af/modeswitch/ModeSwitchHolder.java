@@ -43,7 +43,9 @@ public class ModeSwitchHolder {
 			final String toName = transitionMatcher.group(2);
 			Mode from = getMode(fromName);
 			Mode to = getMode(toName);
-			transitions.add(new TransitionImpl(from, to, null, null));
+			TransitionImpl transition = new TransitionImpl(from, to, null, null);
+			transitions.add(transition);
+			Logger.debug("Training transition: " + transition);
 		}
 		if(transitions.isEmpty()){
 			Logger.error(String.format("The training transitions cannot be matched from: \"%s\"", H3_TRAIN_TRANSITIONS));

@@ -40,6 +40,8 @@ RESULTS_DIR = os.path.realpath(os.path.join('..','results'))
 LOGS_DIR = os.path.join(RESULTS_DIR,'logs')
 ''' The directory where the logs produced by simulations are placed. '''
 
+H3_LOGS = "H3_logs"
+
 FIGURES_DIR = os.path.join(RESULTS_DIR,'figures')
 ''' The directory where plots are placed. '''
 

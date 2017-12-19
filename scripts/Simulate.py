@@ -41,6 +41,8 @@ seed_step = 1
 servers = []
 simulated = []
 
+totalSpawnedSimulations = 0
+
 
 def signal_handler(signal, frame):
         print('\n\nTerminating all jobs...')
@@ -73,10 +75,10 @@ def simulate(scenarioIndex):
     
     # invoke number of iterations with the same configuration
     for i in range(1,SIMULATION_ITERATIONS+1):
-        params = prepareParameters(scenario, i)
+        params = prepareParameters(scenario)
         if scenario[H3_MECHANISM]:    
             if H3_TRAINING in scenario and scenario[H3_TRAINING]:
-                    prepareH3Scenario(scenario, params, i)
+                    prepareH3Scenario(scenario, params)
             else:
                 print("Unsupported scenario!")
         elif scenario[H4_MECHANISM]:
@@ -88,7 +90,7 @@ def simulate(scenarioIndex):
         else:
             logFile = getLogFile(scenario, i)
             params.append("{}={}".format(LOG_DIR, logFile))
-            spawnSimulation(params, i, logFile + "_server")
+            spawnSimulation(params, logFile + "_server")
         
     # finalize the rest
     while len(simulated) > 0:
@@ -97,13 +99,15 @@ def simulate(scenarioIndex):
     print("Simulation processes finished.")
    
    
-def spawnSimulation(params, iteration, serverLogs):
+def spawnSimulation(params, serverLogs):
+    global totalSpawnedSimulations
+    totalSpawnedSimulations += 1
     
     # Wait for free core
     if (len(simulated) >= CORES) :
         finalizeOldestSimulation()
     
-    port = str(RCRS_PORT_BASE + iteration)
+    port = str(RCRS_PORT_BASE + totalSpawnedSimulations)
     
     # Compose invocation command
     jars = '../lib/*:../target/rcrs-adapting-firefighters-' + PROJECT_VERSION + '-jar-with-dependencies.jar';
@@ -120,7 +124,9 @@ def spawnSimulation(params, iteration, serverLogs):
     runServerCmd = ['./start-comprun.sh', '-p ', port, '-l', serverLogs]
         
     print(runServerCmd)
-    with open(serverLogs + "_srvout_" + str(iteration)) as out:
+    if not os.path.exists(serverLogs):
+        os.makedirs(serverLogs)
+    with open(serverLogs + "_srvout_" + str(totalSpawnedSimulations), "w") as out:
         server = Popen(runServerCmd, preexec_fn=os.setpgrp, stdout=out)
     servers.append(server)
     
@@ -131,8 +137,8 @@ def spawnSimulation(params, iteration, serverLogs):
     
     os.chdir(scriptDir)
     print(runAgentsCmd)
-    print("Iteration {}".format(iteration))
-    with open(serverLogs + "_cliout_" + str(iteration)) as out:
+    print("Iteration {}".format(totalSpawnedSimulations))
+    with open(serverLogs + "_cliout_" + str(totalSpawnedSimulations), "w") as out:
         simulation = Popen(runAgentsCmd, preexec_fn=os.setpgrp, stdout=out)
     simulated.append(simulation)
     
@@ -150,7 +156,9 @@ def clientCanConnect(serverLogs):
 def kernelLog(serverLogs):
     return serverLogs + "/" + KERNEL_LOG_FILE
     
-def prepareParameters(scenario, iteration):
+def prepareParameters(scenario):    
+    global totalSpawnedSimulations
+    
     # Prepare parameters
     params = []
     
@@ -161,8 +169,7 @@ def prepareParameters(scenario, iteration):
         seed += seed_step
         
     if scenario[H3_MECHANISM]:
-        params.append("{}={}".format(H3_TRAINING_OUTPUT,
-                                     getUMSLogFile(scenario, iteration)))
+        params.append("{}={}".format(H3_TRAINING_OUTPUT, getH3LogFile(scenario, totalSpawnedSimulations)))
         
     for key, value in scenario.items():        
         # ignore parameters that are used by this script but not by the simulation
@@ -178,31 +185,34 @@ def prepareParameters(scenario, iteration):
     return params
 
 
-def prepareH3Scenario(scenario, params, iteration):
+def prepareH3Scenario(scenario, params):
     if scenario[H3_TRAINING_DEGREE] == 1:
         transitions = missingTransitions
     else:
         transitions = missingTransitionsReduced
     
-    runH3Scenario(scenario, transitions, [], [], params, iteration, scenario[H3_TRAINING_DEGREE])
+    runH3Scenario(scenario, transitions, [], [], params, scenario[H3_TRAINING_DEGREE])
     
 
-def runH3Scenario(scenario, transitions, preparedTransitions, simulatedTransitions, params, iteration, degree):
+def runH3Scenario(scenario, transitions, preparedTransitions, simulatedTransitions, params, degree):
+    global totalSpawnedSimulations
+    
     if degree <= 0:
         for item in simulatedTransitions:
             if set(preparedTransitions).issubset(set(item)):
                 return # skip if already done
-        logFile, params = params + prepareH3Params(scenario, ";".join(preparedTransitions) + ";", iteration)
+        logFile, H3params = prepareH3Params(scenario, ".".join(preparedTransitions) + ".", totalSpawnedSimulations)
+        params = params + H3params
         # remember what was done
         simulatedTransitions.append(preparedTransitions)
-        spawnSimulation(params, iteration, logFile + "_server")
+        spawnSimulation(params, logFile + "_server")
     else:
         for fromMode, toMode in transitions:
             sTransition = "{}-{}".format(fromMode, toMode)
             if sTransition not in preparedTransitions:
                 nextDegreeTransitions = list(preparedTransitions) # create a copy of the given list
                 nextDegreeTransitions.append(sTransition)
-                runH3Scenario(scenario, transitions, nextDegreeTransitions, simulatedTransitions, params, iteration, degree-1)
+                runH3Scenario(scenario, transitions, nextDegreeTransitions, simulatedTransitions, params, degree-1)
                 
 
 def prepareH3Params(scenario, transitions, iteration):
@@ -211,7 +221,7 @@ def prepareH3Params(scenario, transitions, iteration):
     params.append("{}={}".format(LOG_DIR, logFile))
     params.append("{}={}".format(H3_TRAIN_TRANSITIONS, transitions))
     params.append("{}={}".format(H3_TRAINING_OUTPUT,
-                                 getUMSLogFile(scenario, iteration, transitions)))
+                                 getH3LogFile(scenario, iteration, transitions)))
         
     return logFile, params
 
@@ -230,7 +240,8 @@ def runH4Scenario(scenario, properties, preparedProperties, simulatedProperties,
         for item in simulatedProperties:
             if set(preparedProperties).issubset(set(item)):
                 return # skip if already done
-        logFile, params = params + prepareH4Params(scenario, ";".join(preparedProperties) + ";", iteration)
+        logFile, H4params = prepareH4Params(scenario, ";".join(preparedProperties) + ";", iteration)
+        params = params + H4params
         # remember what was done
         simulatedProperties.append(preparedProperties)
         spawnSimulation(params, iteration, logFile + "_server")

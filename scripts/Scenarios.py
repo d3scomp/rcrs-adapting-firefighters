@@ -63,8 +63,24 @@ H4_TRAINING_DEGREE = "H4_TRAINING_DEGREE"
 H4_PROPERTIES = "H4_PROPERTIES";
 
 # Transitions not present in the default mode chart
-missingTransitions = []
-missingTransitionsReduced = []
+missingTransitions = [
+    ("SearchMode","RefillMode"),
+    ("SearchMode","MoveToFireMode"),
+    ("SearchMode","MoveToRefillMode"),
+    ("ExtinguishMode","RefillMode"),
+    ("ExtinguishMode","MoveToFireMode"),
+    ("RefillMode","ExtinguishMode"),
+    ("RefillMode","MoveToRefillMode"),
+    ("MoveToFireMode","SearchMode"),
+    ("MoveToFireMode","RefillMode"),
+    ("MoveToFireMode","MoveToRefillMode"),
+    ("MoveToRefillMode","SearchMode"),
+    ("MoveToRefillMode","ExtinguishMode"),
+    ("MoveToRefillMode","MoveToFireMode")]
+missingTransitionsReduced = [
+    ("SearchMode","MoveToRefillMode"),
+    ("RefillMode","ExtinguishMode"),
+    ("MoveToFireMode","SearchMode")]
 
 # Properties used in scenarios with mode switching properties adjustment
 adjustedProperties = []
@@ -167,7 +183,7 @@ scenarios.append({SCENARIO_NAME:"H4 deg=2\t",
 def getSignature(scenario, iterations = 0, detailed = False):
     ''' Compiles the signature of the given scenario. '''
     outputSignature = []
-    outputSignature.append("{:02}_".format(scenarios.index(scenario)))
+    outputSignature.append("{:02}".format(scenarios.index(scenario)))
     
     if detailed:
         if SCENARIO_NAME in scenario:
@@ -206,8 +222,8 @@ def getSignature(scenario, iterations = 0, detailed = False):
             else:
                 outputSignature.append("-noT")
             outputSignature.append("-P" + str(scenario[H3_TRANSITION_PROBABILITY]))
-        else:
-            outputSignature.append("-" + str(scenarios.index(scenario)))
+#        else:
+#            outputSignature.append("-" + str(scenarios.index(scenario)))
     if scenario[H4_MECHANISM]:
         outputSignature.append("-H4M")
         if detailed:
@@ -239,18 +255,18 @@ def getLogFile(scenario, iteration, specifier = None):
                         'log_' + str(iteration))
     
     
-def getUMSLogFile(scenario, iteration, transitions = None):
+def getH3LogFile(scenario, iteration, transitions = None):
     if(scenario[H3_MECHANISM]):
         if(transitions != None):
             return os.path.join(LOGS_DIR,
                             getSignature(scenario),
-                            UMS_LOGS,
+                            H3_LOGS,
                             transitions,
                             'log_' + str(iteration))
     
     return os.path.join(LOGS_DIR,
                         getSignature(scenario),
-                        UMS_LOGS,
+                        H3_LOGS,
                         'log_' + str(iteration))
     
 
