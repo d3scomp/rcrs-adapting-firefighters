@@ -129,15 +129,20 @@ def spawnSimulation(params, serverLogs):
     with open(serverLogs + "_srvout_" + str(totalSpawnedSimulations), "w") as out:
         server = Popen(runServerCmd, preexec_fn=os.setpgrp, stdout=out)
     servers.append(server)
+    os.chdir(scriptDir)
     
     # Wait for the server to start listening
     while not clientCanConnect(serverLogs): 
+        if server.poll() is not None:
+            # Server not running anymore
+            print("Server failed to start.")
+            servers.remove(server)
+            return
         print("waiting before connecting agents")
         sleep(1)
     
-    os.chdir(scriptDir)
     print(runAgentsCmd)
-    print("Iteration {}".format(totalSpawnedSimulations))
+    print("Simulation {}".format(totalSpawnedSimulations))
     with open(serverLogs + "_cliout_" + str(totalSpawnedSimulations), "w") as out:
         simulation = Popen(runAgentsCmd, preexec_fn=os.setpgrp, stdout=out)
     simulated.append(simulation)
@@ -290,11 +295,7 @@ def extractScenarioArgs(args):
 
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, signal_handler)
-    print("Creating jar with dependencies...")
-    shellRequired = True if sys.platform == 'win32' else False
-    call(['mvn', '-f..', 'package'], shell=shellRequired)
-    print("jar prepared.")
-    
+        
     try:
         si = extractScenarioArgs(sys.argv)        
         
