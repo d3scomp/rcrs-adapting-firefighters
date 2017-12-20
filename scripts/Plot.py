@@ -47,8 +47,9 @@ def analyzeLog(simulationSignature, logDirName):
     return result
 
 
-def analyzeSignature(signature):
-    validDir = re.compile('.+_\d+_server')
+def analyzeScenario(scenario):
+    signature = getScenarioSignature(scenario)
+    validDir = re.compile('.*log_\d+_s')
     logsDir = os.path.join(LOGS_DIR, signature)
     
     if not os.path.isdir(logsDir):
@@ -67,6 +68,43 @@ def analyzeSignature(signature):
                 print("There is no valid score in " + logDirName)
 
     return scores
+
+
+def analyzeH3Scenario(scenario):
+    signature = getScenarioSignature(scenario)
+    validDir = re.compile('.*log_\d+_s')
+    logsDir = os.path.join(LOGS_DIR, signature)
+    
+    if not os.path.isdir(logsDir):
+        raise Exception("Logs from scenario {} are missing.".format(signature))
+                
+    scores = {}
+            
+    for _, dirs, _ in os.walk(logsDir):
+        for logDirName in dirs:
+            if(validDir.match(logDirName) == None):
+                continue;
+            score = analyzeLog(signature, logDirName)
+            if score != -1:
+                index = getTransitions(logDirName)
+                if(index not in scores):
+                    scores[index] = []
+                
+                scores[index].append(score)
+            else:
+                print("There is no valid score in " + logDirName)
+
+    return scores
+
+
+def getTransitions(logDirName):
+    fromTo = re.compile('((\w+-\w+\.)+)[^\.]+')
+    match = fromTo.match(logDirName)
+    if(match != None):
+        return match.group(1)
+    else:
+        raise Exception("Transition not matched from {}.".format(logDirName))
+        
 
 ###############################################################################
 
@@ -126,6 +164,61 @@ def plot(allValues, scenarioIndices):
         plt.legend(labels, signatures, handler_map = {StringLabel:StringLabelHandler()})
     
     plt.savefig("{}.png".format(outputFile))
+    
+    
+def plotH3(allValues, scenarioIndices):
+    if not os.path.exists(FIGURES_DIR):
+        os.makedirs(FIGURES_DIR)
+    outputFile = os.path.join(FIGURES_DIR, '-'.join(map(str, scenarioIndices)))
+    
+    legendFile = open("{}.txt".format(outputFile), 'w')
+        
+    labels = []
+    values = []
+    signatures = []
+    # Prepend baseline
+#    signatures.append("baseline")
+#    labels.append(StringLabel(str(1), "black"))
+#    values.append(baseline)
+    
+    print("LEGEND:")
+#    print("{}\t{}".format(1, "baseline"))
+    legendFile.write("LEGEND:\n")
+#    legendFile.write("{} - {}\n".format(1, "baseline"))
+    
+#    i = 2
+    i = 1
+    for k in allValues.keys():
+        signatures.append(k)
+        labels.append(StringLabel(str(i), "black"))
+        print("{}\t{}".format(i, k))
+        legendFile.write("{} - {}\n".format(i, k))
+        i = i + 1
+        values.append(allValues[k])
+        
+    legendFile.close()
+    
+    if len(values) > 20:
+        plt.figure(figsize=(10,8))
+        sp = plt.subplot()
+        bp = sp.boxplot(values, widths=0.8)
+    else:
+        plt.figure()
+        sp = plt.subplot()
+        bp = sp.boxplot(values)
+    # add the value of the medians to the diagram 
+    printMedians(bp)
+    
+    printYLabel(plt)
+    
+    # Legend
+#    box = sp.get_position()
+#    sp.set_position([box.x0, box.y0, box.width*0.5, box.height])
+#    fontP = FontProperties()
+#    fontP.set_size('small')
+#    sp.legend(labels, signatures, handler_map = {StringLabel:StringLabelHandler()}, loc='center left', bbox_to_anchor=(1, 0.5), prop = fontP)
+    
+    plt.savefig("{}.png".format(outputFile))
 
 
 def printMedians(bp):
@@ -183,12 +276,16 @@ if __name__ == '__main__':
         plotSignature = '-'.join(map(str, scenarioIndices))
         scores = []
         for scenario in scenarioIndices:
-            signature = getScenarioSignature(scenario)
-            print("Analyzing scenario {} with signature {}"
-                  .format(scenario, signature))
-            scores.append(analyzeSignature(signature))
+            print("Analyzing scenario {}".format(scenario))
             
-        plot(scores, scenarioIndices)
+            if scenarios[scenario][H3_MECHANISM]:
+                t = analyzeH3Scenario(scenario)
+                plotH3(t, scenarioIndices)
+            else:
+                scores.append(analyzeScenario(scenario))
+        
+        if scores:
+            plot(scores, scenarioIndices)
 
         end = time.time()
         
