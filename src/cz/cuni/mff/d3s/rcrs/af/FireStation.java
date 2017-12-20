@@ -3,6 +3,7 @@ package cz.cuni.mff.d3s.rcrs.af;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.H1_MECHANISM;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.H2_MECHANISM;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.H3_MECHANISM;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.H4_MECHANISM;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_BURNING_BUILDINGS;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_POSITION;
 
@@ -57,6 +58,11 @@ public class FireStation extends StandardAgent<Building> {
 		// start empty meta-adaptations manager
 		adaptationManager = new MetaAdaptationManager();
 		adaptationManager.setVerbosity(true);
+
+		System.out.println("H1_MECHANISM " + H1_MECHANISM);
+		System.out.println("H2_MECHANISM " + H2_MECHANISM);
+		System.out.println("H3_MECHANISM " + H3_MECHANISM);
+		System.out.println("H4_MECHANISM " + H4_MECHANISM);
 		
 		if(H1_MECHANISM) {
 			correlationManager = new CorrelationHolder(this);

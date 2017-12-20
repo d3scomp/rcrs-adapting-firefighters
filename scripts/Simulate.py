@@ -69,6 +69,7 @@ def finalizeOldestSimulation():
 
 
 def simulate(scenarioIndex):
+    global totalSpawnedSimulations
     scenario = scenarios[scenarioIndex]
           
     print('Spawning simulation processes...')
@@ -83,14 +84,14 @@ def simulate(scenarioIndex):
                 print("Unsupported scenario!")
         elif scenario[H4_MECHANISM]:
             if H4_TRAINING in scenario and scenario[H4_TRAINING]:
-                    prepareH4Scenario(scenario, params, i)
+                    prepareH4Scenario(scenario, params)
             else:
                 print("Unsupported scenario!")
             
         else:
-            logFile = getLogFile(scenario, i)
+            logFile = getLogFile(scenario, totalSpawnedSimulations)
             params.append("{}={}".format(LOG_DIR, logFile))
-            spawnSimulation(params, logFile + "_server")
+            spawnSimulation(params, logFile)
         
     # finalize the rest
     while len(simulated) > 0:
@@ -99,9 +100,11 @@ def simulate(scenarioIndex):
     print("Simulation processes finished.")
    
    
-def spawnSimulation(params, serverLogs):
+def spawnSimulation(params, logs):
     global totalSpawnedSimulations
     totalSpawnedSimulations += 1
+    
+    serverLogs = logs + "_s"
     
     # Wait for free core
     if (len(simulated) >= CORES) :
@@ -126,7 +129,7 @@ def spawnSimulation(params, serverLogs):
     print(runServerCmd)
     if not os.path.exists(serverLogs):
         os.makedirs(serverLogs)
-    with open(serverLogs + "_srvout_" + str(totalSpawnedSimulations), "w") as out:
+    with open(logs + "_sout", "w") as out:
         server = Popen(runServerCmd, preexec_fn=os.setpgrp, stdout=out)
     servers.append(server)
     os.chdir(scriptDir)
@@ -143,8 +146,8 @@ def spawnSimulation(params, serverLogs):
     
     print(runAgentsCmd)
     print("Simulation {}".format(totalSpawnedSimulations))
-    with open(serverLogs + "_cliout_" + str(totalSpawnedSimulations), "w") as out:
-        simulation = Popen(runAgentsCmd, preexec_fn=os.setpgrp, stdout=out)
+    with open(logs + "_cout", "w") as out:
+        simulation = Popen(runAgentsCmd, preexec_fn=os.setpgrp)#, stdout=out)
     simulated.append(simulation)
     
 
@@ -200,17 +203,16 @@ def prepareH3Scenario(scenario, params):
     
 
 def runH3Scenario(scenario, transitions, preparedTransitions, simulatedTransitions, params, degree):
-    global totalSpawnedSimulations
     
     if degree <= 0:
         for item in simulatedTransitions:
             if set(preparedTransitions).issubset(set(item)):
                 return # skip if already done
-        logFile, H3params = prepareH3Params(scenario, ".".join(preparedTransitions) + ".", totalSpawnedSimulations)
+        logFile, H3params = prepareH3Params(scenario, ".".join(preparedTransitions) + ".")
         params = params + H3params
         # remember what was done
         simulatedTransitions.append(preparedTransitions)
-        spawnSimulation(params, logFile + "_server")
+        spawnSimulation(params, logFile)
     else:
         for fromMode, toMode in transitions:
             sTransition = "{}-{}".format(fromMode, toMode)
@@ -220,13 +222,15 @@ def runH3Scenario(scenario, transitions, preparedTransitions, simulatedTransitio
                 runH3Scenario(scenario, transitions, nextDegreeTransitions, simulatedTransitions, params, degree-1)
                 
 
-def prepareH3Params(scenario, transitions, iteration):
+def prepareH3Params(scenario, transitions):
+    global totalSpawnedSimulations
+    
     params = []
-    logFile = getLogFile(scenario, iteration, transitions)
+    logFile = getLogFile(scenario, totalSpawnedSimulations, transitions)
     params.append("{}={}".format(LOG_DIR, logFile))
     params.append("{}={}".format(H3_TRAIN_TRANSITIONS, transitions))
     params.append("{}={}".format(H3_TRAINING_OUTPUT,
-                                 getH3LogFile(scenario, iteration, transitions)))
+                                 getH3LogFile(scenario, totalSpawnedSimulations, transitions)))
         
     return logFile, params
 

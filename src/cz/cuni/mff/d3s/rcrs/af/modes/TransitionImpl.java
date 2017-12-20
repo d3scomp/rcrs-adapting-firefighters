@@ -63,7 +63,7 @@ public class TransitionImpl implements Transition {
 	}
 	@Override
 	public String toString() {
-		return String.format("%s -> %s (%d)",
+		return String.format("%s -> %s (priority: %d)",
 				from.getClass().getSimpleName(),
 				to.getClass().getSimpleName(),
 				priority);
