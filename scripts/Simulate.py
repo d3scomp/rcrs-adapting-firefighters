@@ -119,8 +119,8 @@ def spawnSimulation(params, logs):
     runAgentsCmd.extend([AGENTS_PORT_PARAM + "=" + port])
 
     # Remove the kernel log file to be able to wait for its existence
-    if os.path.exists(kernelLog(serverLogs)):
-        os.remove(kernelLog(serverLogs))
+    if os.path.exists(kernelStartedLog(serverLogs)):
+        os.remove(kernelStartedLog(serverLogs))
 
     scriptDir = os.getcwd()
     os.chdir(RCRS_SERVER_BOOT)
@@ -135,10 +135,12 @@ def spawnSimulation(params, logs):
     os.chdir(scriptDir)
     
     # Wait for the server to start listening
-    while not clientCanConnect(serverLogs): 
-        if server.poll() is not None:
-            # Server not running anymore
+    attempts = 0
+    while not clientCanConnect(serverLogs):
+        attempts += 1
+        if attempts > MAX_SERVER_STARTUP_TIME:
             print("Server failed to start.")
+            server.send_signal(SIGINT)
             servers.remove(server)
             return
         print("waiting before connecting agents")
@@ -147,22 +149,20 @@ def spawnSimulation(params, logs):
     print(runAgentsCmd)
     print("Simulation {}".format(totalSpawnedSimulations))
     with open(logs + "_cout", "w") as out:
-        simulation = Popen(runAgentsCmd, preexec_fn=os.setpgrp)#, stdout=out)
+        simulation = Popen(runAgentsCmd, preexec_fn=os.setpgrp, stdout=out)
     simulated.append(simulation)
     
 
 def clientCanConnect(serverLogs):
-    if not os.path.exists(kernelLog(serverLogs)):
+    if not os.path.exists(kernelStartedLog(serverLogs)):
         return False
     
-    res = call(["grep", "-q", "--binary-files=text",
-                "-e", "Waiting for [0-9]\+ entities of type urn:rescuecore2.standard:entity:firebrigade",
-                kernelLog(serverLogs)])
+    res = call(["grep", "-q", "Started", kernelStartedLog(serverLogs)])
     return (res == 0)
 
 
-def kernelLog(serverLogs):
-    return serverLogs + "/" + KERNEL_LOG_FILE
+def kernelStartedLog(serverLogs):
+    return serverLogs + "/" + KERNEL_STARTED_FILE
     
 def prepareParameters(scenario):    
     global totalSpawnedSimulations
