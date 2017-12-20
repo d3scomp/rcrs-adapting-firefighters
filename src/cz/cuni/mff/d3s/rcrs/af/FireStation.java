@@ -79,7 +79,6 @@ public class FireStation extends StandardAgent<Building> {
 		}
 		if(H3_MECHANISM) {
 			modeSwitchManager = new ModeSwitchHolder();
-			modeSwitchManager.registerAt(adaptationManager);
 		} else {
 			modeSwitchManager = null;
 		}
@@ -153,6 +152,12 @@ public class FireStation extends StandardAgent<Building> {
 			}
 		}
 		
+		if(H3_MECHANISM && !modeSwitchManager.isRegistered()
+				&& modeSwitchManager.getComponentManager().getComponents().size() > 0) {
+			// Register after having the components
+			modeSwitchManager.registerAt(adaptationManager);
+		}
+		
 		adaptationManager.reason();
 		// TODO: check duration 
 		
@@ -168,6 +173,9 @@ public class FireStation extends StandardAgent<Building> {
 		}
 		if(H2_MECHANISM) {
 			isolationManager.getComponentManager().addComponent(new cz.cuni.mff.d3s.rcrs.af.componentisolation.ComponentImpl(c));
+		}
+		if(H3_MECHANISM) {
+			modeSwitchManager.getComponentManager().addComponent(new cz.cuni.mff.d3s.rcrs.af.modeswitch.ComponentImpl(c));
 		}
 		
 		return c;

@@ -25,11 +25,13 @@ public class ModeSwitchHolder {
 	private final ComponentManagerImpl componentManager;
 	private final NonDeterministicModeSwitchingManager modeSwitchManager;
 	private final ModeChartImpl modeChart;
+	private boolean registered;
 	
 	public ModeSwitchHolder() {
 		componentManager = new ComponentManagerImpl();
 		modeSwitchManager = new NonDeterministicModeSwitchingManager(componentManager, null);
 		modeChart = prepareModeChart();
+		registered = false;
 
 		modeSwitchManager.setVerbosity(true);
 		modeSwitchManager.setTransitionProbability(H3_TRANSITION_PROBABILITY);
@@ -108,6 +110,11 @@ public class ModeSwitchHolder {
 	
 	public void registerAt(MetaAdaptationManager manager) {
 		manager.addAdaptation(modeSwitchManager);
+		registered = true;
+	}
+	
+	public boolean isRegistered() {
+		return registered;
 	}
 	
 	public ComponentManagerImpl getComponentManager() {
