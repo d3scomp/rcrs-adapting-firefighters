@@ -22,9 +22,11 @@ class ArgError(Exception):
 # HW RESOURCES
 ###############################################################################
 
-CORES = 10
+CORES = 20
 ''' The number of processor cores to utilize. The number of simulations
     to run in parallel. '''
+    
+MAX_SERVER_STARTUP_TIME = 90 # 1.5 minute
     
 ###############################################################################
 
@@ -46,6 +48,9 @@ FIGURES_DIR = os.path.join(RESULTS_DIR,'figures')
 ''' The directory where plots are placed. '''
 
 KERNEL_LOG_FILE = "kernel.log"
+''' The name of the file containing runtime logs produced by a simulation. '''
+
+KERNEL_STARTED_FILE = "started.log"
 ''' The name of the file containing runtime logs produced by a simulation. '''
 
 ###############################################################################
