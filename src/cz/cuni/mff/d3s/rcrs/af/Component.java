@@ -122,12 +122,17 @@ public class Component implements IComponent {
 	}
 
 	@Override
-	public void addTransition(TransitionImpl transition) {
+	public void addTransitionCallback(TransitionImpl transition) {
 		fireStation.addTransitionCallback(transition, id);
 	}
 
 	@Override
-	public void removeTransition(TransitionImpl transition) {
+	public void removeTransitionCallback(TransitionImpl transition) {
 		fireStation.removeTransitionCallback(transition, id);
+	}
+
+	@Override
+	public void setGuardParamCallback(TransitionImpl transition, String name, double value) {
+		fireStation.setGuardParamCallback(transition, name, value, id);
 	}
 }

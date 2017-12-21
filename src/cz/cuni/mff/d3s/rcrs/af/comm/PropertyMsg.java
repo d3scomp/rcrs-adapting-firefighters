@@ -3,39 +3,46 @@ package cz.cuni.mff.d3s.rcrs.af.comm;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ID;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import cz.cuni.mff.d3s.rcrs.af.modes.TransitionImpl;
 
-public class TransitionMsg extends ITransitionMsg {
-
-	public enum Action {
-		ADD, REMOVE;
-	}
+public class PropertyMsg extends ITransitionMsg {
+	
+	protected static List<String> propertyBuffer = Collections.synchronizedList(new ArrayList<String>());
+	
 	static {
 		// Instance for decoding
-		register(new TransitionMsg());
+		register(new PropertyMsg());
 	}
 	
 	public final int id;
 	public final TransitionImpl transition;
-	public final Action action;
+	public final String property;
+	public final double value;
 		
-	public TransitionMsg(int id, TransitionImpl transition, Action action) {
+	public PropertyMsg(int id, TransitionImpl transition, String property, double value) {
 		this.id = id;
 		this.transition = transition;
-		this.action = action;
+		this.property = property;
+		this.value = value;
 	}
 	
-	private TransitionMsg() {
+	private PropertyMsg() {
 		id = Integer.MIN_VALUE;
 		transition = null;
-		action = null;
+		property = null;
+		value = Double.NaN;
 	}
 	
 	@Override
 	protected ByteBuffer getMsgBytes() {
-		// int id, int transition, int action
+		// int id, int transition, int property,
 		int size = Integer.BYTES * 3
+		// double value,
+				+ Double.BYTES * 1
 		// space for signature
 				 + 1;
 		
@@ -44,7 +51,12 @@ public class TransitionMsg extends ITransitionMsg {
 		data.putInt(id);
 		data.putInt(transition.hashCode());
 		transitionBuffer.put(transition.hashCode(), transition);
-		data.putInt(action.ordinal());
+		if(!propertyBuffer.contains(property)) {
+			propertyBuffer.add(property);
+		}
+		int index = propertyBuffer.indexOf(property);
+		data.putInt(index);
+		data.putDouble(value);
 
 		return data;
 	}
@@ -53,14 +65,15 @@ public class TransitionMsg extends ITransitionMsg {
 	protected Msg fromMsgBytes(ByteBuffer data) {
 		int id = data.getInt();
 		TransitionImpl transition = transitionBuffer.get(data.getInt());
-		Action action = Action.values()[data.getInt()];
+		String property = propertyBuffer.get(data.getInt());
+		double value = data.getDouble();
 		
-		return new TransitionMsg(id, transition, action);
+		return new PropertyMsg(id, transition, property, value);
 	}
 
 	@Override
 	protected byte getSignature() {
-		return 0x4;
+		return 0x5;
 	}
 	
 	@Override
@@ -69,7 +82,8 @@ public class TransitionMsg extends ITransitionMsg {
 		return super.toString()
 				+ " " + KNOWLEDGE_ID + "=" + id
 				+ " TRANSITION=" + transition
-				+ " ACTION=" + action;
+				+ " PROPERTY=" + property
+				+ " VALUE=" + value;
 	}
 
 }

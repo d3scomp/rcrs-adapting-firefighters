@@ -77,17 +77,10 @@ def simulate(scenarioIndex):
     # invoke number of iterations with the same configuration
     for i in range(1,SIMULATION_ITERATIONS+1):
         params = prepareParameters(scenario)
-        if scenario[H3_MECHANISM]:    
-            if H3_TRAINING in scenario and scenario[H3_TRAINING]:
-                    prepareH3Scenario(scenario, params)
-            else:
-                print("Unsupported scenario!")
+        if scenario[H3_MECHANISM]:
+            prepareH3Scenario(scenario, params)
         elif scenario[H4_MECHANISM]:
-            if H4_TRAINING in scenario and scenario[H4_TRAINING]:
-                    prepareH4Scenario(scenario, params)
-            else:
-                print("Unsupported scenario!")
-            
+            prepareH4Scenario(scenario, params)
         else:
             logFile = getLogFile(scenario, totalSpawnedSimulations)
             params.append("{}={}".format(LOG_DIR, logFile))
@@ -149,7 +142,7 @@ def spawnSimulation(params, logs):
     print(runAgentsCmd)
     print("Simulation {}".format(totalSpawnedSimulations))
     with open(logs + "_cout", "w") as out:
-        simulation = Popen(runAgentsCmd, preexec_fn=os.setpgrp, stdout=out)
+        simulation = Popen(runAgentsCmd, preexec_fn=os.setpgrp)#, stdout=out)
     simulated.append(simulation)
     
 
@@ -176,16 +169,11 @@ def prepareParameters(scenario):
         params.append("{}={}".format(SEED, seed))
         seed += seed_step
         
-    if scenario[H3_MECHANISM]:
-        params.append("{}={}".format(H3_TRAINING_OUTPUT, getH3LogFile(scenario, totalSpawnedSimulations)))
-        
     for key, value in scenario.items():        
         # ignore parameters that are used by this script but not by the simulation
         if key in {SCENARIO_NAME,
-                   H3_TRAINING,
-                   H3_TRAINING_DEGREE,
-                   H4_TRAINING,
-                   H4_TRAINING_DEGREE}:
+                   H3_DEGREE,
+                   H4_DEGREE}:
             continue;
         
         params.append("{}={}".format(key, value))
@@ -194,12 +182,12 @@ def prepareParameters(scenario):
 
 
 def prepareH3Scenario(scenario, params):
-    if scenario[H3_TRAINING_DEGREE] == 1:
+    if scenario[H3_DEGREE] == 1:
         transitions = missingTransitions
     else:
         transitions = missingTransitionsReduced
     
-    runH3Scenario(scenario, transitions, [], [], params, scenario[H3_TRAINING_DEGREE])
+    runH3Scenario(scenario, transitions, [], [], params, scenario[H3_DEGREE])
     
 
 def runH3Scenario(scenario, transitions, preparedTransitions, simulatedTransitions, params, degree):
@@ -228,44 +216,44 @@ def prepareH3Params(scenario, transitions):
     params = []
     logFile = getLogFile(scenario, totalSpawnedSimulations, transitions)
     params.append("{}={}".format(LOG_DIR, logFile))
-    params.append("{}={}".format(H3_TRAIN_TRANSITIONS, transitions))
-    params.append("{}={}".format(H3_TRAINING_OUTPUT,
-                                 getH3LogFile(scenario, totalSpawnedSimulations, transitions)))
+    params.append("{}={}".format(H3_TRANSITIONS, transitions))
         
     return logFile, params
 
 
-def prepareH4Scenario(scenario, params, iteration):
-    if scenario[H4_TRAINING_DEGREE] == 1:
+def prepareH4Scenario(scenario, params):
+    if scenario[H4_DEGREE] == 1:
         properties = adjustedProperties
     else:
         properties = adjustedPropertiesReduced
     
-    runH4Scenario(scenario, properties, [], [], params, iteration, scenario[H4_TRAINING_DEGREE])
+    runH4Scenario(scenario, properties, [], [], params, scenario[H4_DEGREE])
 
 
-def runH4Scenario(scenario, properties, preparedProperties, simulatedProperties, params, iteration, degree):
+def runH4Scenario(scenario, properties, preparedProperties, simulatedProperties, params, degree):
     if degree <= 0:
         for item in simulatedProperties:
             if set(preparedProperties).issubset(set(item)):
                 return # skip if already done
-        logFile, H4params = prepareH4Params(scenario, ";".join(preparedProperties) + ";", iteration)
+        logFile, H4params = prepareH4Params(scenario, ".".join(preparedProperties) + ".")
         params = params + H4params
         # remember what was done
         simulatedProperties.append(preparedProperties)
-        spawnSimulation(params, iteration, logFile + "_server")
+        spawnSimulation(params, logFile)
     else:
         for prop, value in properties:
-            sProperty = "{}({})".format(prop, value)
+            sProperty = "{}-{}".format(prop, value)
             if sProperty not in preparedProperties:
                 nextDegreeeProperties = list(preparedProperties) # create a copy of the given list
                 nextDegreeeProperties.append(sProperty)
-                runH4Scenario(scenario, properties, nextDegreeeProperties, simulatedProperties, params, iteration, degree-1)
+                runH4Scenario(scenario, properties, nextDegreeeProperties, simulatedProperties, params, degree-1)
 
 
-def prepareH4Params(scenario, properties, iteration):
+def prepareH4Params(scenario, properties):
+    global totalSpawnedSimulations
+    
     params = []
-    logFile = getLogFile(scenario, iteration, properties)
+    logFile = getLogFile(scenario, totalSpawnedSimulations, properties)
     params.append("{}={}".format(LOG_DIR, logFile))
     params.append("{}={}".format(H4_PROPERTIES, properties))
         

@@ -18,6 +18,7 @@ import cz.cuni.mff.d3s.metaadaptation.MetaAdaptationManager;
 import cz.cuni.mff.d3s.metaadaptation.correlation.KnowledgeMetadataHolder;
 import cz.cuni.mff.d3s.rcrs.af.comm.KnowledgeMsg;
 import cz.cuni.mff.d3s.rcrs.af.comm.Msg;
+import cz.cuni.mff.d3s.rcrs.af.comm.PropertyMsg;
 import cz.cuni.mff.d3s.rcrs.af.comm.TransitionMsg;
 import cz.cuni.mff.d3s.rcrs.af.comm.TransitionMsg.Action;
 import cz.cuni.mff.d3s.rcrs.af.componentisolation.IsolationHolder;
@@ -26,6 +27,7 @@ import cz.cuni.mff.d3s.rcrs.af.correlation.DistanceMetric;
 import cz.cuni.mff.d3s.rcrs.af.correlation.SurroundingMetric;
 import cz.cuni.mff.d3s.rcrs.af.modes.TransitionImpl;
 import cz.cuni.mff.d3s.rcrs.af.modeswitch.ModeSwitchHolder;
+import cz.cuni.mff.d3s.rcrs.af.modeswitchprops.ModeSwitchPropsHolder;
 import rescuecore2.log.Logger;
 import rescuecore2.messages.Command;
 import rescuecore2.standard.components.StandardAgent;
@@ -49,6 +51,7 @@ public class FireStation extends StandardAgent<Building> {
 	private final CorrelationHolder correlationManager;
 	private final IsolationHolder isolationManager;
 	private final ModeSwitchHolder modeSwitchManager;
+	private final ModeSwitchPropsHolder modeSwitchPropsManager;
 	
 	private int time;
 	
@@ -81,6 +84,11 @@ public class FireStation extends StandardAgent<Building> {
 			modeSwitchManager = new ModeSwitchHolder();
 		} else {
 			modeSwitchManager = null;
+		}
+		if(H4_MECHANISM) {
+			modeSwitchPropsManager = new ModeSwitchPropsHolder();
+		} else {
+			modeSwitchPropsManager = null;
 		}
 
 	}
@@ -157,6 +165,11 @@ public class FireStation extends StandardAgent<Building> {
 			// Register after having the components
 			modeSwitchManager.registerAt(adaptationManager);
 		}
+		if(H4_MECHANISM && !modeSwitchPropsManager.isRegistered()
+				&& modeSwitchPropsManager.getComponentManager().getComponents().size() > 0) {
+			// Register after having the components
+			modeSwitchPropsManager.registerAt(adaptationManager);
+		}
 		
 		adaptationManager.reason();
 		// TODO: check duration 
@@ -177,6 +190,9 @@ public class FireStation extends StandardAgent<Building> {
 		if(H3_MECHANISM) {
 			modeSwitchManager.getComponentManager().addComponent(new cz.cuni.mff.d3s.rcrs.af.modeswitch.ComponentImpl(c));
 		}
+		if(H4_MECHANISM) {
+			modeSwitchPropsManager.getComponentManager().addComponent(new cz.cuni.mff.d3s.rcrs.af.modeswitchprops.ComponentImpl(c));
+		}
 		
 		return c;
 	}
@@ -193,6 +209,12 @@ public class FireStation extends StandardAgent<Building> {
 	
 	public void removeTransitionCallback(TransitionImpl transition, int id) {
 		Msg msg = new TransitionMsg(id, transition, Action.REMOVE);
+		sendSpeak(time, CHANNEL_OUT, msg.getBytes());
+		Logger.debug(String.format("at %d %s sending msg %s", time, sid, msg));
+	}
+	
+	public void setGuardParamCallback(TransitionImpl transition, String name, double value, int id) {
+		Msg msg = new PropertyMsg(id, transition, name, value);
 		sendSpeak(time, CHANNEL_OUT, msg.getBytes());
 		Logger.debug(String.format("at %d %s sending msg %s", time, sid, msg));
 	}

@@ -9,21 +9,22 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import cz.cuni.mff.d3s.metaadaptation.modeswitch.Mode;
-import cz.cuni.mff.d3s.metaadaptation.modeswitch.ModeChart;
 import cz.cuni.mff.d3s.metaadaptation.modeswitch.Transition;
+import cz.cuni.mff.d3s.rcrs.af.Component;
 import cz.cuni.mff.d3s.rcrs.af.IComponent;;
 
-public class ModeChartImpl implements ModeChart {
+public class ModeChartImpl implements cz.cuni.mff.d3s.metaadaptation.modeswitch.ModeChart,
+		cz.cuni.mff.d3s.metaadaptation.modeswitchprops.ModeChart {
 
-	private Mode currentMode;
-	private Set<Mode> modes;
-	private Set<Transition> transitions;
+	private ModeImpl currentMode;
+	private Set<ModeImpl> modes;
+	private Set<TransitionImpl> transitions;
 	private IComponent component;
 
-	public ModeChartImpl(IComponent ff) {
-		
-		component = ff;
-		
+	public ModeChartImpl(IComponent component) {
+
+		this.component = component;
+
 		// INIT ###############################################################
 
 		modes = new HashSet<>();
@@ -31,62 +32,105 @@ public class ModeChartImpl implements ModeChart {
 
 		// GUARDS #############################################################
 
-		Predicate<Void> refill2searchGuard = new Predicate<Void>() {
+		Guard refill2searchGuard = new ParamGuard(component) {
+
+			private static final String FILLED_LEVEL = "FILLED_LEVEL_TO_LEAVE";
+
 			@Override
-			public boolean test(Void v) {
-				return ff.getWater() == ff.getMaxWater() && ff.getBurningBuildings().size() == 0;
+			protected void specifyParameters() {
+				parameters.put(FILLED_LEVEL, (double) component.getMaxWater());
+
+			}
+
+			@Override
+			public boolean isSatisfied() {
+				return component.getWater() == parameters.get(FILLED_LEVEL)
+						&& component.getBurningBuildings().size() == 0;
 			}
 		};
 
-		Predicate<Void> refill2moveToFireGuard = new Predicate<Void>() {
+		Guard refill2moveToFireGuard = new ParamGuard(component) {
+
+			private static final String FILLED_LEVEL = "FILLED_LEVEL_TO_LEAVE";
+
 			@Override
-			public boolean test(Void v) {
-				return ff.getWater() == ff.getMaxWater() && ff.getBurningBuildings().size() > 0;
+			protected void specifyParameters() {
+				parameters.put(FILLED_LEVEL, (double) component.getMaxWater());
+			}
+
+			@Override
+			public boolean isSatisfied() {
+				return component.getWater() == parameters.get(FILLED_LEVEL)
+						&& component.getBurningBuildings().size() > 0;
 			}
 		};
 
-		Predicate<Void> moveToRefill2refillGuard = new Predicate<Void>() {
+		Guard moveToRefill2refillGuard = new PredicateGuard(component, new Predicate<Void>() {
 			@Override
 			public boolean test(Void v) {
-				return ff.getRefillTarget() == null || ff.getRefillTarget().equals(ff.getLocation());
+				return component.getRefillTarget() == null
+						|| component.getRefillTarget().equals(component.getLocation());
+			}
+		}) {
+		};
+
+		Guard moveToFire2extinguishGuard = new PredicateGuard(component, new Predicate<Void>() {
+			@Override
+			public boolean test(Void v) {
+				return (component.getFireTarget() == null || component.getFireTarget().equals(component.getLocation())
+						|| component.findCloseBurningBuilding() != null); // TODO: consider removing the last statement
+			}
+		}) {
+		};
+
+		Guard extinguish2moveToRefillGuard = new ParamGuard(component) {
+
+			private static final String EMPTY_LEVEL = "EMPTY_LEVEL";
+
+			@Override
+			protected void specifyParameters() {
+				parameters.put(EMPTY_LEVEL, 0.0);
+			}
+
+			@Override
+			public boolean isSatisfied() {
+				return component.getWater() <= parameters.get(EMPTY_LEVEL);
 			}
 		};
 
-		Predicate<Void> moveToFire2extinguishGuard = new Predicate<Void>() {
+		Guard extinguish2searchGuard = new ParamGuard(component) {
+
+			private static final String FILLED_LEVEL = "FILLED_LEVEL_TO_CONTINUE";
+
 			@Override
-			public boolean test(Void v) {
-				return (ff.getFireTarget() == null && ff.findCloseBurningBuilding() != null)
-						|| ff.getFireTarget().equals(ff.getLocation());
+			protected void specifyParameters() {
+				parameters.put(FILLED_LEVEL, (double) 0.0);
+
+			}
+
+			@Override
+			public boolean isSatisfied() {
+				return component.getWater() > parameters.get(FILLED_LEVEL)
+						&& component.findCloseBurningBuilding() == null;
 			}
 		};
 
-		Predicate<Void> extinguish2moveToRefillGuard = new Predicate<Void>() {
+		Guard search2extinguishGuard = new PredicateGuard(component, new Predicate<Void>() {
 			@Override
 			public boolean test(Void v) {
-				return ff.getWater() == 0;
+				return component.findCloseBurningBuilding() != null;
 			}
+		}) {
 		};
 
-		Predicate<Void> extinguish2searchGuard = new Predicate<Void>() {
-			@Override
-			public boolean test(Void v) {
-				return ff.getWater() > 0 && ff.findCloseBurningBuilding() == null;
-			}
-		};
 		// TODO: check close burning buildings are manageable
-		Predicate<Void> search2extinguishGuard = new Predicate<Void>() {
-			@Override
-			public boolean test(Void v) {
-				return ff.findCloseBurningBuilding() != null;
-			}
-		};
 
 		// ACTIONS ############################################################
 
 		Function<Void, Void> moveToRefillAction = new Function<Void, Void>() {
 			@Override
 			public Void apply(Void t) {
-				ff.setRefillTarget(true);
+				component.setRefillTarget(true);
 				return null;
 			}
 		};
@@ -94,7 +138,7 @@ public class ModeChartImpl implements ModeChart {
 		Function<Void, Void> moveToFireAction = new Function<Void, Void>() {
 			@Override
 			public Void apply(Void t) {
-				ff.setFireTarget(true);
+				component.setFireTarget(true);
 				return null;
 			}
 		};
@@ -102,7 +146,7 @@ public class ModeChartImpl implements ModeChart {
 		Function<Void, Void> RefillReachedAction = new Function<Void, Void>() {
 			@Override
 			public Void apply(Void t) {
-				ff.setRefillTarget(false);
+				component.setRefillTarget(false);
 				return null;
 			}
 		};
@@ -110,94 +154,99 @@ public class ModeChartImpl implements ModeChart {
 		Function<Void, Void> FireReachedAction = new Function<Void, Void>() {
 			@Override
 			public Void apply(Void t) {
-				ff.setFireTarget(false);
+				component.setFireTarget(false);
 				return null;
 			}
 		};
 
 		// MODES ##############################################################
 
-		Mode searchMode = new SearchMode();
+		ModeImpl searchMode = new SearchMode();
 		modes.add(searchMode);
-		Mode moveToFireMode = new MoveToFireMode();
+		ModeImpl moveToFireMode = new MoveToFireMode();
 		modes.add(moveToFireMode);
-		Mode moveToRefillMode = new MoveToRefillMode();
+		ModeImpl moveToRefillMode = new MoveToRefillMode();
 		modes.add(moveToRefillMode);
-		Mode extinguishMode = new ExtinguishMode();
+		ModeImpl extinguishMode = new ExtinguishMode();
 		modes.add(extinguishMode);
-		Mode refillMode = new RefillMode();
+		ModeImpl refillMode = new RefillMode();
 		modes.add(refillMode);
 
 		currentMode = searchMode;
 
 		// TRANSITIONS ########################################################
 
-		transitions.add(new TransitionImpl(searchMode, extinguishMode, search2extinguishGuard));
-		transitions.add(new TransitionImpl(extinguishMode, searchMode, extinguish2searchGuard));
+		transitions.add(new TransitionImpl(searchMode, extinguishMode, search2extinguishGuard, component));
+		transitions.add(new TransitionImpl(extinguishMode, searchMode, extinguish2searchGuard, component));
+		transitions.add(new TransitionImpl(extinguishMode, moveToRefillMode, extinguish2moveToRefillGuard,
+				moveToRefillAction, component));
+		transitions.add(new TransitionImpl(moveToFireMode, extinguishMode, moveToFire2extinguishGuard,
+				FireReachedAction, component));
+		transitions.add(new TransitionImpl(moveToRefillMode, refillMode, moveToRefill2refillGuard, RefillReachedAction,
+				component));
 		transitions.add(
-				new TransitionImpl(extinguishMode, moveToRefillMode, extinguish2moveToRefillGuard, moveToRefillAction));
-		transitions
-				.add(new TransitionImpl(moveToFireMode, extinguishMode, moveToFire2extinguishGuard, FireReachedAction));
-		transitions
-				.add(new TransitionImpl(moveToRefillMode, refillMode, moveToRefill2refillGuard, RefillReachedAction));
-		transitions.add(new TransitionImpl(refillMode, moveToFireMode, refill2moveToFireGuard, moveToFireAction));
-		transitions.add(new TransitionImpl(refillMode, searchMode, refill2searchGuard));
+				new TransitionImpl(refillMode, moveToFireMode, refill2moveToFireGuard, moveToFireAction, component));
+		transitions.add(new TransitionImpl(refillMode, searchMode, refill2searchGuard, component));
 
 	}
 
-	public Set<Mode> getModes() {
+	public Set<ModeImpl> getModes() {
 		return modes;
 	}
 
-	public Mode getCurrentMode() {
+	public ModeImpl getCurrentMode() {
 		return currentMode;
 	}
-	
-	public void setCurrentMode(Class<? extends Mode> mode) {
-		for(Mode m : modes) {
-			if(m.getClass().equals(mode)) {
+
+	public void setCurrentMode(Class<? extends ModeImpl> mode) {
+		for (ModeImpl m : modes) {
+			if (m.getClass().equals(mode)) {
 				currentMode = m;
 				break;
 			}
 		}
 	}
 
-	public Set<Transition> getTransitions() {
+	public Set<TransitionImpl> getTransitions() {
 		return transitions;
 	}
 
 	public Transition addTransition(Mode from, Mode to, Predicate<Void> guard) {
-		TransitionImpl t = new TransitionImpl(from, to, guard);
+		Guard predicateGuard = new PredicateGuard(component, guard);
+		TransitionImpl t = new TransitionImpl((ModeImpl) from, (ModeImpl) to, predicateGuard, component);
 		transitions.add(t);
-		
-		// Callback
-		component.addTransition(t);
-		
+
+		if (component instanceof Component) {
+			// Callback
+			component.addTransitionCallback(t);
+		}
 		return t;
 	}
 
 	public void removeTransition(Transition transition) {
-		// Callback
-		component.removeTransition((TransitionImpl) transition); 
-		
+		if (component instanceof Component) {
+			// Callback
+			component.removeTransitionCallback((TransitionImpl) transition);
+		}
+
 		transitions.remove(transition);
 	}
 
 	public void decideModeSwitch() {
 		// Switch mode only if there is a transition from it
-		Set<Transition> out = getTransitionsFrom(currentMode);
+		Set<TransitionImpl> out = getTransitionsFrom(currentMode);
 		if (out.isEmpty()) {
 			return;
 		}
 
 		// Sort transitions by priority
-		List<Transition> sortedOut = sortByPriority(out);
+		List<TransitionImpl> sortedOut = sortByPriority(out);
 
 		// Switch first satisfied transition
-		for (Transition transition : sortedOut) {
+		for (TransitionImpl transition : sortedOut) {
 			if (transition.getGuard().test(null)) {
 				// Call the transition listeners before the mode is switched
-				if(transition instanceof TransitionImpl) {
+				if (transition instanceof TransitionImpl) {
 					TransitionImpl t = (TransitionImpl) transition;
 					t.invokeAction();
 				}
@@ -207,22 +256,22 @@ public class ModeChartImpl implements ModeChart {
 			}
 		}
 	}
-	
-	private Set<Transition> getTransitionsFrom(Mode mode){
-		Set<Transition> outgoing = new HashSet<>();
-		for(Transition transition : transitions){
-			if(transition.getFrom().equals(mode)){
+
+	private Set<TransitionImpl> getTransitionsFrom(ModeImpl mode) {
+		Set<TransitionImpl> outgoing = new HashSet<>();
+		for (TransitionImpl transition : transitions) {
+			if (transition.getFrom().equals(mode)) {
 				outgoing.add(transition);
 			}
 		}
-		
+
 		return outgoing;
 	}
-	
-	private List<Transition> sortByPriority(Set<Transition> transitions){
-		List<Transition> sorted = new ArrayList<>(transitions);
+
+	private List<TransitionImpl> sortByPriority(Set<TransitionImpl> transitions) {
+		List<TransitionImpl> sorted = new ArrayList<>(transitions);
 		sorted.sort(Comparator.comparing(t -> -t.getPriority()));
-		
+
 		return sorted;
 	}
 }

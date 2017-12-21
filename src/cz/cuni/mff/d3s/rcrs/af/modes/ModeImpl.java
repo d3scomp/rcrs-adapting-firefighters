@@ -1,8 +1,7 @@
 package cz.cuni.mff.d3s.rcrs.af.modes;
 
-import cz.cuni.mff.d3s.metaadaptation.modeswitch.Mode;
-
-public class ModeImpl implements Mode {
+public class ModeImpl implements cz.cuni.mff.d3s.metaadaptation.modeswitch.Mode,
+								 cz.cuni.mff.d3s.metaadaptation.modeswitchprops.Mode {
 	
 	private final String name;
 	

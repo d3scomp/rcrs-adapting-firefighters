@@ -51,15 +51,12 @@ H2_DEFAULT_TIME = 30
 H3_MECHANISM = "H3_MECHANISM" # Enhancing mode switching
 H3_TRANSITION_PROBABILITY = "H3_TRANSITION_PROBABILITY" 
 H3_TRANSITION_PRIORITY = "H3_TRANSITION_PRIORITY"
-H3_TRAINING = "H3_TRAINING"
-H3_TRAINING_DEGREE = "H3_TRAINING_DEGREE"
-H3_TRAIN_TRANSITIONS = "H3_TRAIN_TRANSITIONS"
-H3_TRAINING_OUTPUT = "H3_TRAINING_OUTPUT"
+H3_DEGREE = "H3_DEGREE"
+H3_TRANSITIONS = "H3_TRANSITIONS"
 
 # Mode Switch Properties
 H4_MECHANISM = "H4_MECHANISM";
-H4_TRAINING = "H4_TRAINING";
-H4_TRAINING_DEGREE = "H4_TRAINING_DEGREE"
+H4_DEGREE = "H4_DEGREE"
 H4_PROPERTIES = "H4_PROPERTIES";
 
 # Transitions not present in the default mode chart
@@ -83,9 +80,21 @@ missingTransitionsReduced = [
     ("MoveToFireMode","SearchMode")]
 
 # Properties used in scenarios with mode switching properties adjustment
-adjustedProperties = []
+adjustedProperties = [
+    ("FILLED_LEVEL_TO_LEAVE", "20000"),
+    ("FILLED_LEVEL_TO_LEAVE", "15000"),
+    ("FILLED_LEVEL_TO_LEAVE", "10000"),
+    ("FILLED_LEVEL_TO_CONTINUE", "10000"),
+    ("FILLED_LEVEL_TO_CONTINUE", "15000"),
+    ("FILLED_LEVEL_TO_CONTINUE", "20000"),
+    ("EMPTY_LEVEL", "2000"),
+    ("EMPTY_LEVEL", "5000"),
+    ("EMPTY_LEVEL", "10000")]
 
-adjustedPropertiesReduced = []
+adjustedPropertiesReduced = [
+    ("FILLED_LEVEL_TO_LEAVE", "20000"),
+    ("FILLED_LEVEL_TO_CONTINUE", "10000"),
+    ("EMPTY_LEVEL", "5000")]
 
 # Scenarios
 scenarios = []
@@ -128,17 +137,15 @@ scenarios.append({SCENARIO_NAME:"H3 p=0.001 deg=1",
                   H1_INTRODUCE_FAILURE:False,
                   H2_INTRODUCE_FAILURE:False,
                   H3_MECHANISM:True,
-                  H3_TRAINING:True,
-                  H3_TRAINING_DEGREE:1,
-                  H3_TRANSITION_PROBABILITY:0.001,
+                  H3_DEGREE:1,
+                  H3_TRANSITION_PROBABILITY:1,#0.001,
                   H3_TRANSITION_PRIORITY:10,
                   H4_MECHANISM:False})
 scenarios.append({SCENARIO_NAME:"H3 p=0.01 deg=1",
                   H1_INTRODUCE_FAILURE:False,
                   H2_INTRODUCE_FAILURE:False,
                   H3_MECHANISM:True,
-                  H3_TRAINING:True,
-                  H3_TRAINING_DEGREE:1,
+                  H3_DEGREE:1,
                   H3_TRANSITION_PROBABILITY:0.01,
                   H3_TRANSITION_PRIORITY:10,
                   H4_MECHANISM:False})
@@ -146,17 +153,15 @@ scenarios.append({SCENARIO_NAME:"H3 p=0.001 deg=2",
                   H1_INTRODUCE_FAILURE:False,
                   H2_INTRODUCE_FAILURE:False,
                   H3_MECHANISM:True,
-                  H3_TRAINING:True,
-                  H3_TRAINING_DEGREE:2,
+                  H3_DEGREE:2,
                   H3_TRANSITION_PROBABILITY:0.001,
                   H3_TRANSITION_PRIORITY:10,
                   H4_MECHANISM:False})
-scenarios.append({SCENARIO_NAME:"EMS p=0.01 deg=2",
+scenarios.append({SCENARIO_NAME:"H3 p=0.01 deg=2",
                   H1_INTRODUCE_FAILURE:False,
                   H2_INTRODUCE_FAILURE:False,
                   H3_MECHANISM:True,
-                  H3_TRAINING:True,
-                  H3_TRAINING_DEGREE:2,
+                  H3_DEGREE:2,
                   H3_TRANSITION_PROBABILITY:0.01,
                   H3_TRANSITION_PRIORITY:10,
                   H4_MECHANISM:False})
@@ -166,15 +171,13 @@ scenarios.append({SCENARIO_NAME:"H4 deg=1\t",
                   H2_INTRODUCE_FAILURE:False,
                   H3_MECHANISM:False,
                   H4_MECHANISM:True,
-                  H4_TRAINING:True,
-                  H4_TRAINING_DEGREE:1})
+                  H4_DEGREE:1})
 scenarios.append({SCENARIO_NAME:"H4 deg=2\t",
                   H1_INTRODUCE_FAILURE:False,
                   H2_INTRODUCE_FAILURE:False,
                   H3_MECHANISM:False,
                   H4_MECHANISM:True,
-                  H4_TRAINING:True,
-                  H4_TRAINING_DEGREE:2})
+                  H4_DEGREE:2})
 
 
 #################################################
@@ -215,25 +218,12 @@ def getSignature(scenario, iterations = 0, detailed = False):
         outputSignature.append("noH2F")
     if scenario[H3_MECHANISM]:
         outputSignature.append("-H3M")
+        outputSignature.append(str(scenario[H3_DEGREE]))
         if detailed:
-            if scenario[H3_TRAINING]:
-                outputSignature.append("-T")
-                outputSignature.append(str(scenario[H3_TRAINING_DEGREE]))
-            else:
-                outputSignature.append("-noT")
             outputSignature.append("-P" + str(scenario[H3_TRANSITION_PROBABILITY]))
-#        else:
-#            outputSignature.append("-" + str(scenarios.index(scenario)))
     if scenario[H4_MECHANISM]:
         outputSignature.append("-H4M")
-        if detailed:
-            if scenario[H4_TRAINING]:
-                outputSignature.append("-T")
-                outputSignature.append(str(scenario[H4_TRAINING_DEGREE]))
-            else:
-                outputSignature.append("-noT")
-        else:
-            outputSignature.append("-" + str(scenarios.index(scenario)))
+        outputSignature.append(str(scenario[H4_DEGREE]))
     if iterations > 0:
         outputSignature.append("-it-" + str(iterations) + "-")
     return ''.join(outputSignature)

@@ -66,7 +66,7 @@ RCRS_PORT_BASE = 7100
 
 AGENTS_PORT_PARAM = "PORT"
 
-SIMULATION_ITERATIONS = 20
+SIMULATION_ITERATIONS = 100
 ''' The number of simulation iterations '''
 
 ###############################################################################

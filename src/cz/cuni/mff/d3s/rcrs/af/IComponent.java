@@ -18,7 +18,8 @@ public interface IComponent {
 	public void setFireTarget(boolean set);
 	public void setRefillTarget(boolean set);
 	
-	// Callback for ModeChart
-	public void addTransition(TransitionImpl transition);
-	public void removeTransition(TransitionImpl transition);
+	// Callbacks for ModeChart
+	public void addTransitionCallback(TransitionImpl transition);
+	public void removeTransitionCallback(TransitionImpl transition);
+	public void setGuardParamCallback(TransitionImpl transition, String name, double value);
 }

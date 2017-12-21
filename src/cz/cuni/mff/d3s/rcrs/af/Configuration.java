@@ -46,15 +46,14 @@ public class Configuration {
 	// ENHANCING MODE SWITCHING
 
 	public static boolean H3_MECHANISM = false;
-	public static String H3_TRAIN_TRANSITIONS = null;
+	public static String H3_TRANSITIONS = null;
 	public static double H3_TRANSITION_PROBABILITY = 0.01;
 	public static int H3_TRANSITION_PRIORITY = 10;
-	public static String H3_TRAINING_OUTPUT = "results/Logs/utility.txt";
 
 	// MODE SWITCHING PROPERTIES
 
 	public static boolean H4_MECHANISM = false;
-	public static String H4_PROPERTIES = "";
+	public static String H4_PROPERTIES = null;
 
 //	public static String UTILITY_DIRECTORY = "results\\Logs\\06)-!DDF-!DF-UMS-6\\UMS_Loggers";
 

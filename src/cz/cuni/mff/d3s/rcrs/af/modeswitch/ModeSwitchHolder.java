@@ -1,7 +1,7 @@
 package cz.cuni.mff.d3s.rcrs.af.modeswitch;
 
 
-import static cz.cuni.mff.d3s.rcrs.af.Configuration.H3_TRAIN_TRANSITIONS;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.H3_TRANSITIONS;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.H3_TRANSITION_PRIORITY;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.H3_TRANSITION_PROBABILITY;
 
@@ -11,7 +11,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import cz.cuni.mff.d3s.metaadaptation.MetaAdaptationManager;
-import cz.cuni.mff.d3s.metaadaptation.modeswitch.Mode;
 import cz.cuni.mff.d3s.metaadaptation.modeswitch.NonDeterministicModeSwitchingManager;
 import cz.cuni.mff.d3s.metaadaptation.modeswitch.Transition;
 import cz.cuni.mff.d3s.rcrs.af.IComponent;
@@ -39,19 +38,19 @@ public class ModeSwitchHolder {
 		
 		List<Transition> transitions = new ArrayList<>();
 		final Pattern transitionPattern = Pattern.compile("(\\w+)-(\\w+)");
-		final Matcher transitionMatcher = transitionPattern.matcher(H3_TRAIN_TRANSITIONS);
+		final Matcher transitionMatcher = transitionPattern.matcher(H3_TRANSITIONS);
 		while(transitionMatcher.find()){	
 			final String fromName = transitionMatcher.group(1);
 			final String toName = transitionMatcher.group(2);
-			Mode from = getMode(fromName);
-			Mode to = getMode(toName);
+			ModeImpl from = getMode(fromName);
+			ModeImpl to = getMode(toName);
 			TransitionImpl transition = new TransitionImpl(from, to, null, null);
 			transition.setPriority(H3_TRANSITION_PRIORITY);
 			transitions.add(transition);
 			Logger.info("Training transition: " + transition);
 		}
 		if(transitions.isEmpty()){
-			Logger.error(String.format("The training transitions cannot be matched from: \"%s\"", H3_TRAIN_TRANSITIONS));
+			Logger.error(String.format("The training transitions cannot be matched from: \"%s\"", H3_TRANSITIONS));
 		}
 		modeSwitchManager.setTrainTransitions(transitions);
 	}
@@ -89,15 +88,18 @@ public class ModeSwitchHolder {
 			public void setRefillTarget(boolean set) {}
 
 			@Override
-			public void addTransition(TransitionImpl transition) {}
+			public void addTransitionCallback(TransitionImpl transition) {}
 
 			@Override
-			public void removeTransition(TransitionImpl transition) {}
+			public void removeTransitionCallback(TransitionImpl transition) {}
+
+			@Override
+			public void setGuardParamCallback(TransitionImpl transition, String name, double value) {}
 		});
 	}
 
-	private Mode getMode(String modeName){
-		for(Mode mode : modeChart.getModes()){
+	private ModeImpl getMode(String modeName){
+		for(ModeImpl mode : modeChart.getModes()){
 			if(((ModeImpl) mode).getName().equals(modeName)){
 				return mode;
 			}

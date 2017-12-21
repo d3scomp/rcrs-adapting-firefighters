@@ -28,8 +28,12 @@ from Configuration import *
 def analyzeLog(simulationSignature, logDirName):
     file = os.path.join(LOGS_DIR, simulationSignature, logDirName, KERNEL_LOG_FILE)
     print("Analyzing " + file)
-    
+        
     result = -1.0
+    
+    if not os.path.exists(file):
+        print("Missing file " + file + " Skipping")
+        return result
     
     with open(file, 'r') as fp:
         for line in fp.readlines():
@@ -70,7 +74,7 @@ def analyzeScenario(scenario):
     return scores
 
 
-def analyzeH3Scenario(scenario):
+def analyzeH3H4Scenario(scenario):
     signature = getScenarioSignature(scenario)
     validDir = re.compile('.*log_\d+_s')
     logsDir = os.path.join(LOGS_DIR, signature)
@@ -86,7 +90,12 @@ def analyzeH3Scenario(scenario):
                 continue;
             score = analyzeLog(signature, logDirName)
             if score != -1:
-                index = getTransitions(logDirName)
+                if scenarios(scenario)[H3_MECHANISM]:
+                    index = getTransitions(logDirName)
+                elif scenarions(scenario)(H4_MECHANISM):
+                    index = getProperties(logDirName)
+                else:
+                    raise Exception("Scenario {} is not H3 neither H4 Mechanism.".format(signature))
                 if(index not in scores):
                     scores[index] = []
                 
@@ -104,7 +113,15 @@ def getTransitions(logDirName):
         return match.group(1)
     else:
         raise Exception("Transition not matched from {}.".format(logDirName))
-        
+
+def getProperties(logDirName):
+    fromTo = re.compile('(\w+)-([+-]?\d*\.?\d+)\.[^\.]+')
+    match = fromTo.match(logDirName)
+    if(match != None):
+        return "{}({})".format(match.group(1), match.group(2))
+    else:
+        raise Exception("Property not matched from {}.".format(logDirName))
+    
 
 ###############################################################################
 
@@ -219,6 +236,7 @@ def plotH3(allValues, scenarioIndices):
 #    sp.legend(labels, signatures, handler_map = {StringLabel:StringLabelHandler()}, loc='center left', bbox_to_anchor=(1, 0.5), prop = fontP)
     
     plt.savefig("{}.png".format(outputFile))
+
 
 
 def printMedians(bp):

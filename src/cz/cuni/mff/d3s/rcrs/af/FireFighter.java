@@ -17,6 +17,7 @@ import java.util.List;
 import cz.cuni.mff.d3s.rcrs.af.comm.BuildingsMsg;
 import cz.cuni.mff.d3s.rcrs.af.comm.KnowledgeMsg;
 import cz.cuni.mff.d3s.rcrs.af.comm.Msg;
+import cz.cuni.mff.d3s.rcrs.af.comm.PropertyMsg;
 import cz.cuni.mff.d3s.rcrs.af.comm.TargetMsg;
 import cz.cuni.mff.d3s.rcrs.af.comm.TransitionMsg;
 import cz.cuni.mff.d3s.rcrs.af.modes.ExtinguishMode;
@@ -170,10 +171,10 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements ICo
 						TransitionImpl transition = transitionMsg.transition;
 						switch(transitionMsg.action) {
 						case ADD:
-							modeChart.addTransition(transition.getFrom(), transition.getTo(), transition.getGuard());
+							addTransitionCallback(transition);
 							break;
 						case REMOVE:
-							modeChart.removeTransition(transition);
+							removeTransitionCallback(transition);
 							break;
 						default:
 							Logger.error(formatLog(time, "The operation \"" + transitionMsg.action +"\" is not supported"));
@@ -181,6 +182,16 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements ICo
 						}
 						
 						Logger.info(formatLog(time, "injected with transition " + transition));
+					}
+				}
+				if(command instanceof PropertyMsg) {
+					PropertyMsg propertyMsg = (PropertyMsg) command;
+					if(propertyMsg.id == id) {
+						Logger.debug(formatLog(time, "received " + propertyMsg));
+						TransitionImpl transition = propertyMsg.transition;
+						setGuardParamCallback(transition, propertyMsg.property, propertyMsg.value);
+						
+						Logger.info(formatLog(time, "parameter " + propertyMsg.property + " adjusted to " + propertyMsg.value));
 					}
 				}
 			}
@@ -409,14 +420,31 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements ICo
 	}
 
 	@Override
-	public void addTransition(TransitionImpl transition) {
-		// This is relevant only on the fire station side
+	public void addTransitionCallback(TransitionImpl transition) {
+		modeChart.addTransition(transition.getFrom(), transition.getTo(), transition.getGuard());
 	}
 
 	@Override
-	public void removeTransition(TransitionImpl transition) {
-		// This is relevant only on the fire station side
+	public void removeTransitionCallback(TransitionImpl transition) {
+		modeChart.removeTransition(transition);
+	}
+
+	@Override
+	public void setGuardParamCallback(TransitionImpl outerTransition, String name, double value) {
+		TransitionImpl targetTransition = null;
+		for(TransitionImpl innerTransition : modeChart.getTransitions()) {
+			if(innerTransition.equals(outerTransition)) {
+				targetTransition = innerTransition;
+				break;
+			}
+		}
 		
+		if(targetTransition != null) {
+			targetTransition.setGuardParam(name, value);
+		} else {
+			Logger.error(String.format("Target transition \"%s\"not found while setting guard parameter \"%s=%f\"",
+					outerTransition, name, value));
+		}
 	}
 
 }
