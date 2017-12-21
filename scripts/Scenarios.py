@@ -138,7 +138,7 @@ scenarios.append({SCENARIO_NAME:"H3 p=0.001 deg=1",
                   H2_INTRODUCE_FAILURE:False,
                   H3_MECHANISM:True,
                   H3_DEGREE:1,
-                  H3_TRANSITION_PROBABILITY:1,#0.001,
+                  H3_TRANSITION_PROBABILITY:0.001,
                   H3_TRANSITION_PRIORITY:10,
                   H4_MECHANISM:False})
 scenarios.append({SCENARIO_NAME:"H3 p=0.01 deg=1",
