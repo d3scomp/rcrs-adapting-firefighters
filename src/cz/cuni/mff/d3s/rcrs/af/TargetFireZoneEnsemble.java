@@ -2,10 +2,11 @@ package cz.cuni.mff.d3s.rcrs.af;
 
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_EXTINGUISHING;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_FIRE_TARGET;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_FIREFIGHTER;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_DISTANCE;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_FIREFIGHTER;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ID;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_POSITION;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.MAX_SEPARATION_DISTANCE;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -19,7 +20,6 @@ import rescuecore2.worldmodel.EntityID;
 
 public class TargetFireZoneEnsemble extends Ensemble {
 
-	private static final int MAX_SEPARATION_DISTANCE = 70_000;
 	
 	private static TargetFireZoneEnsemble INSTANCE = null;
 	

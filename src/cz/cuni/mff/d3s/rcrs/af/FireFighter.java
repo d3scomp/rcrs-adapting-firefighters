@@ -6,6 +6,7 @@ import static cz.cuni.mff.d3s.rcrs.af.Configuration.H1_INTRODUCE_FAILURE;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.H2_FAILURE_IDS;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.H2_FAILURE_TIME;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.H2_INTRODUCE_FAILURE;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.HYDRANT_REFILL_PROBABILITY;
 import static rescuecore2.standard.entities.StandardEntityURN.HYDRANT;
 
 import java.util.ArrayList;
@@ -341,8 +342,8 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements ICo
 	public void setRefillTarget(boolean set) {
 		if (set) {
 			List<EntityID> path = null;
-			// With small probability refill at hydrant
-			if (random.nextDouble() < 0.3) {
+			// With given probability refill at hydrant
+			if (random.nextDouble() < HYDRANT_REFILL_PROBABILITY) {
 				path = search.breadthFirstSearch(me().getPosition(), refillStations);
 			} else {
 				path = search.breadthFirstSearch(me().getPosition(), refugeIDs);

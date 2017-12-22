@@ -21,14 +21,17 @@ public class Configuration {
 	// SIMULATION CONFIGURATION
 	///////////////////////////////////////////////////////////////////////////
 
+	
 	public static String LOG_DIR = null;
 	
 	public static int PORT = Constants.DEFAULT_KERNEL_PORT_NUMBER;
-	// Constants.RANDOM_SEED_KEY
 
 	public static boolean WITH_SEED = false;
 	public static int SEED = 0;
 
+	public static final int MAX_SEPARATION_DISTANCE = 70_000;
+	public static final double HYDRANT_REFILL_PROBABILITY = 0.5;
+	
 	// COLLABORATIVE SENSING
 
 	public static boolean H1_INTRODUCE_FAILURE = false;
