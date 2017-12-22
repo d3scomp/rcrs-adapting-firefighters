@@ -1,7 +1,7 @@
 package cz.cuni.mff.d3s.rcrs.af.comm;
 
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_FIRE_TARGET;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ID;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_DISTANCE;
 
 import java.nio.ByteBuffer;
 
@@ -13,42 +13,52 @@ public class TargetMsg extends Msg {
 		// Instance for decoding
 		register(new TargetMsg());
 	}
-	
-	public final int id;
-	public final EntityID target;
+
+	public final int memberId;
+	public final int coordId;
+	public final EntityID coordTarget;
+	public final int helpingDistance;
 		
-	public TargetMsg(int id, EntityID target) {
-		this.id = id;
-		this.target = target;
+	public TargetMsg(int memberId, int coordId, EntityID coordTarget, int helpingDistance) {
+		this.memberId = memberId;
+		this.coordId = coordId;
+		this.coordTarget = coordTarget;
+		this.helpingDistance = helpingDistance;
 	}
 	
 	private TargetMsg() {
-		id = Integer.MIN_VALUE;
-		target = null;
+		memberId = Integer.MIN_VALUE;
+		coordId = Integer.MIN_VALUE;
+		coordTarget = null;
+		helpingDistance = Integer.MAX_VALUE;
 	}
 	
 	@Override
 	protected ByteBuffer getMsgBytes() {
-		// int id, int target,
-		int size = Integer.BYTES * 2
+		// int memberId, int coordId, int memberTarget, int helpingDistance,
+		int size = Integer.BYTES * 4
 		// space for signature
 				 + 1;
 		
 		ByteBuffer data = ByteBuffer.allocate(size);
 		
-		data.putInt(id);
-		data.putInt(target.getValue());
-		entityBuffer.put(target.getValue(), target);
+		data.putInt(memberId);
+		data.putInt(coordId);
+		data.putInt(coordTarget.getValue());
+		entityBuffer.put(coordTarget.getValue(), coordTarget);
+		data.putInt(helpingDistance);
 
 		return data;
 	}
 
 	@Override
 	protected Msg fromMsgBytes(ByteBuffer data) {
-		int id = data.getInt();
-		EntityID target = entityBuffer.get(data.getInt());
+		int memberId = data.getInt();
+		int coordId = data.getInt();
+		EntityID coordTarget = entityBuffer.get(data.getInt());
+		int helpingDistance = data.getInt();
 		
-		return new TargetMsg(id, target);
+		return new TargetMsg(memberId, coordId, coordTarget, helpingDistance);
 	}
 
 	@Override
@@ -60,8 +70,10 @@ public class TargetMsg extends Msg {
 	public String toString() {
 		
 		return super.toString()
-				+ " " + KNOWLEDGE_ID + "=" + id
-				+ " " + KNOWLEDGE_FIRE_TARGET + "=" + target.getValue();
+				+ " MemberId=" + memberId
+				+ " CoordId=" + memberId
+				+ " " + KNOWLEDGE_FIRE_TARGET + "=" + coordTarget.getValue()
+				+ " " + KNOWLEDGE_HELPING_DISTANCE + "=" + helpingDistance;
 	}
 
 }

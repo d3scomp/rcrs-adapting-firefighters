@@ -95,6 +95,11 @@ public class ModeSwitchHolder {
 
 			@Override
 			public void setGuardParamCallback(TransitionImpl transition, String name, double value) {}
+
+			@Override
+			public int getHelpingFireFighter() {
+				return -1;
+			}
 		});
 	}
 

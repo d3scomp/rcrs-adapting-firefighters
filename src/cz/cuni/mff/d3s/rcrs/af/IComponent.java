@@ -14,6 +14,7 @@ public interface IComponent {
 	public EntityID getFireTarget();
 	public EntityID getRefillTarget();
 	public EntityID getLocation();
+	public int getHelpingFireFighter();
 	public EntityID findCloseBurningBuilding();
 	public void setFireTarget(boolean set);
 	public void setRefillTarget(boolean set);

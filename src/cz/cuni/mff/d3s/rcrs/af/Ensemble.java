@@ -5,6 +5,7 @@ import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_BURNING_BUILDINGS;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_FIRE_TARGET;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ID;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_POSITION;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_DISTANCE;
 
 import java.util.HashMap;
 import java.util.List;
@@ -63,11 +64,14 @@ public abstract class Ensemble {
 		return filter.test(knowledge);
 	}
 
+	@SuppressWarnings("unchecked")
 	public Msg getMessage(Component coordinator, Component member) {
 		String mediatedKnowledge = getMediatedKnowledge();
 		if (mediatedKnowledge.equals(KNOWLEDGE_FIRE_TARGET)) {
 			return new TargetMsg((int) member.getKnowledge().get(KNOWLEDGE_ID),
-					(EntityID) coordinator.getKnowledge().get(KNOWLEDGE_POSITION));
+					(int) coordinator.getKnowledge().get(KNOWLEDGE_ID),
+					(EntityID) coordinator.getKnowledge().get(KNOWLEDGE_POSITION),
+					(int) member.getKnowledge().get(KNOWLEDGE_HELPING_DISTANCE));
 		} else if (mediatedKnowledge.equals(KNOWLEDGE_BURNING_BUILDINGS)) {
 			return new BuildingsMsg((int) member.getKnowledge().get(KNOWLEDGE_ID), 
 					(List<EntityID>) coordinator.getKnowledge().get(KNOWLEDGE_BURNING_BUILDINGS));

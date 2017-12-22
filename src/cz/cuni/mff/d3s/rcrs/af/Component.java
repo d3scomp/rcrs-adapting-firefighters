@@ -1,5 +1,7 @@
 package cz.cuni.mff.d3s.rcrs.af;
 
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_FIREFIGHTER;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_DISTANCE;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_BURNING_BUILDINGS;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_CAN_DETECT_BUILDINGS;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_CAN_MOVE;
@@ -52,7 +54,13 @@ public class Component implements IComponent {
 		knowledge.put(KNOWLEDGE_EXTINGUISHING, msg.extinguishing);
 		knowledge.put(KNOWLEDGE_CAN_MOVE, msg.canMove);
 		knowledge.put(KNOWLEDGE_BURNING_BUILDINGS, msg.burningBuildings);
-		knowledge.put(KNOWLEDGE_CAN_DETECT_BUILDINGS, msg.canDetectBuildings);	
+		knowledge.put(KNOWLEDGE_CAN_DETECT_BUILDINGS, msg.canDetectBuildings);
+		knowledge.put(KNOWLEDGE_HELPING_FIREFIGHTER, msg.helpingFireFighter);
+		knowledge.put(KNOWLEDGE_HELPING_DISTANCE, msg.helpingDistance);
+		
+		if(exposedKnowledge.isEmpty()) {
+			exposedKnowledge.addAll(knowledge.keySet());
+		}
 	}
 	
 	public int getId() {
@@ -103,6 +111,11 @@ public class Component implements IComponent {
 	@Override
 	public EntityID getLocation() {
 		return (EntityID) knowledge.get(KNOWLEDGE_POSITION);
+	}
+
+	@Override
+	public int getHelpingFireFighter() {
+		return (int) knowledge.get(KNOWLEDGE_HELPING_FIREFIGHTER);
 	}
 
 	@Override

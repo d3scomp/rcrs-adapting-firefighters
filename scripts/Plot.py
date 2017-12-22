@@ -70,6 +70,7 @@ def analyzeScenario(scenario):
                 scores.append(score)
             else:
                 print("There is no valid score in " + logDirName)
+                # TODO: count number of invalid simulations and print it in the end
 
     return scores
 

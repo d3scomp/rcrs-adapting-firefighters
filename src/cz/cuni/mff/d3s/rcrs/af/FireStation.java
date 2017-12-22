@@ -125,7 +125,6 @@ public class FireStation extends StandardAgent<Building> {
 		
 		// Receive messages from fire fighters
 		for (Command next : heard) {
-//            Logger.info(sid + " Heard " + next);
             if(next instanceof AKSpeak) {
             	AKSpeak message = (AKSpeak) next;
             	KnowledgeMsg msg = (KnowledgeMsg) Msg.fromBytes(message.getContent());

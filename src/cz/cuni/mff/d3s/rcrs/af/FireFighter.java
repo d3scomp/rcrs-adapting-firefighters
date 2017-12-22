@@ -84,6 +84,12 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements ICo
 
 	private boolean canDetectBuildings = true;
 	public final static String KNOWLEDGE_CAN_DETECT_BUILDINGS = "canDetectBuildings";
+	
+	private int helpingFireFighter;
+	public final static String KNOWLEDGE_HELPING_FIREFIGHTER = "helpingFireFighter";
+	
+	private int helpingDistance;
+	public final static String KNOWLEDGE_HELPING_DISTANCE = "helpingDistance";
 
 	// ########################################################################
 
@@ -95,6 +101,8 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements ICo
 		this.id = id;
 		sid = String.format("FF%d", id);
 		modeChart = new ModeChartImpl(this);
+		helpingFireFighter = -1;
+		helpingDistance = Integer.MAX_VALUE;
 	}
 
 	@Override
@@ -133,8 +141,11 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements ICo
 		// update knowledge
 		checkFailures(time);
 		findBurningBuildings();
+		// Anulate helping firefighter to cancel ensemble if no longer satisfied
+		helpingFireFighter = -1;
+		helpingDistance = Integer.MAX_VALUE;
 
-		// l changes.getChangedEntities(); // TODO: extract buildings check burned
+		// changes.getChangedEntities(); // TODO: extract buildings check burned
 		// status
 		// changes.getChangedProperty(building, StandardEntityConstants.Fieryness)
 
@@ -148,12 +159,19 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements ICo
 				
 				if (command instanceof TargetMsg) {
 					TargetMsg targetMsg = (TargetMsg) command;
-					if (targetMsg.id == id) {
+					if (targetMsg.memberId == id) {
 						Logger.debug(formatLog(time, "received " + targetMsg));
-						fireTarget = targetMsg.target;
+						fireTarget = targetMsg.coordTarget;
+						helpingDistance = targetMsg.helpingDistance;
 						modeChart.setCurrentMode(MoveToFireMode.class);
 						modeOverridden = true;
 						Logger.info(formatLog(time, "targeted towards " + fireTarget));
+					}
+					if (targetMsg.coordId == id) {
+						Logger.debug(formatLog(time, "received " + targetMsg));
+						helpingFireFighter = targetMsg.memberId;
+						helpingDistance = targetMsg.helpingDistance;
+						Logger.info(formatLog(time, "help from FF" + helpingFireFighter));
 					}
 				}
 				if (command instanceof BuildingsMsg) {
@@ -268,7 +286,8 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements ICo
 
 		// Send knowledge
 		Msg msg = new KnowledgeMsg(id, location().getID(), fireTarget, refillTarget,
-				getWater(), extinguishing(), canMove, burningBuildings, canDetectBuildings);
+				getWater(), extinguishing(), canMove, burningBuildings, canDetectBuildings,
+				helpingFireFighter, helpingDistance);
 		sendSpeak(time, CHANNEL_OUT, msg.getBytes());
 
 	}
@@ -344,6 +363,10 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements ICo
 
 	public EntityID getLocation() {
 		return location().getID();
+	}
+	
+	public int getHelpingFireFighter() {
+		return helpingFireFighter;
 	}
 
 	public boolean atRefuge() {

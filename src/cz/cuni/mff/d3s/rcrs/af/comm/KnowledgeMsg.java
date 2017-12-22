@@ -16,6 +16,8 @@ import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_EXTINGUISHING;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_CAN_MOVE;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_BURNING_BUILDINGS;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_CAN_DETECT_BUILDINGS;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_FIREFIGHTER;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_DISTANCE;;
 
 public class KnowledgeMsg extends Msg {
 
@@ -33,10 +35,13 @@ public class KnowledgeMsg extends Msg {
 	public final boolean canMove;
 	public final List<EntityID> burningBuildings;
 	public final boolean canDetectBuildings;
+	public final int helpingFireFighter;
+	public final int helpingDistance;
 	
 	
-	public KnowledgeMsg(int id, EntityID position, EntityID fireTarget, EntityID refillTarget, int water,
-			boolean extinguishing, boolean canMove, List<EntityID> burningBuildings, boolean canDetectBuildings) {
+	public KnowledgeMsg(int id, EntityID position, EntityID fireTarget, EntityID refillTarget,
+			int water, boolean extinguishing, boolean canMove, List<EntityID> burningBuildings,
+			boolean canDetectBuildings, int helpingFireFighter, int helpingDistance) {
 		this.id = id;
 		this.position = position;
 		this.fireTarget = fireTarget;
@@ -46,6 +51,8 @@ public class KnowledgeMsg extends Msg {
 		this.canMove = canMove;
 		this.burningBuildings = burningBuildings;
 		this.canDetectBuildings = canDetectBuildings;
+		this.helpingFireFighter = helpingFireFighter;
+		this.helpingDistance = helpingDistance;
 	}
 	
 	private KnowledgeMsg() {
@@ -58,12 +65,15 @@ public class KnowledgeMsg extends Msg {
 		canMove = false;
 		burningBuildings = null;
 		canDetectBuildings = false;
+		helpingFireFighter = -1;
+		helpingDistance = Integer.MAX_VALUE;
 	}
 	
 	@Override
 	protected ByteBuffer getMsgBytes() {
 		// int id, int position, int fireTarget, int refilTarget, int water,
-		int size = Integer.BYTES * 5
+		// int helpingFireFighter, int helpingDistance,
+		int size = Integer.BYTES * 7
 		// boolean extinguishing, boolean canMove, boolean canDetectBuildings,
 				 + 3
 		// 1 byte burningBuildings.size,
@@ -103,7 +113,9 @@ public class KnowledgeMsg extends Msg {
 			entityBuffer.put(burningBuilding.getValue(), burningBuilding);
 		}
 		data.put(canDetectBuildings ? (byte) 1 : (byte) 0);
-		
+		data.putInt(helpingFireFighter);
+		data.putInt(helpingDistance);
+				
 		return data;
 	}
 
@@ -133,9 +145,12 @@ public class KnowledgeMsg extends Msg {
 			burningBuildings.add(entityBuffer.get(data.getInt()));
 		}
 		boolean canDetectBuildings = data.get() == 0 ? false : true;
+		int helpingFireFighter = data.getInt();
+		int helpingDistance = data.getInt();
 		
 		return new KnowledgeMsg(id, position, fireTarget, refillTarget, water,
-				extinguishing, canMove, burningBuildings, canDetectBuildings);
+				extinguishing, canMove, burningBuildings, canDetectBuildings,
+				helpingFireFighter, helpingDistance);
 	}
 
 	@Override
@@ -163,7 +178,9 @@ public class KnowledgeMsg extends Msg {
 				+ " " + KNOWLEDGE_EXTINGUISHING + "=" + extinguishing
 				+ " " + KNOWLEDGE_CAN_MOVE + "=" + canMove
 				+ " " + KNOWLEDGE_BURNING_BUILDINGS + "=[" + bb + "]"
-				+ " " + KNOWLEDGE_CAN_DETECT_BUILDINGS + "=" + canDetectBuildings;
+				+ " " + KNOWLEDGE_CAN_DETECT_BUILDINGS + "=" + canDetectBuildings
+				+ " " + KNOWLEDGE_HELPING_FIREFIGHTER + "=" + helpingFireFighter
+				+ " " + KNOWLEDGE_HELPING_DISTANCE + "=" + helpingDistance;
 	}
 
 }
