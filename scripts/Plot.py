@@ -184,7 +184,7 @@ def plot(allValues, scenarioIndices):
     plt.savefig("{}.png".format(outputFile))
     
     
-def plotH3(allValues, scenarioIndices):
+def plotH3H4(allValues, scenarioIndices):
     if not os.path.exists(FIGURES_DIR):
         os.makedirs(FIGURES_DIR)
     outputFile = os.path.join(FIGURES_DIR, '-'.join(map(str, scenarioIndices)))
@@ -298,8 +298,8 @@ if __name__ == '__main__':
             print("Analyzing scenario {}".format(scenario))
             
             if scenarios[scenario][H3_MECHANISM]:
-                t = analyzeH3Scenario(scenario)
-                plotH3(t, scenarioIndices)
+                t = analyzeH3H4Scenario(scenario)
+                plotH3H4(t, scenarioIndices)
             else:
                 scores.append(analyzeScenario(scenario))
         
