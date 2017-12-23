@@ -93,6 +93,7 @@ public class Component implements IComponent {
 		return fireStation.getMaxWater();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public List<EntityID> getBurningBuildings() {
 		return (List<EntityID>) knowledge.get(KNOWLEDGE_BURNING_BUILDINGS);
