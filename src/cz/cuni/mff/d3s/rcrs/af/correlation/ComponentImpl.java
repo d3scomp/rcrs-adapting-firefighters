@@ -25,6 +25,7 @@ public class ComponentImpl implements cz.cuni.mff.d3s.metaadaptation.correlation
 		ports = new HashSet<>();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public Map<String, Object> getKnowledge() {
 		Map<String, Object> correlationKnowledge = new HashMap<>(component.getKnowledge());
@@ -69,13 +70,14 @@ public class ComponentImpl implements cz.cuni.mff.d3s.metaadaptation.correlation
 		return port;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public String toString() {
 		StringBuilder buffer = new StringBuilder();
 		buffer.append("FF" + component.getId() + " [");
 		
-		for(EntityID building : ((CorrelationMetadataWrapper<List<EntityID>>)component.getKnowledge()
-				.get(KNOWLEDGE_BURNING_BUILDINGS)).getValue()) {
+		for(EntityID building : (List<EntityID>) component.getKnowledge()
+				.get(KNOWLEDGE_BURNING_BUILDINGS)) {
 			buffer.append(building + ", ");
 		}
 		buffer.append("]");
