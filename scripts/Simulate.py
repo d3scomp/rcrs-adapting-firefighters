@@ -142,7 +142,7 @@ def spawnSimulation(params, logs):
     print(runAgentsCmd)
     print("Simulation {}".format(totalSpawnedSimulations))
     with open(logs + "_cout", "w") as out:
-        simulation = Popen(runAgentsCmd, preexec_fn=os.setpgrp)#, stdout=out)
+        simulation = Popen(runAgentsCmd, preexec_fn=os.setpgrp, stdout=out)
     simulated.append(simulation)
     
 

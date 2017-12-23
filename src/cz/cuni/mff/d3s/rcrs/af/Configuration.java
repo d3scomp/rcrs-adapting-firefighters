@@ -36,14 +36,14 @@ public class Configuration {
 
 	public static boolean H1_INTRODUCE_FAILURE = false;
 	public static long H1_FAILURE_TIME = 50;
-	public static final String H1_FAILURE_IDS = "FF1 FF2";
+	public static String H1_FAILURE_IDS = "FF1 FF2";
 	public static boolean H1_MECHANISM = false;
 
 	// FAULTY COMPONENT ISOLATION
 
 	public static boolean H2_INTRODUCE_FAILURE = false;
 	public static long H2_FAILURE_TIME = 50;
-	public static final String H2_FAILURE_IDS = "FF2 FF3";
+	public static String H2_FAILURE_IDS = "FF2 FF3";
 	public static boolean H2_MECHANISM = false;
 
 	// ENHANCING MODE SWITCHING
