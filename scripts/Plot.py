@@ -91,9 +91,9 @@ def analyzeH3H4Scenario(scenario):
                 continue;
             score = analyzeLog(signature, logDirName)
             if score != -1:
-                if scenarios(scenario)[H3_MECHANISM]:
+                if scenarios[scenario][H3_MECHANISM]:
                     index = getTransitions(logDirName)
-                elif scenarions(scenario)(H4_MECHANISM):
+                elif scenarios[scenario][H4_MECHANISM]:
                     index = getProperties(logDirName)
                 else:
                     raise Exception("Scenario {} is not H3 neither H4 Mechanism.".format(signature))
@@ -111,7 +111,7 @@ def getTransitions(logDirName):
     fromTo = re.compile('((\w+-\w+\.)+)[^\.]+')
     match = fromTo.match(logDirName)
     if(match != None):
-        return match.group(1)
+        return str(match.group(1))
     else:
         raise Exception("Transition not matched from {}.".format(logDirName))
 
