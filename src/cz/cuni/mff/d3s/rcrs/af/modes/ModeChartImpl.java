@@ -44,7 +44,7 @@ public class ModeChartImpl implements cz.cuni.mff.d3s.metaadaptation.modeswitch.
 
 			@Override
 			public boolean isSatisfied() {
-				return component.getWater() == parameters.get(FILLED_LEVEL)
+				return component.getWater() >=  Math.round(parameters.get(FILLED_LEVEL))
 						&& component.getBurningBuildings().size() == 0;
 			}
 		};
@@ -60,7 +60,7 @@ public class ModeChartImpl implements cz.cuni.mff.d3s.metaadaptation.modeswitch.
 
 			@Override
 			public boolean isSatisfied() {
-				return component.getWater() == parameters.get(FILLED_LEVEL)
+				return component.getWater() >= Math.round(parameters.get(FILLED_LEVEL))
 						&& component.getBurningBuildings().size() > 0;
 			}
 		};
@@ -94,7 +94,7 @@ public class ModeChartImpl implements cz.cuni.mff.d3s.metaadaptation.modeswitch.
 
 			@Override
 			public boolean isSatisfied() {
-				return component.getWater() <= parameters.get(EMPTY_LEVEL);
+				return component.getWater() <= Math.round(parameters.get(EMPTY_LEVEL));
 			}
 		};
 
