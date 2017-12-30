@@ -23,7 +23,7 @@ public class ComponentImpl implements cz.cuni.mff.d3s.metaadaptation.componentis
 			public Set<String> getExposedKnowledge() {
 				Set<String> ek = new HashSet<>();
 				ek.add(KNOWLEDGE_FIRE_TARGET);
-				return null;
+				return ek;
 			}});
 	}
 	
