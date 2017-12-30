@@ -23,6 +23,9 @@ from Scenarios import *
 from Configuration import *
 
 
+failedSimulations = {}
+
+
 # ANALYSIS ####################################################################
 
 def analyzeLog(simulationSignature, logDirName):
@@ -70,7 +73,10 @@ def analyzeScenario(scenario):
                 scores.append(score)
             else:
                 print("There is no valid score in " + logDirName)
-                # TODO: count number of invalid simulations and print it in the end
+                if scenario not in failedSimulations:
+                    failedSimulations[scenario] = 1
+                else:
+                    failedSimulations[scenario] += 1
 
     return scores
 
@@ -103,6 +109,10 @@ def analyzeH3H4Scenario(scenario):
                 scores[index].append(score)
             else:
                 print("There is no valid score in " + logDirName)
+                if scenario not in failedSimulations:
+                    failedSimulations[scenario] = 1
+                else:
+                    failedSimulations[scenario] += 1
 
     return scores
 
@@ -310,6 +320,9 @@ if __name__ == '__main__':
         
         print("Analysis lasted for {:.2f} mins".format((end-start)/60))
         print("Plot placed to {}.png".format(os.path.join(FIGURES_DIR, plotSignature)))
+        for scenario in scenarioIndices:
+            if scenario in failedSimulations:
+                print("For scenario {} there failed {} simulation(s).".format(scenario, failedSimulations[scenario]))
     except ArgError:
         printHelp()
     except Exception as e:
