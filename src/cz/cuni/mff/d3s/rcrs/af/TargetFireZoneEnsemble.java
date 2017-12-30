@@ -1,15 +1,17 @@
 package cz.cuni.mff.d3s.rcrs.af;
 
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.MAX_SEPARATION_DISTANCE;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_BURNING_BUILDINGS;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_EXTINGUISHING;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_FIRE_TARGET;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_DISTANCE;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_FIREFIGHTER;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ID;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_POSITION;
-import static cz.cuni.mff.d3s.rcrs.af.Configuration.MAX_SEPARATION_DISTANCE;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -42,7 +44,9 @@ public class TargetFireZoneEnsemble extends Ensemble {
 				}
 				
 				int memberId = (int) t.get(Ensemble.getMemberFieldName(KNOWLEDGE_ID));
-				boolean coordExtinguishing = (boolean) t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_EXTINGUISHING));
+				@SuppressWarnings("unchecked")
+				boolean coordExtinguishing = (boolean) t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_EXTINGUISHING))
+						&& !((List<EntityID>)t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_BURNING_BUILDINGS))).isEmpty();
 				EntityID memberFireTarget = (EntityID) t.get(Ensemble.getMemberFieldName(KNOWLEDGE_FIRE_TARGET));
 				int helpingFireFighter = (int) t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_HELPING_FIREFIGHTER));
 				int helpingDistance = (int) t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_HELPING_DISTANCE));
@@ -76,6 +80,7 @@ public class TargetFireZoneEnsemble extends Ensemble {
 				KNOWLEDGE_FIRE_TARGET,
 				KNOWLEDGE_POSITION,
 				KNOWLEDGE_EXTINGUISHING,
+				KNOWLEDGE_BURNING_BUILDINGS,
 				KNOWLEDGE_HELPING_FIREFIGHTER}));
 	}
 
