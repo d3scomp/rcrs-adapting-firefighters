@@ -34,7 +34,7 @@ from Scenarios import *
 from Configuration import *
 
 
-ENABLE_SEED = True # Seed usage
+ENABLE_SEED = False # Seed usage
 seed = 0
 seed_step = 1
 
@@ -59,7 +59,13 @@ def signal_handler(signal, frame):
 def finalizeOldestSimulation():
     # Wait for server to finish
     server = servers[0]
-    server.wait()
+    attempts = 1200 # 20 minutes
+    while server.poll() == None:
+        attempts -= 1
+        if attempts <= 0:
+            server.send_signal(SIGINT)
+            break
+        sleep(1)
     servers.pop(0)
     
     # If server finished terminate the simulation
