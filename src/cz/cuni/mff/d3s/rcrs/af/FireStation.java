@@ -131,7 +131,7 @@ public class FireStation extends StandardAgent<Building> {
             	if(msg == null) {
             		continue;
             	}
-            	Logger.debug(String.format("at %d %s received %s", time, sid, msg));
+            	Logger.info(String.format("at %d %s received %s", time, sid, msg));
             	Component c = components.containsKey(msg.id)
             			? components.get(msg.id)
             			: newComponent(msg, time);
@@ -153,7 +153,7 @@ public class FireStation extends StandardAgent<Building> {
 					if(ensemble.isSatisfied(coordinator, member)) {
 						Msg msg = ensemble.getMessage(coordinator, member);
 						sendSpeak(time, CHANNEL_OUT, msg.getBytes());
-						Logger.debug(String.format("at %d %s sending msg %s", time, sid, msg));
+						Logger.info(String.format("at %d %s sending msg %s", time, sid, msg));
 					}
 				}
 			}
@@ -170,8 +170,10 @@ public class FireStation extends StandardAgent<Building> {
 			modeSwitchPropsManager.registerAt(adaptationManager);
 		}
 		
+		long startTime = System.nanoTime();
 		adaptationManager.reason();
-		// TODO: check duration 
+		long duration = System.nanoTime() - startTime;
+		Logger.info("Meta-adaptation took " + duration/1000000 + " ms");
 		
         sendRest(time);
 	}
@@ -203,19 +205,19 @@ public class FireStation extends StandardAgent<Building> {
 	public void addTransitionCallback(TransitionImpl transition, int id) {
 		Msg msg = new TransitionMsg(id, transition, Action.ADD);
 		sendSpeak(time, CHANNEL_OUT, msg.getBytes());
-		Logger.debug(String.format("at %d %s sending msg %s", time, sid, msg));
+		Logger.info(String.format("at %d %s sending msg %s", time, sid, msg));
 	}
 	
 	public void removeTransitionCallback(TransitionImpl transition, int id) {
 		Msg msg = new TransitionMsg(id, transition, Action.REMOVE);
 		sendSpeak(time, CHANNEL_OUT, msg.getBytes());
-		Logger.debug(String.format("at %d %s sending msg %s", time, sid, msg));
+		Logger.info(String.format("at %d %s sending msg %s", time, sid, msg));
 	}
 	
 	public void setGuardParamCallback(TransitionImpl transition, String name, double value, int id) {
 		Msg msg = new PropertyMsg(id, transition, name, value);
 		sendSpeak(time, CHANNEL_OUT, msg.getBytes());
-		Logger.debug(String.format("at %d %s sending msg %s", time, sid, msg));
+		Logger.info(String.format("at %d %s sending msg %s", time, sid, msg));
 	}
 	
 	public Set<Ensemble> getEnsembles() {
