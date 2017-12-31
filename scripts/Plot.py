@@ -307,7 +307,7 @@ if __name__ == '__main__':
         for scenario in scenarioIndices:
             print("Analyzing scenario {}".format(scenario))
             
-            if scenarios[scenario][H3_MECHANISM]:
+            if scenarios[scenario][H3_MECHANISM] or scenarios[scenario][H4_MECHANISM]:
                 t = analyzeH3H4Scenario(scenario)
                 plotH3H4(t, scenarioIndices)
             else:
