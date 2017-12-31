@@ -29,8 +29,8 @@ public class Configuration {
 	public static boolean WITH_SEED = false;
 	public static int SEED = 0;
 
-	public static final int MAX_SEPARATION_DISTANCE = 70_000;
-	public static final double HYDRANT_REFILL_PROBABILITY = 0.5;
+	public static int MAX_SEPARATION_DISTANCE = 70_000;
+	public static double HYDRANT_REFILL_PROBABILITY = 0.5;
 	
 	// COLLABORATIVE SENSING
 

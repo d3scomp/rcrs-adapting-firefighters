@@ -175,6 +175,11 @@ def prepareParameters(scenario):
         params.append("{}={}".format(SEED, seed))
         seed += seed_step
         
+    # Global parameters
+    params.append("{}={}".format(MAX_SEPARATION_DISTANCE, MAX_SEPARATION_DISTANCE_DEFAULT))
+    params.append("{}={}".format(HYDRANT_REFILL_PROBABILITY, HYDRANT_REFILL_PROBABILITY_DEFAULT))
+    
+    # Local parameters
     for key, value in scenario.items():        
         # ignore parameters that are used by this script but not by the simulation
         if key in {SCENARIO_NAME,
