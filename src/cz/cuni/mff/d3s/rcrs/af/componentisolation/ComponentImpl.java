@@ -56,7 +56,11 @@ public class ComponentImpl implements cz.cuni.mff.d3s.metaadaptation.componentis
 		if(port.getExposedKnowledge().contains(KNOWLEDGE_FIRE_TARGET)) {
 			component.getExposedKnowledge().remove(KNOWLEDGE_FIRE_TARGET);
 		}
-		
+	}
+	
+	@Override
+	public String toString() {
+		return component.toString();
 	}
 
 }

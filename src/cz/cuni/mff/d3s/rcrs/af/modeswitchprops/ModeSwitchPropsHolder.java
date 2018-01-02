@@ -33,7 +33,7 @@ public class ModeSwitchPropsHolder {
 			final String propertyValue = propertyMatcher.group(2);
 			PropertyValue property = new PropertyValue(propertyName, Double.parseDouble(propertyValue));
 			properties.add(property);
-			Logger.info("Training property: " + property);
+			Logger.info("Training property: " + property.property);
 		}
 
 		if (properties.isEmpty()) {

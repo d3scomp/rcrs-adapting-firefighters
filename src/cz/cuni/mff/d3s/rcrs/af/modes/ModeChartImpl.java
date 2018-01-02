@@ -34,7 +34,7 @@ public class ModeChartImpl implements cz.cuni.mff.d3s.metaadaptation.modeswitch.
 
 		Guard refill2searchGuard = new ParamGuard(component) {
 
-			private static final String FILLED_LEVEL = "FILLED_LEVEL_TO_LEAVE";
+			private static final String FILLED_LEVEL = "FILLED_LEVEL";
 
 			@Override
 			protected void specifyParameters() {
@@ -51,7 +51,7 @@ public class ModeChartImpl implements cz.cuni.mff.d3s.metaadaptation.modeswitch.
 
 		Guard refill2moveToFireGuard = new ParamGuard(component) {
 
-			private static final String FILLED_LEVEL = "FILLED_LEVEL_TO_LEAVE";
+			private static final String FILLED_LEVEL = "FILLED_LEVEL";
 
 			@Override
 			protected void specifyParameters() {
@@ -100,17 +100,17 @@ public class ModeChartImpl implements cz.cuni.mff.d3s.metaadaptation.modeswitch.
 
 		Guard extinguish2searchGuard = new ParamGuard(component) {
 
-			private static final String FILLED_LEVEL = "FILLED_LEVEL_TO_CONTINUE";
+			private static final String EMPTY_LEVEL = "EMPTY_LEVEL";
 
 			@Override
 			protected void specifyParameters() {
-				parameters.put(FILLED_LEVEL, (double) 0.0);
+				parameters.put(EMPTY_LEVEL, (double) 0.0);
 
 			}
 
 			@Override
 			public boolean isSatisfied() {
-				return component.getWater() > parameters.get(FILLED_LEVEL)
+				return component.getWater() > parameters.get(EMPTY_LEVEL)
 						&& component.findCloseBurningBuilding() == null;
 			}
 		};

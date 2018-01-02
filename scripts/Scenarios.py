@@ -83,19 +83,16 @@ missingTransitionsReduced = [
 
 # Properties used in scenarios with mode switching properties adjustment
 adjustedProperties = [
-    ("FILLED_LEVEL_TO_LEAVE", "20000"),
-    ("FILLED_LEVEL_TO_LEAVE", "15000"),
-    ("FILLED_LEVEL_TO_LEAVE", "10000"),
-    ("FILLED_LEVEL_TO_CONTINUE", "10000")]#,
-#     ("FILLED_LEVEL_TO_CONTINUE", "15000"),
-#     ("FILLED_LEVEL_TO_CONTINUE", "20000"),
-#     ("EMPTY_LEVEL", "2000"),
-#     ("EMPTY_LEVEL", "5000"),
-#     ("EMPTY_LEVEL", "10000")]
+    ("FILLED_LEVEL", "45000"),
+    ("FILLED_LEVEL", "40000"),
+    ("FILLED_LEVEL", "30000"),
+    ("EMPTY_LEVEL", "5000"),
+    ("EMPTY_LEVEL", "10000"),
+    ("EMPTY_LEVEL", "15000")]
 
 adjustedPropertiesReduced = [
-    ("FILLED_LEVEL_TO_LEAVE", "20000"),
-    ("FILLED_LEVEL_TO_CONTINUE", "10000"),
+    ("FILLED_LEVEL", "20000"),
+    ("FILLED_LEVEL", "10000"),
     ("EMPTY_LEVEL", "5000")]
 
 # Scenarios

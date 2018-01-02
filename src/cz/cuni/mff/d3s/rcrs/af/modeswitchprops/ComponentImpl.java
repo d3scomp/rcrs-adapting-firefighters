@@ -32,4 +32,8 @@ public class ComponentImpl implements cz.cuni.mff.d3s.metaadaptation.modeswitchp
 		return modeChart;
 	}
 
+	@Override
+	public String toString() {
+		return component.toString();
+	}
 }

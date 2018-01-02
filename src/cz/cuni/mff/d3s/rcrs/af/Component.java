@@ -149,4 +149,9 @@ public class Component implements IComponent {
 	public void setGuardParamCallback(TransitionImpl transition, String name, double value) {
 		fireStation.setGuardParamCallback(transition, name, value, id);
 	}
+	
+	@Override
+	public String toString() {
+		return String.format("FF%d", id);
+	}
 }

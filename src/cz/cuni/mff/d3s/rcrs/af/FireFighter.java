@@ -301,7 +301,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements ICo
 		long duration = System.nanoTime() - startTime;
 		Logger.info(formatLog(time, "thinking took " + duration/1000000 + " ms"));
 
-        sendRest(time);
+        // sendRest(time);
 	}
 	
 	@Override
