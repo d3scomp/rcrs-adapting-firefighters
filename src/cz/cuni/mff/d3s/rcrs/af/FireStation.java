@@ -2,6 +2,9 @@ package cz.cuni.mff.d3s.rcrs.af;
 
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.H1_MECHANISM;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.H2_MECHANISM;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.H2_INTRODUCE_FAILURE;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.H2_FAILURE_IMPACT;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.failedRefillStations;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.H3_MECHANISM;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.H4_MECHANISM;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_BURNING_BUILDINGS;
@@ -32,6 +35,9 @@ import rescuecore2.log.Logger;
 import rescuecore2.messages.Command;
 import rescuecore2.standard.components.StandardAgent;
 import rescuecore2.standard.entities.Building;
+import rescuecore2.standard.entities.Hydrant;
+import rescuecore2.standard.entities.Refuge;
+import rescuecore2.standard.entities.StandardEntity;
 import rescuecore2.standard.entities.StandardEntityURN;
 import rescuecore2.standard.messages.AKSpeak;
 import rescuecore2.worldmodel.ChangeSet;
@@ -44,7 +50,8 @@ public class FireStation extends StandardAgent<Building> {
 	private final int CHANNEL_IN = 1;
 	private final int CHANNEL_OUT = 2;
 	
-	private final Map<Integer, Component> components = new HashMap<>();
+	private final Map<Integer, FFComponent> ffComponents = new HashMap<>();
+	private final Set<cz.cuni.mff.d3s.rcrs.af.componentisolation.ComponentImpl> refillComponents = new HashSet<>();
 	private final Set<Ensemble> ensembles = new HashSet<>();
 	
 	private final MetaAdaptationManager adaptationManager;
@@ -100,12 +107,30 @@ public class FireStation extends StandardAgent<Building> {
 				StandardEntityURN.GAS_STATION);
 		Logger.info(sid + " connected");
 
+		// Create refill components
+		for (StandardEntity next : model) {
+            if (next instanceof Hydrant || next instanceof Refuge) {
+            	refillComponents.add(new cz.cuni.mff.d3s.rcrs.af.componentisolation.ComponentImpl(next.getID()));
+            }
+        }
+		
 		ensembles.add(TargetFireZoneEnsemble.getInstance(model));
 
 		if(H1_MECHANISM) {
 			// Register metrics
 			KnowledgeMetadataHolder.setBoundAndMetric(KNOWLEDGE_POSITION, 30_000, new DistanceMetric(model), 0.9);
 			KnowledgeMetadataHolder.setBoundAndMetric(KNOWLEDGE_BURNING_BUILDINGS, 2, new SurroundingMetric(), 0.9);
+		}
+		if(H2_INTRODUCE_FAILURE) {
+			for(cz.cuni.mff.d3s.rcrs.af.componentisolation.ComponentImpl refillStation : refillComponents) {
+				if(random.nextDouble() <= H2_FAILURE_IMPACT) {
+					refillStation.malfunction();
+					failedRefillStations.add(refillStation.getId());
+					if(H2_MECHANISM) {
+						isolationManager.getComponentManager().addComponent(refillStation);
+					}
+				}
+			}
 		}
 	}
 	
@@ -132,29 +157,40 @@ public class FireStation extends StandardAgent<Building> {
             		continue;
             	}
             	Logger.info(String.format("at %d %s received %s", time, sid, msg));
-            	Component c = components.containsKey(msg.id)
-            			? components.get(msg.id)
+            	FFComponent c = ffComponents.containsKey(msg.id)
+            			? ffComponents.get(msg.id)
             			: newComponent(msg, time);
             	c.loadKnowledge(msg, time);
-            	components.put(msg.id, c);
+            	ffComponents.put(msg.id, c);
             }
         }		
 		
 		// Evaluate ensembles
-		for(int cId : components.keySet()) {
-			for(int mId : components.keySet()) {
+		for(int cId : ffComponents.keySet()) {
+			for(int mId : ffComponents.keySet()) {
 				if(cId == mId) {
 					continue;
 				}
 				
-				Component coordinator = components.get(cId);
-				Component member = components.get(mId);
+				FFComponent coordinator = ffComponents.get(cId);
+				FFComponent member = ffComponents.get(mId);
 				for(Ensemble ensemble : ensembles) {
 					if(ensemble.isSatisfied(coordinator, member)) {
 						Msg msg = ensemble.getMessage(coordinator, member);
 						sendSpeak(time, CHANNEL_OUT, msg.getBytes());
 						Logger.info(String.format("at %d %s sending msg %s", time, sid, msg));
 					}
+				}
+			}
+		}
+		Ensemble refillEnsemble = RefillStationEnsemble.getInstance(model);
+		for(cz.cuni.mff.d3s.rcrs.af.componentisolation.ComponentImpl coordinator : refillComponents) {
+			for(int mId : ffComponents.keySet()) {
+				FFComponent member = ffComponents.get(mId);
+				if(refillEnsemble.isSatisfied(coordinator, member)) {
+					Msg msg = refillEnsemble.getMessage(coordinator, member);
+					sendSpeak(time, CHANNEL_OUT, msg.getBytes());
+					Logger.info(String.format("at %d %s sending msg %s", time, sid, msg));
 				}
 			}
 		}
@@ -178,15 +214,12 @@ public class FireStation extends StandardAgent<Building> {
         sendRest(time);
 	}
 	
-	private Component newComponent(KnowledgeMsg msg, int time) {
-		Component c = new Component(this);
+	private FFComponent newComponent(KnowledgeMsg msg, int time) {
+		FFComponent c = new FFComponent(this);
 		c.loadKnowledge(msg, time);
 		
 		if(H1_MECHANISM) {
 			correlationManager.getComponentManager().addComponent(new cz.cuni.mff.d3s.rcrs.af.correlation.ComponentImpl(c));
-		}
-		if(H2_MECHANISM) {
-			isolationManager.getComponentManager().addComponent(new cz.cuni.mff.d3s.rcrs.af.componentisolation.ComponentImpl(c));
 		}
 		if(H3_MECHANISM) {
 			modeSwitchManager.getComponentManager().addComponent(new cz.cuni.mff.d3s.rcrs.af.modeswitch.ComponentImpl(c));

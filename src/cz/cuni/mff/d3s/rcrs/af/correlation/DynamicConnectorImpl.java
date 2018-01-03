@@ -65,23 +65,5 @@ public class DynamicConnectorImpl implements DynamicConnector {
 		ports.add(port);
 		return port;
 	}
-	
-/*	public boolean isSatisfied(ComponentImpl coordinator, ComponentImpl member) {
-		Map<String, Object> filterValues = new HashMap<>();
-		Map<String, Object> cValues = coordinator.getKnowledge();
-		for(String cKey : cValues.keySet()) {
-			filterValues.put("coordinator." + cKey, cValues.get(cKey));
-		}
-		Map<String, Object> mValues = member.getKnowledge();
-		for(String mKey : mValues.keySet()){
-			filterValues.put("member." + mKey, mValues.get(mKey));
-		}
-		
-		return filter.test(filterValues);
-	}
-	
-	public MediatedKnowledge getMediatedKnowledge() {
-		return mediatedKnowledge;
-	}*/
 
 }

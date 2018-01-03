@@ -7,13 +7,15 @@ import static cz.cuni.mff.d3s.rcrs.af.Configuration.H3_TRANSITION_PROBABILITY;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import cz.cuni.mff.d3s.metaadaptation.MetaAdaptationManager;
 import cz.cuni.mff.d3s.metaadaptation.modeswitch.NonDeterministicModeSwitchingManager;
 import cz.cuni.mff.d3s.metaadaptation.modeswitch.Transition;
-import cz.cuni.mff.d3s.rcrs.af.IComponent;
+import cz.cuni.mff.d3s.rcrs.af.IFFComponent;
 import cz.cuni.mff.d3s.rcrs.af.modes.ModeChartImpl;
 import cz.cuni.mff.d3s.rcrs.af.modes.ModeImpl;
 import cz.cuni.mff.d3s.rcrs.af.modes.TransitionImpl;
@@ -56,7 +58,7 @@ public class ModeSwitchHolder {
 	}
 	
 	private ModeChartImpl prepareModeChart() {
-		return new ModeChartImpl(new IComponent() {
+		return new ModeChartImpl(new IFFComponent() {
 			@Override
 			public int getId() { return 0; }
 
@@ -84,8 +86,8 @@ public class ModeSwitchHolder {
 			@Override
 			public void setFireTarget(boolean set) {}
 
-			@Override
-			public void setRefillTarget(boolean set) {}
+//			@Override
+//			public void setRefillTarget(boolean set) {}
 
 			@Override
 			public void addTransitionCallback(TransitionImpl transition) {}
@@ -100,6 +102,12 @@ public class ModeSwitchHolder {
 			public int getHelpingFireFighter() {
 				return -1;
 			}
+
+			@Override
+			public Map<String, Object> getKnowledge() { return null; }
+
+			@Override
+			public Set<String> getExposedKnowledge() { return null; }
 		});
 	}
 

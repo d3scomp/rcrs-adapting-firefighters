@@ -13,11 +13,11 @@ import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_REFILL_TARGET;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_POSITION;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_WATER;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_EXTINGUISHING;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_CAN_MOVE;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_REFILLING;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_BURNING_BUILDINGS;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_CAN_DETECT_BUILDINGS;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_FIREFIGHTER;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_DISTANCE;;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_DISTANCE;
 
 public class KnowledgeMsg extends Msg {
 
@@ -32,7 +32,7 @@ public class KnowledgeMsg extends Msg {
 	public final EntityID refillTarget;
 	public final int water;
 	public final boolean extinguishing;
-	public final boolean canMove;
+	public final boolean refilling;
 	public final List<EntityID> burningBuildings;
 	public final boolean canDetectBuildings;
 	public final int helpingFireFighter;
@@ -40,7 +40,7 @@ public class KnowledgeMsg extends Msg {
 	
 	
 	public KnowledgeMsg(int id, EntityID position, EntityID fireTarget, EntityID refillTarget,
-			int water, boolean extinguishing, boolean canMove, List<EntityID> burningBuildings,
+			int water, boolean extinguishing, boolean refilling, List<EntityID> burningBuildings,
 			boolean canDetectBuildings, int helpingFireFighter, int helpingDistance) {
 		this.id = id;
 		this.position = position;
@@ -48,7 +48,7 @@ public class KnowledgeMsg extends Msg {
 		this.refillTarget = refillTarget;
 		this.water = water;
 		this.extinguishing = extinguishing;
-		this.canMove = canMove;
+		this.refilling = refilling;
 		this.burningBuildings = burningBuildings;
 		this.canDetectBuildings = canDetectBuildings;
 		this.helpingFireFighter = helpingFireFighter;
@@ -62,7 +62,7 @@ public class KnowledgeMsg extends Msg {
 		refillTarget = null;
 		water = Integer.MIN_VALUE;
 		extinguishing = false;
-		canMove = false;
+		refilling = false;
 		burningBuildings = null;
 		canDetectBuildings = false;
 		helpingFireFighter = -1;
@@ -74,7 +74,7 @@ public class KnowledgeMsg extends Msg {
 		// int id, int position, int fireTarget, int refilTarget, int water,
 		// int helpingFireFighter, int helpingDistance,
 		int size = Integer.BYTES * 7
-		// boolean extinguishing, boolean canMove, boolean canDetectBuildings,
+		// boolean extinguishing, boolean refilling, boolean canDetectBuildings,
 				 + 3
 		// 1 byte burningBuildings.size,
 				 + 1
@@ -106,7 +106,7 @@ public class KnowledgeMsg extends Msg {
 		}
 		data.putInt(water);
 		data.put(extinguishing ? (byte) 1 : (byte) 0);
-		data.put(canMove ? (byte) 1 : (byte) 0);
+		data.put(refilling ? (byte) 1 : (byte) 0);
 		data.put((byte) burningBuildings.size());
 		for(EntityID burningBuilding : burningBuildings) {
 			data.putInt(burningBuilding.getValue());
@@ -139,7 +139,7 @@ public class KnowledgeMsg extends Msg {
 		}
 		int water = data.getInt();
 		boolean extinguishing = data.get() == 0 ? false : true;
-		boolean canMove = data.get() == 0 ? false : true;
+		boolean refilling = data.get() == 0 ? false : true;
 		ArrayList<EntityID> burningBuildings = new ArrayList<>();
 		for(int i = data.get(); i > 0; i--) {
 			burningBuildings.add(entityBuffer.get(data.getInt()));
@@ -149,7 +149,7 @@ public class KnowledgeMsg extends Msg {
 		int helpingDistance = data.getInt();
 		
 		return new KnowledgeMsg(id, position, fireTarget, refillTarget, water,
-				extinguishing, canMove, burningBuildings, canDetectBuildings,
+				extinguishing, refilling, burningBuildings, canDetectBuildings,
 				helpingFireFighter, helpingDistance);
 	}
 
@@ -176,7 +176,7 @@ public class KnowledgeMsg extends Msg {
 				+ " " + KNOWLEDGE_REFILL_TARGET + "=" + (refillTarget != null ? refillTarget.getValue() : -1)
 				+ " " + KNOWLEDGE_WATER + "=" + water
 				+ " " + KNOWLEDGE_EXTINGUISHING + "=" + extinguishing
-				+ " " + KNOWLEDGE_CAN_MOVE + "=" + canMove
+				+ " " + KNOWLEDGE_REFILLING + "=" + refilling
 				+ " " + KNOWLEDGE_BURNING_BUILDINGS + "=[" + bb + "]"
 				+ " " + KNOWLEDGE_CAN_DETECT_BUILDINGS + "=" + canDetectBuildings
 				+ " " + KNOWLEDGE_HELPING_FIREFIGHTER + "=" + helpingFireFighter

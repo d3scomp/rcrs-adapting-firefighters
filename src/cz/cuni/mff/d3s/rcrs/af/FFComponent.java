@@ -4,8 +4,8 @@ import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_FIREFIGHTER;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_DISTANCE;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_BURNING_BUILDINGS;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_CAN_DETECT_BUILDINGS;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_CAN_MOVE;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_EXTINGUISHING;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_REFILLING;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_FIRE_TARGET;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ID;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_POSITION;
@@ -22,7 +22,7 @@ import cz.cuni.mff.d3s.rcrs.af.comm.KnowledgeMsg;
 import cz.cuni.mff.d3s.rcrs.af.modes.TransitionImpl;
 import rescuecore2.worldmodel.EntityID;
 
-public class Component implements IComponent {
+public class FFComponent implements IFFComponent {
 	
 	protected int id = -1;
 	protected int time = -1;
@@ -32,7 +32,7 @@ public class Component implements IComponent {
 	protected Set<String> exposedKnowledge;
 	protected Set<String> faultyKnowledge;
 	
-	public Component(FireStation fireStation) {
+	public FFComponent(FireStation fireStation) {
 		knowledge = new HashMap<>();
 		exposedKnowledge = new HashSet<>();
 		faultyKnowledge = new HashSet<>();
@@ -52,7 +52,7 @@ public class Component implements IComponent {
 		knowledge.put(KNOWLEDGE_POSITION, msg.position);
 		knowledge.put(KNOWLEDGE_WATER, msg.water);
 		knowledge.put(KNOWLEDGE_EXTINGUISHING, msg.extinguishing);
-		knowledge.put(KNOWLEDGE_CAN_MOVE, msg.canMove);
+		knowledge.put(KNOWLEDGE_REFILLING, msg.refilling);
 		knowledge.put(KNOWLEDGE_BURNING_BUILDINGS, msg.burningBuildings);
 		knowledge.put(KNOWLEDGE_CAN_DETECT_BUILDINGS, msg.canDetectBuildings);
 		knowledge.put(KNOWLEDGE_HELPING_FIREFIGHTER, msg.helpingFireFighter);
@@ -71,10 +71,12 @@ public class Component implements IComponent {
 		return time;
 	}
 	
+	@Override
 	public Map<String, Object> getKnowledge(){
 		return knowledge;
 	}
 	
+	@Override
 	public Set<String> getExposedKnowledge(){
 		return exposedKnowledge;
 	}
@@ -127,11 +129,6 @@ public class Component implements IComponent {
 
 	@Override
 	public void setFireTarget(boolean set) {
-		// Relevant only for fire fighter object
-	}
-
-	@Override
-	public void setRefillTarget(boolean set) {
 		// Relevant only for fire fighter object
 	}
 

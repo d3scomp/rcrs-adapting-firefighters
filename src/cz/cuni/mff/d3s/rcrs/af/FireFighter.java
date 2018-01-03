@@ -3,22 +3,23 @@ package cz.cuni.mff.d3s.rcrs.af;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.H1_FAILURE_IDS;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.H1_FAILURE_TIME;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.H1_INTRODUCE_FAILURE;
-import static cz.cuni.mff.d3s.rcrs.af.Configuration.H2_FAILURE_IDS;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.H2_FAILURE_TIME;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.H2_INTRODUCE_FAILURE;
-import static cz.cuni.mff.d3s.rcrs.af.Configuration.HYDRANT_REFILL_PROBABILITY;
-import static rescuecore2.standard.entities.StandardEntityURN.HYDRANT;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.failedRefillStations;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import cz.cuni.mff.d3s.rcrs.af.comm.BuildingsMsg;
 import cz.cuni.mff.d3s.rcrs.af.comm.KnowledgeMsg;
 import cz.cuni.mff.d3s.rcrs.af.comm.Msg;
 import cz.cuni.mff.d3s.rcrs.af.comm.PropertyMsg;
+import cz.cuni.mff.d3s.rcrs.af.comm.RefillMsg;
 import cz.cuni.mff.d3s.rcrs.af.comm.TargetMsg;
 import cz.cuni.mff.d3s.rcrs.af.comm.TransitionMsg;
 import cz.cuni.mff.d3s.rcrs.af.modes.ExtinguishMode;
@@ -42,7 +43,7 @@ import rescuecore2.worldmodel.Entity;
 import rescuecore2.worldmodel.EntityID;
 import sample.AbstractSampleAgent;
 
-public class FireFighter extends AbstractSampleAgent<FireBrigade> implements IComponent {
+public class FireFighter extends AbstractSampleAgent<FireBrigade> implements IFFComponent {
 
 	private static final String MAX_WATER_KEY = "fire.tank.maximum";
 	private static final String MAX_DISTANCE_KEY = "fire.extinguish.max-distance";
@@ -64,7 +65,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements ICo
 	private EntityID fireTarget; // updated by mode switch
 	public final static String KNOWLEDGE_FIRE_TARGET = "fireTarget";
 
-	private EntityID refillTarget; // updated by mode switch
+	private EntityID refillTarget; // updated by ensemble
 	public final static String KNOWLEDGE_REFILL_TARGET = "refillTarget";
 
 	private EntityID searchTarget;
@@ -75,12 +76,12 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements ICo
 	// water; me().getWater()
 	public final static String KNOWLEDGE_WATER = "water";
 
-	private boolean canMove;
-	public final static String KNOWLEDGE_CAN_MOVE = "canMove";
-
 	// extinguishing: mode == Extinguish
 	public final static String KNOWLEDGE_EXTINGUISHING = "extinguishing";
-
+	
+	// extinguishing: mode == Refill || mode == MoveToRefill
+	public final static String KNOWLEDGE_REFILLING = "refilling";
+	
 	private List<EntityID> burningBuildings = Collections.emptyList();
 	public final static String KNOWLEDGE_BURNING_BUILDINGS = "burningBuildings";
 
@@ -96,7 +97,6 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements ICo
 	// ########################################################################
 
 	private ModeChartImpl modeChart;
-	private List<EntityID> refillStations;
 	StandardEntity[] roads;
 
 	public FireFighter(int id) {
@@ -117,11 +117,10 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements ICo
 		maxPower = config.getIntValue(MAX_POWER_KEY);
 		Logger.info(sid + " connected: max extinguish distance = " + maxDistance + ", max power = " + maxPower
 				+ ", max tank = " + maxWater);
-
-		refillStations = new ArrayList<>();
-		refillStations.addAll(refugeIDs);
-		for (StandardEntity hydrant : model.getEntitiesOfType(HYDRANT)) {
-			refillStations.add(hydrant.getID());
+		
+		// Specify mode chart parameters after maxWater is defined
+		for(TransitionImpl t : modeChart.getTransitions()) {
+			t.getInnerGuard().specifyParameters();
 		}
 
 		Collection<StandardEntity> entities = model.getEntitiesOfType(StandardEntityURN.ROAD);
@@ -143,7 +142,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements ICo
 
 		// update knowledge
 		checkFailures(time);
-		Logger.info(formatLog(time, "can move: " + canMove + " can detect: " + canDetectBuildings));
+		Logger.info(formatLog(time, "can detect: " + canDetectBuildings + ", water: " + getWater()));
 		findBurningBuildings();
 		Logger.info(formatLog(time, "found burning buildings: " + stringBurningBuildings()));
 		
@@ -161,9 +160,9 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements ICo
 			if (nextCom instanceof AKSpeak) {
 				AKSpeak message = (AKSpeak) nextCom;
 				Msg command = Msg.fromBytes(message.getContent());
-				Logger.info(formatLog(time, "heard " + message));
+				Logger.debug(formatLog(time, "heard " + message));
 				
-				if (command instanceof TargetMsg) {
+				if (command instanceof TargetMsg && !refilling()) {
 					TargetMsg targetMsg = (TargetMsg) command;
 					if (targetMsg.memberId == id) {
 						Logger.info(formatLog(time, "received " + targetMsg));
@@ -178,6 +177,13 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements ICo
 						helpingFireFighter = targetMsg.memberId;
 						helpingDistance = targetMsg.helpingDistance;
 						Logger.info(formatLog(time, "help from FF" + helpingFireFighter));
+					}
+				}
+				if (command instanceof RefillMsg) {
+					RefillMsg refillMsg = (RefillMsg) command;
+					if (refillMsg.memberId == id) {
+						Logger.info(formatLog(time, "received " + refillMsg));
+						refillTarget = refillMsg.coordId;
 					}
 				}
 				if (command instanceof BuildingsMsg) {
@@ -236,41 +242,32 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements ICo
 			} else if (searchTarget.equals(location().getID())) {
 				searchTarget = randomTarget();
 			}
-			// sendMove(time, randomWalk());
-			if (canMove) {
-				Logger.info(formatLog(time, "moving towards search target: " + searchTarget.getValue()));
-				sendMove(time, planShortestRoute(searchTarget));
-			} else {
-				Logger.info(formatLog(time, "can't move."));
-			}
+			Logger.info(formatLog(time, "moving towards search target: " + searchTarget.getValue()));
+			sendMove(time, planShortestRoute(searchTarget));
 		}
 
 		// Move to fire
 		else if (modeChart.getCurrentMode() instanceof MoveToFireMode) {
-			if (canMove) {
-				Logger.info(formatLog(time, "moving to fire " + fireTarget));
-				if (fireTarget != null) {
-					Logger.info(formatLog(time, "moving towards fire target: " + fireTarget.getValue()));
-					sendMove(time, planShortestRoute(fireTarget));
-				} else {
-					Logger.error(formatLog(time, " in MoveToFireMode missing fireTarget"));
-				}
+			Logger.info(formatLog(time, "moving to fire " + fireTarget));
+			if (fireTarget != null) {
+				Logger.info(formatLog(time, "moving towards fire target: " + fireTarget.getValue()));
+				sendMove(time, planShortestRoute(fireTarget));
 			} else {
-				Logger.info(formatLog(time, "can't move."));
+				Logger.error(formatLog(time, " in MoveToFireMode missing fireTarget"));
 			}
 		}
 
 		// Move to Refill
 		else if (modeChart.getCurrentMode() instanceof MoveToRefillMode) {
-			if (canMove) {
-				if (refillTarget != null) {
+			if (refillTarget != null) {
+				if(H2_INTRODUCE_FAILURE && H2_FAILURE_TIME >= time && failedRefillStations.contains(refillTarget)) {
+					Logger.info(formatLog(time, "Stucked moving towards broken refill station " + refillTarget.getValue()));
+				} else {
 					Logger.info(formatLog(time, "moving towards refill target: " + refillTarget.getValue()));
 					sendMove(time, planShortestRoute(refillTarget));
-				} else {
-					Logger.error(formatLog(time, "in MoveToRefillMode missing refillTarget"));
 				}
 			} else {
-				Logger.info(formatLog(time, "can't move."));
+				Logger.error(formatLog(time, "in MoveToRefillMode missing refillTarget"));
 			}
 		}
 
@@ -279,7 +276,6 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements ICo
 			EntityID building = findCloseBurningBuilding();
 			if (building != null) {
 				Logger.info(formatLog(time, "extinguishing(" + building.getValue() + ")[" + getWater() + "]"));
-				// Logger.info(model.getEntity(building).getFullDescription());
 				sendExtinguish(time, building, maxPower);
 			} else {
 				Logger.warn(formatLog(time, "Trying to extinguish null."));
@@ -294,14 +290,13 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements ICo
 
 		// Send knowledge
 		Msg msg = new KnowledgeMsg(id, location().getID(), fireTarget, refillTarget,
-				getWater(), extinguishing(), canMove, burningBuildings, canDetectBuildings,
+				getWater(), extinguishing(), refilling(), burningBuildings, canDetectBuildings,
 				helpingFireFighter, helpingDistance);
 		sendSpeak(time, CHANNEL_OUT, msg.getBytes());
 		
 		long duration = System.nanoTime() - startTime;
 		Logger.info(formatLog(time, "thinking took " + duration/1000000 + " ms"));
 
-        // sendRest(time);
 	}
 	
 	@Override
@@ -337,40 +332,26 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements ICo
 		return modeChart.getCurrentMode() instanceof ExtinguishMode;
 	}
 
+	private boolean refilling() {
+		return modeChart.getCurrentMode() instanceof RefillMode
+				|| modeChart.getCurrentMode() instanceof MoveToRefillMode;
+	}
+	
 	public void setFireTarget(boolean set) {
 		if (set) {
 			List<EntityID> path = search.breadthFirstSearch(me().getPosition(), burningBuildings);
 			if (path == null) {
 				Logger.error(formatLog(0, "Couldn't plan a path to a fire."));
 			} else {
-				fireTarget = getTarget(path);
+				if(path.size() > 2) {
+					fireTarget = path.get(path.size() - 2); // -2 to avoid entering building on fire
+				} else {
+					fireTarget = location().getID();
+				}
 			}
 		} else {
 			fireTarget = null;
 		}
-	}
-
-	public void setRefillTarget(boolean set) {
-		if (set) {
-			List<EntityID> path = null;
-			// With given probability refill at hydrant
-			if (random.nextDouble() < HYDRANT_REFILL_PROBABILITY) {
-				path = search.breadthFirstSearch(me().getPosition(), refillStations);
-			} else {
-				path = search.breadthFirstSearch(me().getPosition(), refugeIDs);
-			}
-			if (path == null) {
-				Logger.error(formatLog(0, "Couldn't plan a path to a refuge."));
-			} else {
-				refillTarget = getTarget(path);
-			}
-		} else {
-			refillTarget = null;
-		}
-	}
-
-	private EntityID getTarget(List<EntityID> path) {
-		return path.get(path.size() - 1);
 	}
 
 	public EntityID getLocation() {
@@ -392,9 +373,6 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements ICo
 	private void checkFailures(int time) {
 		// H1 failure
 		canDetectBuildings = !(H1_INTRODUCE_FAILURE && time >= H1_FAILURE_TIME && H1_FAILURE_IDS.indexOf(sid) != -1);
-
-		// H2 failure
-		canMove = !(H2_INTRODUCE_FAILURE && time >= H2_FAILURE_TIME && H2_FAILURE_IDS.indexOf(sid) != -1);
 	}
 
 	private void findBurningBuildings() {
@@ -495,6 +473,16 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements ICo
 			Logger.error(String.format("Target transition \"%s\"not found while setting guard parameter \"%s=%f\"",
 					outerTransition, name, value));
 		}
+	}
+
+	@Override
+	public Map<String, Object> getKnowledge() {
+		return null;
+	}
+
+	@Override
+	public Set<String> getExposedKnowledge() {
+		return null;
 	}
 
 }

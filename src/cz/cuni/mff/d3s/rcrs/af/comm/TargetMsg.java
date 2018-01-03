@@ -71,7 +71,7 @@ public class TargetMsg extends Msg {
 		
 		return super.toString()
 				+ " MemberId=" + memberId
-				+ " CoordId=" + memberId
+				+ " CoordId=" + coordId
 				+ " " + KNOWLEDGE_FIRE_TARGET + "=" + coordTarget.getValue()
 				+ " " + KNOWLEDGE_HELPING_DISTANCE + "=" + helpingDistance;
 	}

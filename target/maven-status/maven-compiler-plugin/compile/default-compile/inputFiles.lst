@@ -7,6 +7,7 @@
 /home/iridin/Documents/rcrs-adapting-firefighters/src/cz/cuni/mff/d3s/rcrs/af/correlation/ComponentPortImpl.java
 /home/iridin/Documents/rcrs-adapting-firefighters/src/sample/SampleSearch.java
 /home/iridin/Documents/rcrs-adapting-firefighters/src/cz/cuni/mff/d3s/rcrs/af/modes/SearchMode.java
+/home/iridin/Documents/rcrs-adapting-firefighters/src/cz/cuni/mff/d3s/rcrs/af/FFComponent.java
 /home/iridin/Documents/rcrs-adapting-firefighters/src/cz/cuni/mff/d3s/rcrs/af/modeswitchprops/ModeSwitchPropsHolder.java
 /home/iridin/Documents/rcrs-adapting-firefighters/src/cz/cuni/mff/d3s/rcrs/af/correlation/ComponentImpl.java
 /home/iridin/Documents/rcrs-adapting-firefighters/src/sample/DistanceSorter.java
@@ -30,9 +31,11 @@
 /home/iridin/Documents/rcrs-adapting-firefighters/src/cz/cuni/mff/d3s/rcrs/af/modeswitch/ComponentManagerImpl.java
 /home/iridin/Documents/rcrs-adapting-firefighters/src/cz/cuni/mff/d3s/rcrs/af/comm/Msg.java
 /home/iridin/Documents/rcrs-adapting-firefighters/src/cz/cuni/mff/d3s/rcrs/af/correlation/SurroundingMetric.java
+/home/iridin/Documents/rcrs-adapting-firefighters/src/cz/cuni/mff/d3s/rcrs/af/comm/RefillMsg.java
 /home/iridin/Documents/rcrs-adapting-firefighters/src/sample/SampleAmbulanceTeam.java
 /home/iridin/Documents/rcrs-adapting-firefighters/src/cz/cuni/mff/d3s/rcrs/af/modes/MoveToRefillMode.java
 /home/iridin/Documents/rcrs-adapting-firefighters/src/cz/cuni/mff/d3s/rcrs/af/FireFighter.java
+/home/iridin/Documents/rcrs-adapting-firefighters/src/cz/cuni/mff/d3s/rcrs/af/RefillStationEnsemble.java
 /home/iridin/Documents/rcrs-adapting-firefighters/src/cz/cuni/mff/d3s/rcrs/af/correlation/CorrelationHolder.java
 /home/iridin/Documents/rcrs-adapting-firefighters/src/sample/LiveLogExtractor.java
 /home/iridin/Documents/rcrs-adapting-firefighters/src/cz/cuni/mff/d3s/rcrs/af/comm/TargetMsg.java
@@ -49,13 +52,14 @@
 /home/iridin/Documents/rcrs-adapting-firefighters/src/cz/cuni/mff/d3s/rcrs/af/modes/TransitionImpl.java
 /home/iridin/Documents/rcrs-adapting-firefighters/src/cz/cuni/mff/d3s/rcrs/af/IComponent.java
 /home/iridin/Documents/rcrs-adapting-firefighters/src/cz/cuni/mff/d3s/rcrs/af/comm/BuildingsMsg.java
+/home/iridin/Documents/rcrs-adapting-firefighters/src/cz/cuni/mff/d3s/rcrs/af/IFFComponent.java
 /home/iridin/Documents/rcrs-adapting-firefighters/src/sample/SampleCentre.java
 /home/iridin/Documents/rcrs-adapting-firefighters/src/sample/SampleViewer.java
 /home/iridin/Documents/rcrs-adapting-firefighters/src/cz/cuni/mff/d3s/rcrs/af/correlation/DistanceMetric.java
 /home/iridin/Documents/rcrs-adapting-firefighters/src/sample/DummyAgent.java
+/home/iridin/Documents/rcrs-adapting-firefighters/src/cz/cuni/mff/d3s/rcrs/af/componentisolation/ComponentImpl2.java
 /home/iridin/Documents/rcrs-adapting-firefighters/src/sample/SampleCivilian.java
 /home/iridin/Documents/rcrs-adapting-firefighters/src/cz/cuni/mff/d3s/rcrs/af/comm/KnowledgeMsg.java
 /home/iridin/Documents/rcrs-adapting-firefighters/src/cz/cuni/mff/d3s/rcrs/af/Configuration.java
-/home/iridin/Documents/rcrs-adapting-firefighters/src/cz/cuni/mff/d3s/rcrs/af/Component.java
 /home/iridin/Documents/rcrs-adapting-firefighters/src/cz/cuni/mff/d3s/rcrs/af/modes/ExtinguishMode.java
 /home/iridin/Documents/rcrs-adapting-firefighters/src/cz/cuni/mff/d3s/rcrs/af/componentisolation/ComponentImpl.java

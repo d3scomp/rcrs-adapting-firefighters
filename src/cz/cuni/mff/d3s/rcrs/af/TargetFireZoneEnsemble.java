@@ -8,6 +8,7 @@ import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_DISTANCE;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_FIREFIGHTER;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ID;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_POSITION;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_REFILLING;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -51,6 +52,7 @@ public class TargetFireZoneEnsemble extends Ensemble {
 				int helpingFireFighter = (int) t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_HELPING_FIREFIGHTER));
 				int helpingDistance = (int) t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_HELPING_DISTANCE));
 				boolean memberIsFree = memberFireTarget == null || memberFireTarget.equals(coordPosition);
+				boolean memberRefilling = (boolean) t.get(Ensemble.getMemberFieldName(KNOWLEDGE_REFILLING));
 				boolean coordGotDifferentHelp = helpingFireFighter != -1 && helpingFireFighter != memberId;
 				
 				int newDistance = model.getDistance(memberPosition, coordPosition);
@@ -58,7 +60,7 @@ public class TargetFireZoneEnsemble extends Ensemble {
 				boolean newIsCloser = newDistance < helpingDistance
 						&& newDistance < MAX_SEPARATION_DISTANCE;
 				
-				boolean satisfied = !coordGotDifferentHelp && memberIsFree && coordExtinguishing && newIsCloser;
+				boolean satisfied = !coordGotDifferentHelp && memberIsFree && !memberRefilling && coordExtinguishing && newIsCloser;
 				if(satisfied) {
 					int coordId = (int) t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_ID));
 					Logger.debug("TargetFireZoneEnsemble satisfied for " + "FF" + memberId + " and FF" + coordId);

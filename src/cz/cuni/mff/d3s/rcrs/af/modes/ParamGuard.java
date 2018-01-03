@@ -2,11 +2,11 @@ package cz.cuni.mff.d3s.rcrs.af.modes;
 
 import java.util.function.Predicate;
 
-import cz.cuni.mff.d3s.rcrs.af.IComponent;
+import cz.cuni.mff.d3s.rcrs.af.IFFComponent;
 
 public abstract class ParamGuard extends Guard {
 
-	public ParamGuard(IComponent component) {
+	public ParamGuard(IFFComponent component) {
 		super(component);
 	}
 	

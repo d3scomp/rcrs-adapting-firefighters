@@ -4,8 +4,8 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import cz.cuni.mff.d3s.rcrs.af.Component;
-import cz.cuni.mff.d3s.rcrs.af.IComponent;
+import cz.cuni.mff.d3s.rcrs.af.FFComponent;
+import cz.cuni.mff.d3s.rcrs.af.IFFComponent;
 
 public class TransitionImpl implements cz.cuni.mff.d3s.metaadaptation.modeswitch.Transition,
 		cz.cuni.mff.d3s.metaadaptation.modeswitchprops.Transition {
@@ -15,9 +15,9 @@ public class TransitionImpl implements cz.cuni.mff.d3s.metaadaptation.modeswitch
 	private final Guard guard;
 	private final Function<Void, Void> action;
 	private int priority;
-	private final IComponent component;
+	private final IFFComponent component;
 
-	public TransitionImpl(ModeImpl from, ModeImpl to, Guard guard, Function<Void, Void> action, IComponent component) {
+	public TransitionImpl(ModeImpl from, ModeImpl to, Guard guard, Function<Void, Void> action, IFFComponent component) {
 		this.from = from;
 		this.to = to;
 		this.guard = guard;
@@ -26,7 +26,7 @@ public class TransitionImpl implements cz.cuni.mff.d3s.metaadaptation.modeswitch
 		priority = 1;
 	}
 
-	public TransitionImpl(ModeImpl from, ModeImpl to, Guard guard, IComponent component) {
+	public TransitionImpl(ModeImpl from, ModeImpl to, Guard guard, IFFComponent component) {
 		this(from, to, guard, null, component);
 	}
 
@@ -53,6 +53,10 @@ public class TransitionImpl implements cz.cuni.mff.d3s.metaadaptation.modeswitch
 	@Override
 	public Predicate<Void> getGuard() {
 		return guard.getPredicate();
+	}
+	
+	public Guard getInnerGuard() {
+		return guard;
 	}
 	
 	public void invokeAction() {
@@ -90,7 +94,7 @@ public class TransitionImpl implements cz.cuni.mff.d3s.metaadaptation.modeswitch
 	public void setGuardParam(String name, double value) {
 		guard.setParameter(name, value);
 
-		if (component instanceof Component) {
+		if (component instanceof FFComponent) {
 			// Callback
 			component.setGuardParamCallback(this, name, value);
 		}

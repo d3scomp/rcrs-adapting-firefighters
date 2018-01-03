@@ -44,7 +44,7 @@ H1_DEFAULT_TIME = 30
 
 H2_INTRODUCE_FAILURE = "H2_INTRODUCE_FAILURE" # Movement failure
 H2_FAILURE_TIME = "H2_FAILURE_TIME"
-H2_FAILURE_IDS = "H2_FAILURE_IDS"
+H2_FAILURE_IMPACT = "H2_FAILURE_IMPACT"
 H2_MECHANISM = "H2_MECHANISM" # Faulty component isolation
 H2_DEFAULT_TIME = 30
 ''' The default time of movement failure in seconds. '''
@@ -120,18 +120,18 @@ scenarios.append({SCENARIO_NAME:"H1 remedy\t",
                   H2_INTRODUCE_FAILURE:False,
                   H3_MECHANISM:False,
                   H4_MECHANISM:False})
-# Movement failure
+# Refill failure
 scenarios.append({SCENARIO_NAME:"H2 failure\t",
                   H1_INTRODUCE_FAILURE:False,
                   H2_INTRODUCE_FAILURE:True,
-                  H2_FAILURE_IDS:"FF1 FF2",
+                  H2_FAILURE_IMPACT:0.1,
                   H2_MECHANISM:False,
                   H3_MECHANISM:False,
                   H4_MECHANISM:False})
 scenarios.append({SCENARIO_NAME:"H2 remedy\t",
                   H1_INTRODUCE_FAILURE:False,
                   H2_INTRODUCE_FAILURE:True,
-                  H2_FAILURE_IDS:"FF1 FF2",
+                  H2_FAILURE_IMPACT:0.1,
                   H2_MECHANISM:True,
                   H3_MECHANISM:False,
                   H4_MECHANISM:False})

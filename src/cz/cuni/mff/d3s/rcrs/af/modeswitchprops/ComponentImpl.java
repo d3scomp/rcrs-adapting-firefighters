@@ -2,15 +2,15 @@ package cz.cuni.mff.d3s.rcrs.af.modeswitchprops;
 
 import cz.cuni.mff.d3s.metaadaptation.modeswitchprops.ComponentType;
 import cz.cuni.mff.d3s.metaadaptation.modeswitchprops.ModeChart;
-import cz.cuni.mff.d3s.rcrs.af.Component;
+import cz.cuni.mff.d3s.rcrs.af.FFComponent;
 import cz.cuni.mff.d3s.rcrs.af.modes.ModeChartImpl;
 
 public class ComponentImpl implements cz.cuni.mff.d3s.metaadaptation.modeswitchprops.Component  {
 
-	private final Component component;
+	private final FFComponent component;
 	private final ModeChartImpl modeChart;
 	
-	public ComponentImpl(Component component) {
+	public ComponentImpl(FFComponent component) {
 		this.component = component;
 		
 		modeChart = new ModeChartImpl(component);

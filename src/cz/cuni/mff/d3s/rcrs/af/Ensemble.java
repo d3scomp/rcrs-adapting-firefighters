@@ -3,9 +3,10 @@ package cz.cuni.mff.d3s.rcrs.af;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.H1_FAILURE_IDS;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_BURNING_BUILDINGS;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_FIRE_TARGET;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_DISTANCE;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ID;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_POSITION;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_DISTANCE;
+import static cz.cuni.mff.d3s.rcrs.af.componentisolation.ComponentImpl.KNOWLEDGE_REFILL_ID;
 
 import java.util.HashMap;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.function.Predicate;
 
 import cz.cuni.mff.d3s.rcrs.af.comm.BuildingsMsg;
 import cz.cuni.mff.d3s.rcrs.af.comm.Msg;
+import cz.cuni.mff.d3s.rcrs.af.comm.RefillMsg;
 import cz.cuni.mff.d3s.rcrs.af.comm.TargetMsg;
 import rescuecore2.log.Logger;
 import rescuecore2.worldmodel.EntityID;
@@ -30,7 +32,7 @@ public abstract class Ensemble {
 		this.filter = filter;
 	}
 
-	public boolean isSatisfied(Component coordinator, Component member) {
+	public boolean isSatisfied(IComponent coordinator, IComponent member) {
 		Set<String> coordinatorExposedKnowledge = coordinator.getExposedKnowledge();
 		Set<String> memberExposedKnowledge = member.getExposedKnowledge();
 
@@ -65,7 +67,7 @@ public abstract class Ensemble {
 	}
 
 	@SuppressWarnings("unchecked")
-	public Msg getMessage(Component coordinator, Component member) {
+	public Msg getMessage(IComponent coordinator, IComponent member) {
 		String mediatedKnowledge = getMediatedKnowledge();
 		if (mediatedKnowledge.equals(KNOWLEDGE_FIRE_TARGET)) {
 			return new TargetMsg((int) member.getKnowledge().get(KNOWLEDGE_ID),
@@ -73,8 +75,11 @@ public abstract class Ensemble {
 					(EntityID) coordinator.getKnowledge().get(KNOWLEDGE_POSITION),
 					(int) member.getKnowledge().get(KNOWLEDGE_HELPING_DISTANCE));
 		} else if (mediatedKnowledge.equals(KNOWLEDGE_BURNING_BUILDINGS)) {
-			return new BuildingsMsg((int) member.getKnowledge().get(KNOWLEDGE_ID), 
+			return new BuildingsMsg((int) member.getKnowledge().get(KNOWLEDGE_ID),
 					(List<EntityID>) coordinator.getKnowledge().get(KNOWLEDGE_BURNING_BUILDINGS));
+		} else if (mediatedKnowledge.equals(KNOWLEDGE_REFILL_ID)) {
+			return new RefillMsg((int) member.getKnowledge().get(KNOWLEDGE_ID),
+					(EntityID) coordinator.getKnowledge().get(KNOWLEDGE_REFILL_ID));
 		} else {
 			Logger.error("No message type implemented for mediated knowledge: " + mediatedKnowledge);
 			return null;

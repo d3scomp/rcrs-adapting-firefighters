@@ -10,8 +10,9 @@ import java.util.function.Predicate;
 
 import cz.cuni.mff.d3s.metaadaptation.modeswitch.Mode;
 import cz.cuni.mff.d3s.metaadaptation.modeswitch.Transition;
-import cz.cuni.mff.d3s.rcrs.af.Component;
-import cz.cuni.mff.d3s.rcrs.af.IComponent;;
+import cz.cuni.mff.d3s.rcrs.af.FFComponent;
+import cz.cuni.mff.d3s.rcrs.af.IFFComponent;
+import rescuecore2.log.Logger;;
 
 public class ModeChartImpl implements cz.cuni.mff.d3s.metaadaptation.modeswitch.ModeChart,
 		cz.cuni.mff.d3s.metaadaptation.modeswitchprops.ModeChart {
@@ -19,9 +20,9 @@ public class ModeChartImpl implements cz.cuni.mff.d3s.metaadaptation.modeswitch.
 	private ModeImpl currentMode;
 	private Set<ModeImpl> modes;
 	private Set<TransitionImpl> transitions;
-	private IComponent component;
+	private IFFComponent component;
 
-	public ModeChartImpl(IComponent component) {
+	public ModeChartImpl(IFFComponent component) {
 
 		this.component = component;
 
@@ -37,14 +38,14 @@ public class ModeChartImpl implements cz.cuni.mff.d3s.metaadaptation.modeswitch.
 			private static final String FILLED_LEVEL = "FILLED_LEVEL";
 
 			@Override
-			protected void specifyParameters() {
+			public void specifyParameters() {
 				parameters.put(FILLED_LEVEL, (double) component.getMaxWater());
-
+				Logger.info(FILLED_LEVEL + " = " + (double) component.getMaxWater());
 			}
 
 			@Override
 			public boolean isSatisfied() {
-				return component.getWater() >=  Math.round(parameters.get(FILLED_LEVEL))
+				return component.getWater() >=  parameters.get(FILLED_LEVEL)
 						&& component.getBurningBuildings().size() == 0;
 			}
 		};
@@ -54,13 +55,13 @@ public class ModeChartImpl implements cz.cuni.mff.d3s.metaadaptation.modeswitch.
 			private static final String FILLED_LEVEL = "FILLED_LEVEL";
 
 			@Override
-			protected void specifyParameters() {
+			public void specifyParameters() {
 				parameters.put(FILLED_LEVEL, (double) component.getMaxWater());
 			}
 
 			@Override
 			public boolean isSatisfied() {
-				return component.getWater() >= Math.round(parameters.get(FILLED_LEVEL))
+				return component.getWater() >= parameters.get(FILLED_LEVEL)
 						&& component.getBurningBuildings().size() > 0;
 			}
 		};
@@ -88,13 +89,13 @@ public class ModeChartImpl implements cz.cuni.mff.d3s.metaadaptation.modeswitch.
 			private static final String EMPTY_LEVEL = "EMPTY_LEVEL";
 
 			@Override
-			protected void specifyParameters() {
+			public void specifyParameters() {
 				parameters.put(EMPTY_LEVEL, 0.0);
 			}
 
 			@Override
 			public boolean isSatisfied() {
-				return component.getWater() <= Math.round(parameters.get(EMPTY_LEVEL));
+				return component.getWater() <= parameters.get(EMPTY_LEVEL);
 			}
 		};
 
@@ -103,7 +104,7 @@ public class ModeChartImpl implements cz.cuni.mff.d3s.metaadaptation.modeswitch.
 			private static final String EMPTY_LEVEL = "EMPTY_LEVEL";
 
 			@Override
-			protected void specifyParameters() {
+			public void specifyParameters() {
 				parameters.put(EMPTY_LEVEL, (double) 0.0);
 
 			}
@@ -127,26 +128,10 @@ public class ModeChartImpl implements cz.cuni.mff.d3s.metaadaptation.modeswitch.
 
 		// ACTIONS ############################################################
 
-		Function<Void, Void> moveToRefillAction = new Function<Void, Void>() {
-			@Override
-			public Void apply(Void t) {
-				component.setRefillTarget(true);
-				return null;
-			}
-		};
-
 		Function<Void, Void> moveToFireAction = new Function<Void, Void>() {
 			@Override
 			public Void apply(Void t) {
 				component.setFireTarget(true);
-				return null;
-			}
-		};
-
-		Function<Void, Void> RefillReachedAction = new Function<Void, Void>() {
-			@Override
-			public Void apply(Void t) {
-				component.setRefillTarget(false);
 				return null;
 			}
 		};
@@ -178,12 +163,10 @@ public class ModeChartImpl implements cz.cuni.mff.d3s.metaadaptation.modeswitch.
 
 		transitions.add(new TransitionImpl(searchMode, extinguishMode, search2extinguishGuard, component));
 		transitions.add(new TransitionImpl(extinguishMode, searchMode, extinguish2searchGuard, component));
-		transitions.add(new TransitionImpl(extinguishMode, moveToRefillMode, extinguish2moveToRefillGuard,
-				moveToRefillAction, component));
+		transitions.add(new TransitionImpl(extinguishMode, moveToRefillMode, extinguish2moveToRefillGuard, component));
 		transitions.add(new TransitionImpl(moveToFireMode, extinguishMode, moveToFire2extinguishGuard,
 				FireReachedAction, component));
-		transitions.add(new TransitionImpl(moveToRefillMode, refillMode, moveToRefill2refillGuard, RefillReachedAction,
-				component));
+		transitions.add(new TransitionImpl(moveToRefillMode, refillMode, moveToRefill2refillGuard, component));
 		transitions.add(
 				new TransitionImpl(refillMode, moveToFireMode, refill2moveToFireGuard, moveToFireAction, component));
 		transitions.add(new TransitionImpl(refillMode, searchMode, refill2searchGuard, component));
@@ -216,7 +199,7 @@ public class ModeChartImpl implements cz.cuni.mff.d3s.metaadaptation.modeswitch.
 		TransitionImpl t = new TransitionImpl((ModeImpl) from, (ModeImpl) to, predicateGuard, component);
 		transitions.add(t);
 
-		if (component instanceof Component) {
+		if (component instanceof FFComponent) {
 			// Callback
 			component.addTransitionCallback(t);
 		}
@@ -224,7 +207,7 @@ public class ModeChartImpl implements cz.cuni.mff.d3s.metaadaptation.modeswitch.
 	}
 
 	public void removeTransition(Transition transition) {
-		if (component instanceof Component) {
+		if (component instanceof FFComponent) {
 			// Callback
 			component.removeTransitionCallback((TransitionImpl) transition);
 		}

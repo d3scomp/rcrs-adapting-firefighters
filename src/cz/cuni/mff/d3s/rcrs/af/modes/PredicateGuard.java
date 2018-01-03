@@ -2,17 +2,17 @@ package cz.cuni.mff.d3s.rcrs.af.modes;
 
 import java.util.function.Predicate;
 
-import cz.cuni.mff.d3s.rcrs.af.IComponent;
+import cz.cuni.mff.d3s.rcrs.af.IFFComponent;
 
 public class PredicateGuard extends Guard {
 	
-	public PredicateGuard(IComponent component, Predicate<Void> predicate) {
+	public PredicateGuard(IFFComponent component, Predicate<Void> predicate) {
 		super(component);
 		this.predicate = predicate;
 	}
 	
 	@Override
-	protected void specifyParameters() {}
+	public void specifyParameters() {}
 
 	@Override
 	protected Predicate<Void> setPredicate() {

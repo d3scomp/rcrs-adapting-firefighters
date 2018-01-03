@@ -12,15 +12,15 @@ import java.util.Set;
 
 import cz.cuni.mff.d3s.metaadaptation.correlation.ComponentPort;
 import cz.cuni.mff.d3s.metaadaptation.correlation.CorrelationMetadataWrapper;
-import cz.cuni.mff.d3s.rcrs.af.Component;
+import cz.cuni.mff.d3s.rcrs.af.FFComponent;
 import rescuecore2.worldmodel.EntityID;
 
 public class ComponentImpl implements cz.cuni.mff.d3s.metaadaptation.correlation.Component {
 	
-	private final Component component;
+	private final FFComponent component;
 	private Set<ComponentPort> ports;
 	
-	public ComponentImpl(Component component) {
+	public ComponentImpl(FFComponent component) {
 		this.component = component;
 		ports = new HashSet<>();
 	}

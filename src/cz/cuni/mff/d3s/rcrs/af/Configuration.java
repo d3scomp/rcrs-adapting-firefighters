@@ -1,11 +1,14 @@
 package cz.cuni.mff.d3s.rcrs.af;
 
 import java.lang.reflect.Field;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import rescuecore2.Constants;
 import rescuecore2.log.Logger;
+import rescuecore2.worldmodel.EntityID;
 
 /**
  * <p>
@@ -43,8 +46,10 @@ public class Configuration {
 
 	public static boolean H2_INTRODUCE_FAILURE = false;
 	public static long H2_FAILURE_TIME = 50;
-	public static String H2_FAILURE_IDS = "FF2 FF3";
+	public static double H2_FAILURE_IMPACT = 0.1;
 	public static boolean H2_MECHANISM = false;
+	
+	public static Set<EntityID> failedRefillStations = new HashSet<>();
 
 	// ENHANCING MODE SWITCHING
 

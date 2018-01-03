@@ -5,15 +5,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Predicate;
 
-import cz.cuni.mff.d3s.rcrs.af.IComponent;
+import cz.cuni.mff.d3s.rcrs.af.IFFComponent;
 
 public abstract class Guard {
 	
 	protected final Map<String, Double> parameters;
-	protected final IComponent component;
+	protected final IFFComponent component;
 	protected Predicate<Void> predicate;
 
-	public Guard(IComponent component){
+	public Guard(IFFComponent component){
 		this.component = component;
 		parameters = new HashMap<>();
 		specifyParameters();
@@ -41,5 +41,5 @@ public abstract class Guard {
 	
 	protected abstract Predicate<Void> setPredicate();
 
-	protected abstract void specifyParameters();
+	public abstract void specifyParameters();
 }
