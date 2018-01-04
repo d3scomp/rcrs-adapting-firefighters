@@ -131,6 +131,12 @@ public class FFComponent implements IFFComponent {
 	public void setFireTarget(boolean set) {
 		// Relevant only for fire fighter object
 	}
+	
+	@Override
+	public boolean atRefill() {
+		// Relevant only for fire fighter object
+		return false;
+	}
 
 	@Override
 	public void addTransitionCallback(TransitionImpl transition) {

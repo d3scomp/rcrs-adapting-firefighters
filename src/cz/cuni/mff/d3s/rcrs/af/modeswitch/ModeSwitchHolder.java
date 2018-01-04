@@ -86,9 +86,9 @@ public class ModeSwitchHolder {
 			@Override
 			public void setFireTarget(boolean set) {}
 
-//			@Override
-//			public void setRefillTarget(boolean set) {}
-
+			@Override
+			public boolean atRefill() { return false; }
+			
 			@Override
 			public void addTransitionCallback(TransitionImpl transition) {}
 

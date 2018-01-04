@@ -48,6 +48,7 @@ public class TargetFireZoneEnsemble extends Ensemble {
 				@SuppressWarnings("unchecked")
 				boolean coordExtinguishing = (boolean) t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_EXTINGUISHING))
 						&& !((List<EntityID>)t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_BURNING_BUILDINGS))).isEmpty();
+				// TODO: coordinator not a member
 				EntityID memberFireTarget = (EntityID) t.get(Ensemble.getMemberFieldName(KNOWLEDGE_FIRE_TARGET));
 				int helpingFireFighter = (int) t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_HELPING_FIREFIGHTER));
 				int helpingDistance = (int) t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_HELPING_DISTANCE));

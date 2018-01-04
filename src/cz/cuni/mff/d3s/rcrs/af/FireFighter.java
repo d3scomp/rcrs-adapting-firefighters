@@ -33,6 +33,7 @@ import rescuecore2.log.Logger;
 import rescuecore2.messages.Command;
 import rescuecore2.standard.entities.Building;
 import rescuecore2.standard.entities.FireBrigade;
+import rescuecore2.standard.entities.Hydrant;
 import rescuecore2.standard.entities.Refuge;
 import rescuecore2.standard.entities.StandardEntity;
 import rescuecore2.standard.entities.StandardEntityURN;
@@ -284,7 +285,11 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements IFF
 
 		// Refill;
 		else if (modeChart.getCurrentMode() instanceof RefillMode) {
-			Logger.info(formatLog(time, "refilling(" + getWater() + ")"));
+			if(!atRefill()) {
+				Logger.warn(formatLog(time, "Trying to refill at wrong place " + getLocation().getValue()));
+			} else {
+				Logger.info(formatLog(time, "refilling(" + getWater() + ")"));
+			}
 			sendRest(time);
 		}
 
@@ -362,10 +367,6 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements IFF
 		return helpingFireFighter;
 	}
 
-	public boolean atRefuge() {
-		return location() instanceof Refuge;
-	}
-
 	public List<EntityID> getBurningBuildings() {
 		return burningBuildings;
 	}
@@ -412,13 +413,17 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements IFF
 	private String stringBurningBuildings() {
 		StringBuilder builder = new StringBuilder();
 		for(EntityID buildingId : burningBuildings) {
-			StandardEntity building = model.getEntity(buildingId);
+			Building building = (Building) model.getEntity(buildingId);
 			builder.append(buildingId.getValue());
-			builder.append("(");
-			builder.append(building.getProperty(StandardPropertyURN.TEMPERATURE.toString()).getValue());
-			builder.append(")[");
-			builder.append(building.getProperty(StandardPropertyURN.FIERYNESS.toString()).getValue());
-			builder.append("] ");
+			builder.append("(temp: ");
+			builder.append(building.getTemperature());
+			builder.append(")(on fire: ");
+			builder.append(building.isOnFire());
+			builder.append(")(fire: ");
+			builder.append(building.getFieryness());
+			builder.append(")(ignition: ");
+			//builder.append(building.getIgnition());
+			builder.append(")");
 		}
 		
 		return builder.toString();
@@ -485,4 +490,9 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements IFF
 		return null;
 	}
 
+	@Override
+	public boolean atRefill() {
+		StandardEntity here = location();
+		return here instanceof Hydrant || here instanceof Refuge;
+	}
 }

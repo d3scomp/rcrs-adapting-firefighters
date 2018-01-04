@@ -17,6 +17,7 @@ public interface IFFComponent extends IComponent {
 	public int getHelpingFireFighter();
 	public EntityID findCloseBurningBuilding();
 	public void setFireTarget(boolean set);
+	public boolean atRefill();
 	
 	// Callbacks for ModeChart
 	public void addTransitionCallback(TransitionImpl transition);

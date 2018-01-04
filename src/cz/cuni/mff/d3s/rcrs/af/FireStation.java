@@ -114,7 +114,7 @@ public class FireStation extends StandardAgent<Building> {
             }
         }
 		
-		ensembles.add(TargetFireZoneEnsemble.getInstance(model));
+		// ensembles.add(TargetFireZoneEnsemble.getInstance(model));
 
 		if(H1_MECHANISM) {
 			// Register metrics
