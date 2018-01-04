@@ -415,15 +415,19 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements IFF
 		for(EntityID buildingId : burningBuildings) {
 			Building building = (Building) model.getEntity(buildingId);
 			builder.append(buildingId.getValue());
-			builder.append("(temp: ");
-			builder.append(building.getTemperature());
-			builder.append(")(on fire: ");
-			builder.append(building.isOnFire());
-			builder.append(")(fire: ");
-			builder.append(building.getFieryness());
-			builder.append(")(ignition: ");
-			//builder.append(building.getIgnition());
-			builder.append(")");
+			try {
+				builder.append("(temp: ");
+				builder.append(building.getTemperature());
+				builder.append(")(on fire: ");
+				builder.append(building.isOnFire());
+				builder.append(")(fire: ");
+				builder.append(building.getFieryness());
+				builder.append(")(ignition: ");
+				builder.append(building.getIgnition());
+				builder.append(")");
+			} catch (NullPointerException e) {
+				builder.append(" null ");
+			}
 		}
 		
 		return builder.toString();
