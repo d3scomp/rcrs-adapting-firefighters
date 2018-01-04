@@ -126,9 +126,11 @@ public class FireStation extends StandardAgent<Building> {
 				if(random.nextDouble() <= H2_FAILURE_IMPACT) {
 					refillStation.malfunction();
 					failedRefillStations.add(refillStation.getId());
-					if(H2_MECHANISM) {
-						isolationManager.getComponentManager().addComponent(refillStation);
-					}
+					Logger.info("Refill station " + refillStation.toString() + " malfunction");
+				}
+
+				if(H2_MECHANISM) {
+					isolationManager.getComponentManager().addComponent(refillStation);
 				}
 			}
 		}

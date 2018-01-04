@@ -260,7 +260,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements IFF
 		// Move to Refill
 		else if (modeChart.getCurrentMode() instanceof MoveToRefillMode) {
 			if (refillTarget != null) {
-				if(H2_INTRODUCE_FAILURE && H2_FAILURE_TIME >= time && failedRefillStations.contains(refillTarget)) {
+				if(H2_INTRODUCE_FAILURE && time >= H2_FAILURE_TIME && failedRefillStations.contains(refillTarget)) {
 					Logger.info(formatLog(time, "Stucked moving towards broken refill station " + refillTarget.getValue()));
 				} else {
 					Logger.info(formatLog(time, "moving towards refill target: " + refillTarget.getValue()));
