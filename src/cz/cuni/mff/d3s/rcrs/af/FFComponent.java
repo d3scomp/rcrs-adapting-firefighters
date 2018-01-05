@@ -7,6 +7,7 @@ import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_CAN_DETECT_BUILDINGS
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_EXTINGUISHING;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_REFILLING;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_FIRE_TARGET;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELP_TARGET;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ID;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_POSITION;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_REFILL_TARGET;
@@ -48,6 +49,7 @@ public class FFComponent implements IFFComponent {
 		
 		knowledge.put(KNOWLEDGE_ID, msg.id);
 		knowledge.put(KNOWLEDGE_FIRE_TARGET, msg.fireTarget);
+		knowledge.put(KNOWLEDGE_HELP_TARGET, msg.helpTarget);
 		knowledge.put(KNOWLEDGE_REFILL_TARGET, msg.refillTarget);
 		knowledge.put(KNOWLEDGE_POSITION, msg.position);
 		knowledge.put(KNOWLEDGE_WATER, msg.water);

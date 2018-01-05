@@ -1,7 +1,8 @@
 package cz.cuni.mff.d3s.rcrs.af;
 
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_REFILL_TARGET;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ID;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_POSITION;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_REFILL_TARGET;
 import static cz.cuni.mff.d3s.rcrs.af.componentisolation.ComponentImpl.KNOWLEDGE_CAN_REFILL;
 import static cz.cuni.mff.d3s.rcrs.af.componentisolation.ComponentImpl.KNOWLEDGE_REFILL_ID;
 
@@ -11,6 +12,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import cz.cuni.mff.d3s.rcrs.af.comm.Msg;
+import cz.cuni.mff.d3s.rcrs.af.comm.RefillMsg;
 import rescuecore2.log.Logger;
 import rescuecore2.standard.entities.StandardWorldModel;
 import rescuecore2.worldmodel.EntityID;
@@ -74,6 +77,12 @@ public class RefillStationEnsemble extends Ensemble {
 		return new HashSet<>(Arrays.asList(new String[] {
 				KNOWLEDGE_POSITION,
 				KNOWLEDGE_REFILL_TARGET}));
+	}
+	
+	@Override
+	public Msg getMessage(IComponent coordinator, IComponent member) {
+		return new RefillMsg((int) member.getKnowledge().get(KNOWLEDGE_ID),
+				(EntityID) coordinator.getKnowledge().get(KNOWLEDGE_REFILL_ID));
 	}
 
 }

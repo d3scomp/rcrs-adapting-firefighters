@@ -37,7 +37,6 @@ import rescuecore2.standard.entities.Hydrant;
 import rescuecore2.standard.entities.Refuge;
 import rescuecore2.standard.entities.StandardEntity;
 import rescuecore2.standard.entities.StandardEntityURN;
-import rescuecore2.standard.entities.StandardPropertyURN;
 import rescuecore2.standard.messages.AKSpeak;
 import rescuecore2.worldmodel.ChangeSet;
 import rescuecore2.worldmodel.Entity;
@@ -65,6 +64,9 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements IFF
 
 	private EntityID fireTarget; // updated by mode switch
 	public final static String KNOWLEDGE_FIRE_TARGET = "fireTarget";
+
+	private EntityID helpTarget; // updated by mode switch
+	public final static String KNOWLEDGE_HELP_TARGET = "helpTarget";
 
 	private EntityID refillTarget; // updated by ensemble
 	public final static String KNOWLEDGE_REFILL_TARGET = "refillTarget";
@@ -148,6 +150,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements IFF
 		Logger.info(formatLog(time, "found burning buildings: " + stringBurningBuildings()));
 		
 		// Anulate helping firefighter to cancel ensemble if no longer satisfied
+		helpTarget = null;
 		helpingFireFighter = -1;
 		helpingDistance = Integer.MAX_VALUE;
 
@@ -155,7 +158,6 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements IFF
 		// status
 		// changes.getChangedProperty(building, StandardEntityConstants.Fieryness)
 
-		boolean modeOverridden = false;
 		// If fire station issued a command follow it.
 		for (Command nextCom : heard) {
 			if (nextCom instanceof AKSpeak) {
@@ -163,15 +165,13 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements IFF
 				Msg command = Msg.fromBytes(message.getContent());
 				Logger.debug(formatLog(time, "heard " + message));
 				
-				if (command instanceof TargetMsg && !refilling()) {
+				if (command instanceof TargetMsg) {
 					TargetMsg targetMsg = (TargetMsg) command;
 					if (targetMsg.memberId == id) {
 						Logger.info(formatLog(time, "received " + targetMsg));
-						fireTarget = targetMsg.coordTarget;
+						helpTarget = targetMsg.coordTarget;
 						helpingDistance = targetMsg.helpingDistance;
-						modeChart.setCurrentMode(MoveToFireMode.class);
-						modeOverridden = true;
-						Logger.info(formatLog(time, "targeted towards " + fireTarget));
+						Logger.info(formatLog(time, "help towards " + helpTarget));
 					}
 					if (targetMsg.coordId == id) {
 						Logger.info(formatLog(time, "received " + targetMsg));
@@ -228,17 +228,17 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements IFF
 			}
 		}
 
-		// Switch mode if necessary
-		if (!modeOverridden) {
-			modeChart.decideModeSwitch();
-		}
+		// Switch mode
+		modeChart.decideModeSwitch();
 
 		// Switch behavior according to current mode
 
 		// Search
 		if (modeChart.getCurrentMode() instanceof SearchMode) {
 			Logger.info(formatLog(time, "searching"));
-			if (searchTarget == null) {
+			if(helpTarget != null) {
+				searchTarget = helpTarget;
+			} else if (searchTarget == null) {
 				searchTarget = randomTarget();
 			} else if (searchTarget.equals(location().getID())) {
 				searchTarget = randomTarget();
@@ -294,7 +294,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements IFF
 		}
 
 		// Send knowledge
-		Msg msg = new KnowledgeMsg(id, location().getID(), fireTarget, refillTarget,
+		Msg msg = new KnowledgeMsg(id, location().getID(), fireTarget, helpTarget, refillTarget,
 				getWater(), extinguishing(), refilling(), burningBuildings, canDetectBuildings,
 				helpingFireFighter, helpingDistance);
 		sendSpeak(time, CHANNEL_OUT, msg.getBytes());
@@ -401,13 +401,17 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> implements IFF
 	}
 
 	public EntityID findCloseBurningBuilding() {
+		ArrayList<EntityID> closeBuildings = new ArrayList<>();
 		// Can we extinguish any right now?
 		for (EntityID building : burningBuildings) {
-			if (model.getDistance(getID(), building) < maxDistance) {
-				return building;
+			if (model.getDistance(getID(), building) < maxDistance*0.8) {
+				closeBuildings.add(building);
 			}
 		}
-		return null;
+		if(closeBuildings.size() == 0) {
+			return null;
+		}
+		return closeBuildings.get(random.nextInt(closeBuildings.size()));
 	}
 
 	private String stringBurningBuildings() {

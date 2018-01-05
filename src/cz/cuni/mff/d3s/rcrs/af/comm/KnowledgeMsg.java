@@ -29,6 +29,7 @@ public class KnowledgeMsg extends Msg {
 	public final int id;
 	public final EntityID position;
 	public final EntityID fireTarget;
+	public final EntityID helpTarget;
 	public final EntityID refillTarget;
 	public final int water;
 	public final boolean extinguishing;
@@ -39,12 +40,14 @@ public class KnowledgeMsg extends Msg {
 	public final int helpingDistance;
 	
 	
-	public KnowledgeMsg(int id, EntityID position, EntityID fireTarget, EntityID refillTarget,
-			int water, boolean extinguishing, boolean refilling, List<EntityID> burningBuildings,
+	public KnowledgeMsg(int id, EntityID position, EntityID fireTarget,
+			EntityID helpTarget, EntityID refillTarget, int water,
+			boolean extinguishing, boolean refilling, List<EntityID> burningBuildings,
 			boolean canDetectBuildings, int helpingFireFighter, int helpingDistance) {
 		this.id = id;
 		this.position = position;
 		this.fireTarget = fireTarget;
+		this.helpTarget = helpTarget;
 		this.refillTarget = refillTarget;
 		this.water = water;
 		this.extinguishing = extinguishing;
@@ -59,6 +62,7 @@ public class KnowledgeMsg extends Msg {
 		id = Integer.MIN_VALUE;
 		position = null;
 		fireTarget = null;
+		helpTarget = null;
 		refillTarget = null;
 		water = Integer.MIN_VALUE;
 		extinguishing = false;
@@ -71,9 +75,9 @@ public class KnowledgeMsg extends Msg {
 	
 	@Override
 	protected ByteBuffer getMsgBytes() {
-		// int id, int position, int fireTarget, int refilTarget, int water,
+		// int id, int position, int fireTarget, int helpTarget, int refilTarget, int water,
 		// int helpingFireFighter, int helpingDistance,
-		int size = Integer.BYTES * 7
+		int size = Integer.BYTES * 8
 		// boolean extinguishing, boolean refilling, boolean canDetectBuildings,
 				 + 3
 		// 1 byte burningBuildings.size,
@@ -95,6 +99,12 @@ public class KnowledgeMsg extends Msg {
 		if(fireTarget != null) {
 			data.putInt(fireTarget.getValue());
 			entityBuffer.put(fireTarget.getValue(), fireTarget);
+		} else {
+			data.putInt(-1);
+		}
+		if(helpTarget != null) {
+			data.putInt(helpTarget.getValue());
+			entityBuffer.put(helpTarget.getValue(), helpTarget);
 		} else {
 			data.putInt(-1);
 		}
@@ -133,6 +143,11 @@ public class KnowledgeMsg extends Msg {
 			fireTarget = entityBuffer.get(targetInt);
 		}
 		targetInt = data.getInt();
+		EntityID helpTarget = null;
+		if(targetInt != -1) {
+			helpTarget = entityBuffer.get(targetInt);
+		}
+		targetInt = data.getInt();
 		EntityID refillTarget = null;
 		if(targetInt != -1) {
 			refillTarget = entityBuffer.get(targetInt);
@@ -148,8 +163,8 @@ public class KnowledgeMsg extends Msg {
 		int helpingFireFighter = data.getInt();
 		int helpingDistance = data.getInt();
 		
-		return new KnowledgeMsg(id, position, fireTarget, refillTarget, water,
-				extinguishing, refilling, burningBuildings, canDetectBuildings,
+		return new KnowledgeMsg(id, position, fireTarget, helpTarget, refillTarget,
+				water, extinguishing, refilling, burningBuildings, canDetectBuildings,
 				helpingFireFighter, helpingDistance);
 	}
 
@@ -173,6 +188,7 @@ public class KnowledgeMsg extends Msg {
 				+ " " + KNOWLEDGE_ID + "=" + id
 				+ " " + KNOWLEDGE_POSITION + "=" + (position != null ? position.getValue() : -1)
 				+ " " + KNOWLEDGE_FIRE_TARGET + "=" + (fireTarget != null ? fireTarget.getValue() : -1)
+				+ " " + KNOWLEDGE_FIRE_TARGET + "=" + (helpTarget != null ? helpTarget.getValue() : -1)
 				+ " " + KNOWLEDGE_REFILL_TARGET + "=" + (refillTarget != null ? refillTarget.getValue() : -1)
 				+ " " + KNOWLEDGE_WATER + "=" + water
 				+ " " + KNOWLEDGE_EXTINGUISHING + "=" + extinguishing
