@@ -166,7 +166,7 @@ def plot(allValues, scenarioIndices):
     bp = plt.boxplot(allValues)
         
     # add the value of the medians to the diagram 
-    printMedians(bp)
+    # printMedians(bp)
     
     plt.xlabel("Scenario number")
     printYLabel(plt)
@@ -194,7 +194,7 @@ def plot(allValues, scenarioIndices):
     plt.savefig("{}.png".format(outputFile))
     
     
-def plotH3H4(allValues, scenarioIndices):
+def plotH3H4(baselineValues, allValues, scenarioIndices):
     if not os.path.exists(FIGURES_DIR):
         os.makedirs(FIGURES_DIR)
     outputFile = os.path.join(FIGURES_DIR, '-'.join(map(str, scenarioIndices)))
@@ -205,17 +205,16 @@ def plotH3H4(allValues, scenarioIndices):
     values = []
     signatures = []
     # Prepend baseline
-#    signatures.append("baseline")
-#    labels.append(StringLabel(str(1), "black"))
-#    values.append(baseline)
+    signatures.append("baseline")
+    labels.append(StringLabel(str(1), "black"))
+    values.append(baselineValues)
     
     print("LEGEND:")
-#    print("{}\t{}".format(1, "baseline"))
+    print("{}\t{}".format(1, "baseline"))
     legendFile.write("LEGEND:\n")
-#    legendFile.write("{} - {}\n".format(1, "baseline"))
+    legendFile.write("{} - {}\n".format(1, "baseline"))
     
-#    i = 2
-    i = 1
+    i = 2
     for k in allValues.keys():
         signatures.append(k)
         labels.append(StringLabel(str(i), "black"))
@@ -235,7 +234,7 @@ def plotH3H4(allValues, scenarioIndices):
         sp = plt.subplot()
         bp = sp.boxplot(values)
     # add the value of the medians to the diagram 
-    printMedians(bp)
+    # printMedians(bp)
     
     printYLabel(plt)
     
@@ -308,8 +307,9 @@ if __name__ == '__main__':
             print("Analyzing scenario {}".format(scenario))
             
             if scenarios[scenario][H3_MECHANISM] or scenarios[scenario][H4_MECHANISM]:
+                baselineScore = analyzeScenario(BASELINE_SCENARIO)
                 t = analyzeH3H4Scenario(scenario)
-                plotH3H4(t, scenarioIndices)
+                plotH3H4(baselineScore, t, scenarioIndices)
             else:
                 scores.append(analyzeScenario(scenario))
         

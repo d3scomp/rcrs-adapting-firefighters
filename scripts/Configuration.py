@@ -22,7 +22,7 @@ class ArgError(Exception):
 # HW RESOURCES
 ###############################################################################
 
-CORES = 20
+CORES = 32
 ''' The number of processor cores to utilize. The number of simulations
     to run in parallel. '''
     
@@ -66,7 +66,7 @@ RCRS_PORT_BASE = 7100
 
 AGENTS_PORT_PARAM = "PORT"
 
-SIMULATION_ITERATIONS = 20
+SIMULATION_ITERATIONS = 100
 ''' The number of simulation iterations '''
 
 ###############################################################################
@@ -75,6 +75,9 @@ SIMULATION_ITERATIONS = 20
 ###############################################################################
 # ANALYSIS CONFIGURATION
 ###############################################################################
+
+
+BASELINE_SCENARIO = 0
 
 PLOT_LABELS = False
 ''' Indicates whether the produced plot should contain signature labels. '''
