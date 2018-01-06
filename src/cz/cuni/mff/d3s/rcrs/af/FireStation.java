@@ -123,7 +123,8 @@ public class FireStation extends StandardAgent<Building> {
 		}
 		if(H2_INTRODUCE_FAILURE) {
 			for(cz.cuni.mff.d3s.rcrs.af.componentisolation.ComponentImpl refillStation : refillComponents) {
-				if(random.nextDouble() <= H2_FAILURE_IMPACT) {
+				if(model.getEntity(refillStation.getId()) instanceof Hydrant
+						&& random.nextDouble() < H2_FAILURE_IMPACT) {
 					refillStation.malfunction();
 					failedRefillStations.add(refillStation.getId());
 					Logger.info("Refill station " + refillStation.toString() + " malfunction");

@@ -63,17 +63,17 @@ H4_PROPERTIES = "H4_PROPERTIES";
 
 # Transitions not present in the default mode chart
 missingTransitions = [
-#     ("SearchMode","RefillMode"),
-#     ("SearchMode","MoveToFireMode"),
-#     ("SearchMode","MoveToRefillMode"),
-#     ("ExtinguishMode","RefillMode"),
-#     ("ExtinguishMode","MoveToFireMode"),
-#     ("RefillMode","ExtinguishMode"),
-#     ("RefillMode","MoveToRefillMode"),
-#     ("MoveToFireMode","SearchMode"),
-#     ("MoveToFireMode","RefillMode"),
-#     ("MoveToFireMode","MoveToRefillMode"),
-#     ("MoveToRefillMode","SearchMode"),
+    ("SearchMode","RefillMode"),
+    ("SearchMode","MoveToFireMode"),
+    ("SearchMode","MoveToRefillMode"),
+    ("ExtinguishMode","RefillMode"),
+    ("ExtinguishMode","MoveToFireMode"),
+    ("RefillMode","ExtinguishMode"),
+    ("RefillMode","MoveToRefillMode"),
+    ("MoveToFireMode","SearchMode"),
+    ("MoveToFireMode","RefillMode"),
+    ("MoveToFireMode","MoveToRefillMode"),
+    ("MoveToRefillMode","SearchMode"),
     ("MoveToRefillMode","ExtinguishMode"),
     ("MoveToRefillMode","MoveToFireMode")]
 missingTransitionsReduced = [
