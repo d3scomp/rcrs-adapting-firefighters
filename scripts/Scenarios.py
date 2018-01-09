@@ -144,30 +144,6 @@ scenarios.append({SCENARIO_NAME:"H3 p=0.1 deg=1",
                   H3_TRANSITION_PROBABILITY:0.1,
                   H3_TRANSITION_PRIORITY:10,
                   H4_MECHANISM:False})
-scenarios.append({SCENARIO_NAME:"H3 p=0.01 deg=1",
-                  H1_INTRODUCE_FAILURE:False,
-                  H2_INTRODUCE_FAILURE:False,
-                  H3_MECHANISM:True,
-                  H3_DEGREE:1,
-                  H3_TRANSITION_PROBABILITY:0.01,
-                  H3_TRANSITION_PRIORITY:10,
-                  H4_MECHANISM:False})
-scenarios.append({SCENARIO_NAME:"H3 p=0.1 deg=2",
-                  H1_INTRODUCE_FAILURE:False,
-                  H2_INTRODUCE_FAILURE:False,
-                  H3_MECHANISM:True,
-                  H3_DEGREE:2,
-                  H3_TRANSITION_PROBABILITY:0.1,
-                  H3_TRANSITION_PRIORITY:10,
-                  H4_MECHANISM:False})
-scenarios.append({SCENARIO_NAME:"H3 p=0.01 deg=2",
-                  H1_INTRODUCE_FAILURE:False,
-                  H2_INTRODUCE_FAILURE:False,
-                  H3_MECHANISM:True,
-                  H3_DEGREE:2,
-                  H3_TRANSITION_PROBABILITY:0.01,
-                  H3_TRANSITION_PRIORITY:10,
-                  H4_MECHANISM:False})
 # Mode Switch Properties
 scenarios.append({SCENARIO_NAME:"H4 deg=1\t",
                   H1_INTRODUCE_FAILURE:False,
@@ -175,12 +151,6 @@ scenarios.append({SCENARIO_NAME:"H4 deg=1\t",
                   H3_MECHANISM:False,
                   H4_MECHANISM:True,
                   H4_DEGREE:1})
-scenarios.append({SCENARIO_NAME:"H4 deg=2\t",
-                  H1_INTRODUCE_FAILURE:False,
-                  H2_INTRODUCE_FAILURE:False,
-                  H3_MECHANISM:False,
-                  H4_MECHANISM:True,
-                  H4_DEGREE:2})
 
 
 #################################################
