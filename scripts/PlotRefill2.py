@@ -23,7 +23,8 @@ from Scenarios import *
 from Configuration import *
 
 
-suffix = "_queue"
+suffix = "_refill"
+
 
 # ANALYSIS ####################################################################
 
@@ -41,9 +42,11 @@ def analyzeLog(simulationSignature, logDirFile):
     with open(file, 'r') as fp:
         for line in fp.readlines():
             begin = re.compile('.*T\[(\d+)\].*(FF\d+) moving towards refill target: \d+')
-            end = re.compile('.*T\[(\d+)\] .* (FF\d+) refilling\(\d+\)')
+            end1 = re.compile('.*T\[(\d+)\] .* (FF\d+) moving to fire.*')
+            end2 = re.compile('.*T\[(\d+)\] .* (FF\d+) searching.*')
             matchBegin = begin.match(line)
-            matchEnd = end.match(line)
+            matchEnd1 = end1.match(line)
+            matchEnd2 = end2.match(line)
             
             if matchBegin:
                 try:
@@ -54,7 +57,8 @@ def analyzeLog(simulationSignature, logDirFile):
                 except ValueError:
                     print matchBegin.group(1), 'error - not a number'
                     
-            if matchEnd:
+            if matchEnd1 or matchEnd2:
+                matchEnd = matchEnd1 if matchEnd1 != None else matchEnd2
                 try:
                     eTime = int(matchEnd.group(1))
                     eAgent = matchEnd.group(2)
