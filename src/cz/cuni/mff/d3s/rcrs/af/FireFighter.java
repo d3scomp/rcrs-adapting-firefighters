@@ -1,31 +1,33 @@
 package cz.cuni.mff.d3s.rcrs.af;
 
-import static rescuecore2.misc.Handy.objectsToIDs;
-import static cz.cuni.mff.d3s.rcrs.af.Run.TS_WINDOW_CNT;
-import static cz.cuni.mff.d3s.rcrs.af.Run.TS_WINDOW_SIZE;
-import static cz.cuni.mff.d3s.rcrs.af.Run.TS_ALPHA;
 import static cz.cuni.mff.d3s.rcrs.af.Run.NOISE_MEAN;
 import static cz.cuni.mff.d3s.rcrs.af.Run.NOISE_VARIANCE;
+import static cz.cuni.mff.d3s.rcrs.af.Run.TS_ALPHA;
+import static cz.cuni.mff.d3s.rcrs.af.Run.TS_WINDOW_CNT;
+import static cz.cuni.mff.d3s.rcrs.af.Run.TS_WINDOW_SIZE;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import cz.cuni.mff.d3s.rcrs.af.modes.Mode;
-import cz.cuni.mff.d3s.tss.*;
+import cz.cuni.mff.d3s.tss.TimeSeries;
 import rescuecore2.log.Logger;
 import rescuecore2.messages.Command;
 import rescuecore2.standard.entities.Building;
 import rescuecore2.standard.entities.FireBrigade;
+import rescuecore2.standard.entities.Hydrant;
 import rescuecore2.standard.entities.Refuge;
 import rescuecore2.standard.entities.StandardEntity;
 import rescuecore2.standard.entities.StandardEntityURN;
 import rescuecore2.worldmodel.ChangeSet;
+import rescuecore2.worldmodel.Entity;
 import rescuecore2.worldmodel.EntityID;
 import sample.AbstractSampleAgent;
-import sample.DistanceSorter;
 
 public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 	
@@ -40,23 +42,31 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 	private static final String MAX_WATER_KEY = "fire.tank.maximum";
 	private static final String MAX_DISTANCE_KEY = "fire.extinguish.max-distance";
 	private static final String MAX_POWER_KEY = "fire.extinguish.max-sum";
-
-	private final int waterThreshold = 1000;
 	
 	private int maxWater;
 	private int maxDistance;
 	private int maxPower;
 
 	private Mode mode = Mode.Search;
-	private EntityID target;
-	private EntityID closeBurningBuilding;
+
+	private EntityID searchTarget = null;
+	private EntityID fireTarget = null;
+	private EntityID refillTarget = null;
 	
+	private List<EntityID> burningBuildings = Collections.emptyList();
+
+	private final int waterThreshold = 1000; // TODO: Move to config	
 	private TimeSeries waterSeries;
-	private NoiseFilter noise;
+	private NoiseFilter waterNoise;
+
+	StandardEntity[] roads;
+	Set<EntityID> refillStations = new HashSet<>();
+	
+	// ########################################################################
 
 	public FireFighter(int id, boolean extendedModes) {
 		this.id = String.format("FF%d", id);
-		useExtendedModes = extendedModes;
+		useExtendedModes = extendedModes; // TODO: move to config
 		
 		if(useExtendedModes) {
 			waterSeries = new TimeSeries(TS_WINDOW_CNT, TS_WINDOW_SIZE);
@@ -64,7 +74,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			waterSeries = null;
 		}
 		
-		noise = new NoiseFilter(NOISE_MEAN, NOISE_VARIANCE);
+		waterNoise = new NoiseFilter(NOISE_MEAN, NOISE_VARIANCE);
 	}
 
 	@Override
@@ -77,6 +87,16 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 		maxPower = config.getIntValue(MAX_POWER_KEY);
 		Logger.info(toString() + " connected: max extinguish distance = " + maxDistance + ", max power = " + maxPower
 				+ ", max tank = " + maxWater);
+		
+		Collection<StandardEntity> entities = model.getEntitiesOfType(StandardEntityURN.ROAD);
+		roads = entities.toArray(new StandardEntity[entities.size()]);
+		
+		// Store refill stations
+		for (StandardEntity next : model) {
+            if (next instanceof Hydrant || next instanceof Refuge) {
+            	refillStations.add(next.getID());
+            }
+        }
 	}
 
 	@Override
@@ -86,41 +106,73 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 
 	@Override
 	protected void think(int time, ChangeSet changes, Collection<Command> heard) {
-
+		long startTime = System.nanoTime();
+		
+		findBurningBuildings();
+		
 		if(useExtendedModes) {
 			waterSeries.addSample(getWater(), time);
 		}
 		
-		findCloseBurningBuilding();		
-		switchMode();
+		switchMode(time);
 
 		// Act
 		switch (mode) {
-		case Extinguish:
-			Logger.info(id + " extinguishing at " + location());
-			sendExtinguish(time, closeBurningBuilding, maxPower);
+		case Search:
+			Logger.info(formatLog(time, "searching"));
+			if (searchTarget == null) {
+				searchTarget = randomTarget();
+			} else if (searchTarget.equals(location().getID())) {
+				searchTarget = randomTarget();
+			}
+			Logger.info(formatLog(time, "moving towards search target: " + searchTarget.getValue()));
+			sendMove(time, planShortestRoute(searchTarget));
 			break;
-		case Move:
-			Logger.info(id + " moving to target " + target);
-			sendMove(time, planShortestRoute(target));
+		case MoveToFire:
+			if (fireTarget != null) {
+				Logger.info(formatLog(time, "moving towards fire target: " + fireTarget.getValue()));
+				sendMove(time, planShortestRoute(fireTarget));
+			} else {
+				Logger.error(formatLog(time, " in MoveToFireMode missing fireTarget"));
+			}
+			break;
+		case MoveToRefill:
+			if (refillTarget != null) {
+				Logger.info(formatLog(time, "moving towards refill target: " + refillTarget.getValue()));
+				sendMove(time, planShortestRoute(refillTarget));
+			} else {
+				Logger.error(formatLog(time, "in MoveToRefillMode missing refillTarget"));
+			}
+			break;
+		case Extinguish:
+			EntityID building = findCloseBurningBuilding();
+			if (building != null) {
+				Logger.info(formatLog(time, "extinguishing(" + building.getValue() + ")[" + getWater() + "]"));
+				sendExtinguish(time, building, maxPower);
+			} else {
+				Logger.warn(formatLog(time, "Trying to extinguish null."));
+			}
 			break;
 		case Refill:
-			Logger.info(id + " filling with water at " + location());
+			if(!atRefill()) {
+				Logger.error(formatLog(time, "Trying to refill at wrong place " + location().getID().getValue()));
+			} else {
+				Logger.info(formatLog(time, "refilling(" + getWater() + ")"));
+			}
 			sendRest(time);
 			break;
-		case Search:
-			Logger.info(id + " at " + location().getID() + " search towards target " + target);
-			sendMove(time, planShortestRoute(target));
-			break;
+		
 		default:
 			Logger.error(id + " in unknown mode " + mode);
 			break;
 
 		}
-
+		
+		long duration = System.nanoTime() - startTime;
+		Logger.info(formatLog(time, "thinking took " + duration/1000000 + " ms"));
 	}
 
-	private void switchMode() {
+	private void switchMode(int time) {
 		boolean modeSwitched = true;
 
 		switch (mode) {
@@ -128,89 +180,82 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			// Are we out of water?
 			if (isWaterLevel(Quantity.LESS_OR_EQUAL, waterThreshold)) {
 				// Plan for refill
-				List<EntityID> path = planShortestRoute(refugeIDs.toArray(new EntityID[refugeIDs.size()]));
+				List<EntityID> path = planShortestRoute(refillStations.toArray(new EntityID[refillStations.size()]));
 				if(path != null) {
-					target = getTarget(path);
-					mode = Mode.Move;
+					refillTarget = getTarget(path);
+					mode = Mode.MoveToRefill;
 				} else {
-					target = getTarget(randomWalk());
-					mode = Mode.Search;
+					Logger.error(formatLog(time, "no refill station reachable"));
 				}
 				break;
 			}
 			// Not next a building on fire?
-			if(closeBurningBuilding == null) {
+			if(findCloseBurningBuilding() == null) {
 				// Plan to search fire
-				target = getTarget(randomWalk());
-				mode = Mode.Search;	
+				searchTarget = randomTarget();
+				mode = Mode.Search;
 				break;
 			}
 			// Keep extinguishing
 			modeSwitched = false;
 			break;
-		case Move:
+		case MoveToFire:
 			// Target reached?
-			if (location().getID().equals(target)) {
-				if (location() instanceof Refuge) {
-					// If we are at refuge
-					mode = Mode.Refill;
-					break;
-				}
-				// If we reached target different than refuge 
+			if(fireTarget == null || fireTarget.equals(location().getID())) { 
 				mode = Mode.Extinguish;
 				break;
 			}
 			// Otherwise keep moving
 			modeSwitched = false;
 			break;
-		case Refill:
-			// Are we currently filling with water?
-			if (!(location() instanceof Refuge)) {
-				Logger.error(id + " misplaced refill at " + location());
-				Logger.info(id + " mode fallback.");
-				mode = Mode.Search;
+		case MoveToRefill:
+			// Target reached?
+			if(refillTarget == null || refillTarget.equals(location().getID())) {
+				mode = Mode.Refill;
 				break;
 			}
+			// Otherwise keep moving
+			modeSwitched = false;
+			break;
+		case Refill:
 			// Still not full?
-			if (isWaterLevel(Quantity.LESS_OR_EQUAL, maxWater - waterThreshold)) {
+			if (isWaterLevel(Quantity.LESS_THAN, maxWater - waterThreshold)) {
 				modeSwitched = false;
 				break;
 			}
 			// Water full
-			Collection<EntityID> buildings = getBurningBuildings();
-			List<EntityID> path = planShortestRoute(buildings.toArray(new EntityID[buildings.size()]));
-			if (path != null) {
+			if (burningBuildings.size() > 0) {
 				// Any known burning buildings?
-				target = getTarget(path);
-				mode = Mode.Move;
+				List<EntityID> path = planShortestRoute(burningBuildings.toArray(new EntityID[burningBuildings.size()]));
+				if(path != null) {
+					fireTarget = getTarget(path);
+					mode = Mode.MoveToFire;
+				} else {
+					Logger.error(formatLog(time, "no burning building reachable"));
+				}
 			} else {
 				// Search burning buildings
-				target = getTarget(randomWalk());
+				searchTarget = randomTarget();
 				mode = Mode.Search;
 			}
 			break;
 		case Search: {
 			// Found burning building?
-			if (closeBurningBuilding != null) {
+			if (findCloseBurningBuilding() != null) {
 				mode = Mode.Extinguish;
 				break;
-			}
-			// Reached target?
-			if (target == null || location().getID().equals(target)) {
-				// Plan for new one
-				target = getTarget(randomWalk());
 			}
 			modeSwitched = false;
 			break;
 		}
 		default:
-			Logger.error(id + " in unknown mode " + mode);
+			Logger.error(formatLog(time, "in unknown mode " + mode));
 			mode = Mode.Search;
 			break;
 		}
 
 		if (modeSwitched) {
-			Logger.info(id + " switching to " + mode);
+			Logger.info(formatLog(time, "switching to " + mode));
 		}
 
 	}
@@ -251,41 +296,14 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			throw new UnsupportedOperationException("Operation getWater() not supported on " + id);
 		}
 		
-		return (int) (me().getWater() + noise.generateNoise());
-	}
-
-	private void findCloseBurningBuilding() {
-		closeBurningBuilding = null;
-		
-		// Find all buildings that are on fire
-		Collection<EntityID> buildings = getBurningBuildings();
-		// Can we extinguish any right now?
-		for (EntityID building : buildings) {
-			if (model.getDistance(getID(), building) <= maxDistance) {
-				closeBurningBuilding = building;
-				return;
-			}
-		}
-	}
-
-	private List<EntityID> planShortestRoute(EntityID ... targets) {
-		List<EntityID> path = search.breadthFirstSearch(me().getPosition(), targets);
-		if (path != null) {
-			Logger.info(id + " planed route to " + path.get(path.size() - 1));
-			return path;
-		} else {
-			for (EntityID target : targets) {
-				Logger.info(id + " couldn't plan a path to " + target);
-			}
-			return null;
-		}
+		return (int) (me().getWater() + waterNoise.generateNoise());
 	}
 	
-	private EntityID getTarget(List<EntityID> path) {
-		return path.get(path.size()-1);
+	private EntityID randomTarget() {
+		return roads[random.nextInt(roads.length)].getID();
 	}
 	
-	private Collection<EntityID> getBurningBuildings() {
+	private void findBurningBuildings() {
 		Collection<StandardEntity> e = model.getEntitiesOfType(StandardEntityURN.BUILDING);
 		List<Building> result = new ArrayList<Building>();
 		for (StandardEntity next : e) {
@@ -296,20 +314,54 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 				}
 			}
 		}
-		// Sort by distance
-		Collections.sort(result, new DistanceSorter(location(), model));
-		return objectsToIDs(result);
+		List<EntityID> resultIds = new ArrayList<EntityID>();
+		for (Entity next : result) {
+			resultIds.add(next.getID());
+		}
+		burningBuildings = resultIds;
 	}
 
-	private List<EntityID> planPathToFire(EntityID target) {
-		// Try to get to anything within maxDistance of the target
-		Collection<StandardEntity> targets = model.getObjectsInRange(target, maxDistance);
-		if (targets.isEmpty()) {
+	public EntityID findCloseBurningBuilding() {
+		ArrayList<EntityID> closeBuildings = new ArrayList<>();
+		// Can we extinguish any right now?
+		for (EntityID building : burningBuildings) {
+			if (model.getDistance(getID(), building) < maxDistance*0.8) {
+				closeBuildings.add(building);
+			}
+		}
+		if(closeBuildings.size() == 0) {
 			return null;
 		}
-		return search.breadthFirstSearch(me().getPosition(), objectsToIDs(targets));
+		return closeBuildings.get(random.nextInt(closeBuildings.size()));
 	}
 
+	private List<EntityID> planShortestRoute(EntityID... targets) {
+		List<EntityID> path = search.breadthFirstSearch(me().getPosition(), targets);
+		if (path != null) {
+			Logger.info(formatLog(0, "planed route to " + path.get(path.size() - 1)));
+			return path;
+		} else {
+			for (EntityID target : targets) {
+				Logger.warn(formatLog(0, "couldn't plan a path to " + target));
+				;
+			}
+			return null;
+		}
+	}
+	
+	private EntityID getTarget(List<EntityID> path) {
+		return path.get(path.size() - 1);
+	}
+	
+	public boolean atRefill() {
+		StandardEntity here = location();
+		return here instanceof Hydrant || here instanceof Refuge;
+	}
+
+	private String formatLog(int time, String msg) {
+		return String.format("T[%d] L[%s] %s %s", time, location(), id, msg);
+	}
+	
 	@Override
 	public String toString() {
 		return id;

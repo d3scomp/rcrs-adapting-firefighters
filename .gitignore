@@ -1,4 +1,10 @@
 /*.class
+*.pyc
 /log/
+*.log
 /test-results/
 /bin/
+/target/
+/.settings
+/scripts/test-results/
+/results
