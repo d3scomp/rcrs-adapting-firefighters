@@ -27,45 +27,61 @@ import os
 import sys
 import time
 from time import sleep
+from datetime import datetime
 import signal
 from signal import SIGINT
 from subprocess import *
 from Scenarios import *
 from Configuration import *
 
+class Simulation:
+    
+    serverProcess = None
+    clientProcess = None
+    
+    def __init__(self, serverProcess, scenario, run):
+        self.startTime = datetime.now()
+        self.scenario = scenario
+        self.run = run
+        self.serverProcess = serverProcess
+        
+    def attachClient(self, clientProcess):
+        self.clientProcess = clientProcess
+    
+    def terminate(self):
+        if self.clientProcess != None and self.clientProcess.poll() == None:
+            self.clientProcess.terminate()
+        if self.serverProcess != None and self.serverProcess.poll() == None:
+            self.serverProcess.send_signal(SIGINT)
+        print("Scenario {}, run {} terminated".format(self.scenario, self.run))
+        
+    def finalize(self):
+        timeDiff = (datetime.now() - self.startTime).total_seconds()
+        while self.serverProcess.poll() == None and timeDiff <= MAX_SERVER_RUN_TIME:
+            print("Scenario {}, run {} will timeout in {}".format(self.scenario, self.run, MAX_SERVER_RUN_TIME - timeDiff))
+            sleep(10)            
+            timeDiff = (datetime.now() - self.startTime).total_seconds()
 
-servers = [] # TODO: move to one object with start time
-simulated = []
+        self.terminate()
+        
+
+simulations = []
 
 
 def signal_handler(signal, frame):
         print('\n\nTerminating all jobs...')
-        for simulation in simulated:
+        for simulation in simulations:
             simulation.terminate()
-        for server in servers:
-            server.send_signal(signal)
+        
         sleep(2)
         print('done.')
         sys.exit(0)
 
 
 def finalizeOldestSimulation():
-    # Wait for server to finish
-    server = servers[0]
-    attempts = MAX_SERVER_RUN_TIME
-    while server.poll() == None:
-        print("FIN {}".format(attempts))
-        attempts -= 1
-        if attempts <= 0:
-            server.send_signal(SIGINT)
-            break
-        sleep(1)
-    servers.pop(0)
-    
-    # If server finished terminate the simulation
-    simulation = simulated[0]
-    simulation.terminate()
-    simulated.pop(0)
+    simulation = simulations[0]
+    simulation.finalize()
+    simulations.pop(0)
 
 
 def simulate(scenarioIndex):
@@ -84,23 +100,23 @@ def simulate(scenarioIndex):
         port = str(RCRS_PORT_BASE + 100*scenarioIndex + i)
         params = prepareParameters(scenarioIndex, runDir, port)
         print("Scenario {}, run {}".format(scenarioIndex, i))       
-        spawnSimulation(params, runDir, port)
+        spawnSimulation(params, runDir, port, scenarioIndex, i)
         
     # finalize the rest
-    while len(simulated) > 0:
+    while len(simulations) > 0:
         finalizeOldestSimulation()
         
     print("Simulation processes finished.")
    
    
-def spawnSimulation(params, runDir, port):
+def spawnSimulation(params, runDir, port, scenarioIndex, runIndex):
     
     serverLogs = os.path.join(runDir,  "server")
     if not os.path.exists(serverLogs):
         os.makedirs(serverLogs)
     
     # Wait for free core
-    if (len(simulated) >= CORES):
+    if (len(simulations) >= CORES):
         finalizeOldestSimulation()
         
     # Compose invocation command
@@ -119,7 +135,7 @@ def spawnSimulation(params, runDir, port):
     print(runServerCmd)
     with open(os.path.join(runDir, "server.out"), "w") as out:
         server = Popen(runServerCmd, preexec_fn=os.setpgrp, stdout=out)
-    servers.append(server)
+    simulation = Simulation(server, scenarioIndex, runIndex)
     os.chdir(scriptDir)
     
     # Wait for the server to start listening
@@ -128,16 +144,16 @@ def spawnSimulation(params, runDir, port):
         attempts += 1
         if attempts > MAX_SERVER_STARTUP_TIME:
             print("Server failed to start.")
-            server.send_signal(SIGINT)
-            servers.remove(server)
+            simulation.terminate()
             return
-        print("waiting before connecting agents")
-        sleep(1)
+        print("Scenario {}, run {} waiting before connecting agents".format(scenarioIndex, runIndex))
+        sleep(5)
     
     print(runAgentsCmd)
     with open(os.path.join(runDir, "client.out"), "w") as out:
-        simulation = Popen(runAgentsCmd, preexec_fn=os.setpgrp, stdout=out)
-    simulated.append(simulation)
+        client = Popen(runAgentsCmd, preexec_fn=os.setpgrp, stdout=out)
+    simulation.attachClient(client)
+    simulations.append(simulation)
     
 
 def clientCanConnect(serverLogs):
