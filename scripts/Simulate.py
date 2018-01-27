@@ -173,10 +173,6 @@ def prepareParameters(scenarioIndex, runDir, port):
     params = []
     
     for key, value in scenario.items():        
-        # ignore parameters that are used by this script but not by the simulation
-        if key in { SCENARIO_NAME }:
-            continue;
-        
         params.append("{}={}".format(key, value))
 
     logFile = os.path.join(runDir, "client.log")

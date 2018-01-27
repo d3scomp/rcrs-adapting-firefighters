@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import cz.cuni.mff.d3s.tss.TTable;
 import rescuecore2.Constants;
 import rescuecore2.log.Logger;
 
@@ -26,6 +27,27 @@ public class Configuration {
 	
 	public static int PORT = Constants.DEFAULT_KERNEL_PORT_NUMBER;
 
+	
+	public static final int TS_WINDOW_CNT = 50;
+	public static final int TS_WINDOW_SIZE = 10;
+	public static final TTable.ALPHAS TS_ALPHA = TTable.ALPHAS.ALPHA_0_025;
+		
+	
+	public static boolean USE_EXTENDED_MODES = false;
+	
+	public static int WATER_THRESHOLD = 0;
+	
+	public static double WATER_NOISE_VARIANCE = 0.1; // 10% of the tank capacity
+	
+	public static double FIRE_MAX_DISTANCE_DETECTABILITY = 0.2; // 20% chance to detect fire at the maximum detectable distance
+						 
+	public static int FIRE_MAX_DETECTABLE_DISTANCE = 40000;
+	
+	public static int FIRE_UNERRING_DETECTABLE_DISTANCE = 8000;
+		
+	public static double FIRE_NOISE_VARIANCE = 0.1; // 10% of fire detectability
+	
+	public static double FIRE_PROBABILITY_THRESHOLD = 0.6;
 	
 	
 	///////////////////////////////////////////////////////////////////////////

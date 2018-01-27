@@ -4,18 +4,17 @@ import java.util.Random;
 
 public class NoiseFilter {
 
-	private double mean;
 	private double variance;
 	private Random random;
 	
 	
-	public NoiseFilter(double mean, double variance) {
-		this.mean = mean;
+	public NoiseFilter(double variance) {
 		this.variance = variance;
 		random = new Random();
 	}
 	
-	public double generateNoise() {
-		return random.nextGaussian() * Math.sqrt(variance) + mean;
+	public double generateNoise(double mean) {
+		int sign = random.nextBoolean() ? 1 : -1;
+		return sign * random.nextGaussian() * Math.sqrt(variance) + mean;
 	}
 }

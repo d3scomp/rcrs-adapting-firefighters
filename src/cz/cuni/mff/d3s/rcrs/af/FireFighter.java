@@ -1,21 +1,21 @@
 package cz.cuni.mff.d3s.rcrs.af;
 
-import static cz.cuni.mff.d3s.rcrs.af.Run.NOISE_MEAN;
-import static cz.cuni.mff.d3s.rcrs.af.Run.NOISE_VARIANCE;
-import static cz.cuni.mff.d3s.rcrs.af.Run.TS_ALPHA;
-import static cz.cuni.mff.d3s.rcrs.af.Run.TS_WINDOW_CNT;
-import static cz.cuni.mff.d3s.rcrs.af.Run.TS_WINDOW_SIZE;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.FIRE_PROBABILITY_THRESHOLD;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.WATER_THRESHOLD;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import cz.cuni.mff.d3s.rcrs.af.modes.Mode;
-import cz.cuni.mff.d3s.tss.TimeSeries;
+import cz.cuni.mff.d3s.rcrs.af.sensors.FireSensor;
+import cz.cuni.mff.d3s.rcrs.af.sensors.Sensor.Quantity;
+import cz.cuni.mff.d3s.rcrs.af.sensors.WaterSensor;
 import rescuecore2.log.Logger;
 import rescuecore2.messages.Command;
 import rescuecore2.standard.entities.Building;
@@ -25,20 +25,14 @@ import rescuecore2.standard.entities.Refuge;
 import rescuecore2.standard.entities.StandardEntity;
 import rescuecore2.standard.entities.StandardEntityURN;
 import rescuecore2.worldmodel.ChangeSet;
-import rescuecore2.worldmodel.Entity;
 import rescuecore2.worldmodel.EntityID;
 import sample.AbstractSampleAgent;
 
 public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 	
-	private enum Quantity {
-		LESS_THAN, LESS_OR_EQUAL, GREATER_THAN, GREATER_OR_EQUAL;
-	}
 	
 	private final String id;
 	
-	private final boolean useExtendedModes;
-
 	private static final String MAX_WATER_KEY = "fire.tank.maximum";
 	private static final String MAX_DISTANCE_KEY = "fire.extinguish.max-distance";
 	private static final String MAX_POWER_KEY = "fire.extinguish.max-sum";
@@ -53,28 +47,18 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 	private EntityID fireTarget = null;
 	private EntityID refillTarget = null;
 	
-	private List<EntityID> burningBuildings = Collections.emptyList();
-
-	private final int waterThreshold = 1000; // TODO: Move to config	
-	private TimeSeries waterSeries;
-	private NoiseFilter waterNoise;
+	private Map<Building, FireSensor> fireSensor;
+	private WaterSensor waterSensor;
 
 	StandardEntity[] roads;
 	Set<EntityID> refillStations = new HashSet<>();
 	
 	// ########################################################################
 
-	public FireFighter(int id, boolean extendedModes) {
+	public FireFighter(int id) {
 		this.id = String.format("FF%d", id);
-		useExtendedModes = extendedModes; // TODO: move to config
-		
-		if(useExtendedModes) {
-			waterSeries = new TimeSeries(TS_WINDOW_CNT, TS_WINDOW_SIZE);
-		} else {
-			waterSeries = null;
-		}
-		
-		waterNoise = new NoiseFilter(NOISE_MEAN, NOISE_VARIANCE);
+		maxWater = -1;
+		fireSensor = new HashMap<>();
 	}
 
 	@Override
@@ -91,12 +75,17 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 		Collection<StandardEntity> entities = model.getEntitiesOfType(StandardEntityURN.ROAD);
 		roads = entities.toArray(new StandardEntity[entities.size()]);
 		
-		// Store refill stations
-		for (StandardEntity next : model) {
-            if (next instanceof Hydrant || next instanceof Refuge) {
-            	refillStations.add(next.getID());
+		// Store refill stations and create fire sensors
+		for (StandardEntity entity : model) {
+            if (entity instanceof Hydrant || entity instanceof Refuge) {
+            	refillStations.add(entity.getID());
+            }
+            if (entity instanceof Building) {
+            	fireSensor.put((Building) entity, new FireSensor(this, (Building) entity));
             }
         }
+		
+		waterSensor = new WaterSensor(this);
 	}
 
 	@Override
@@ -108,12 +97,11 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 	protected void think(int time, ChangeSet changes, Collection<Command> heard) {
 		long startTime = System.nanoTime();
 		
-		findBurningBuildings();
-		
-		if(useExtendedModes) {
-			waterSeries.addSample(getWater(), time);
+		waterSensor.sense(time);
+		for(Building building : fireSensor.keySet()) {
+			fireSensor.get(building).sense(time);
 		}
-		
+			
 		switchMode(time);
 
 		// Act
@@ -178,7 +166,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 		switch (mode) {
 		case Extinguish:
 			// Are we out of water?
-			if (isWaterLevel(Quantity.LESS_OR_EQUAL, waterThreshold)) {
+			if (waterSensor.isLevel(Quantity.LESS_OR_EQUAL, WATER_THRESHOLD)) {
 				// Plan for refill
 				List<EntityID> path = planShortestRoute(refillStations.toArray(new EntityID[refillStations.size()]));
 				if(path != null) {
@@ -219,14 +207,15 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			break;
 		case Refill:
 			// Still not full?
-			if (isWaterLevel(Quantity.LESS_THAN, maxWater - waterThreshold)) {
+			if (waterSensor.isLevel(Quantity.LESS_THAN, maxWater - WATER_THRESHOLD)) {
 				modeSwitched = false;
 				break;
 			}
 			// Water full
-			if (burningBuildings.size() > 0) {
+			EntityID burningBuilding = findCloseBurningBuilding();
+			if (burningBuilding != null) {
 				// Any known burning buildings?
-				List<EntityID> path = planShortestRoute(burningBuildings.toArray(new EntityID[burningBuildings.size()]));
+				List<EntityID> path = planShortestRoute(burningBuilding);
 				if(path != null) {
 					fireTarget = getTarget(path);
 					mode = Mode.MoveToFire;
@@ -260,73 +249,42 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 
 	}
 	
-	private boolean isWaterLevel(Quantity operation, int level) {
-		
-		if(useExtendedModes) {
-			switch(operation) {
-			case GREATER_THAN:
-				return waterSeries.getMean().isGreaterThan(level, TS_ALPHA);
-			case GREATER_OR_EQUAL:
-				return waterSeries.getMean().isGreaterOrEqualTo(level, TS_ALPHA);
-			case LESS_THAN:
-				return waterSeries.getMean().isLessThan(level, TS_ALPHA);
-			case LESS_OR_EQUAL:
-				return waterSeries.getMean().isLessOrEqualTo(level, TS_ALPHA);
-			default:
-				throw new UnsupportedOperationException("Operation " + operation + " not implemented");
-			}
+	// Sensor readings ////////////////////////////////////////////////////////
+	
+	public double getMaxWater() {
+		if(maxWater == -1) {
+			throw new RuntimeException("The maxWater variable is not initialized. Calling getFFMaxWater() before postConnect()?");
 		}
 		
-		switch(operation) {
-		case GREATER_THAN:
-			return getWater() > level;
-		case GREATER_OR_EQUAL:
-			return getWater() >= level;
-		case LESS_THAN:
-			return getWater() < level;
-		case LESS_OR_EQUAL:
-			return getWater() <= level;
-		default:
-			throw new UnsupportedOperationException("Operation " + operation + " not implemented");
-		}
+		return maxWater;
 	}
 	
-	private int getWater() {
-		if(!me().isWaterDefined()) {
-			throw new UnsupportedOperationException("Operation getWater() not supported on " + id);
-		}
-		
-		return (int) (me().getWater() + waterNoise.generateNoise());
+	public double getWater() {
+		return me().getWater();
 	}
+	
+	public int getBuildingDistance(Building building) {
+		return model.getDistance(building, location());
+	}
+	
+	public boolean isBuildingOnFire(Building building) {
+		return building.isOnFire();
+	}
+	
+	///////////////////////////////////////////////////////////////////////////
+	
 	
 	private EntityID randomTarget() {
 		return roads[random.nextInt(roads.length)].getID();
-	}
-	
-	private void findBurningBuildings() {
-		Collection<StandardEntity> e = model.getEntitiesOfType(StandardEntityURN.BUILDING);
-		List<Building> result = new ArrayList<Building>();
-		for (StandardEntity next : e) {
-			if (next instanceof Building) {
-				Building b = (Building) next;
-				if (b.isOnFire()) {
-					result.add(b);
-				}
-			}
-		}
-		List<EntityID> resultIds = new ArrayList<EntityID>();
-		for (Entity next : result) {
-			resultIds.add(next.getID());
-		}
-		burningBuildings = resultIds;
 	}
 
 	public EntityID findCloseBurningBuilding() {
 		ArrayList<EntityID> closeBuildings = new ArrayList<>();
 		// Can we extinguish any right now?
-		for (EntityID building : burningBuildings) {
-			if (model.getDistance(getID(), building) < maxDistance*0.8) {
-				closeBuildings.add(building);
+		for (Building building : fireSensor.keySet()) {
+			if (model.getDistance(location(), building) < maxDistance*0.8
+					&& fireSensor.get(building).isLevel(Quantity.GREATER_OR_EQUAL, FIRE_PROBABILITY_THRESHOLD)) {
+				closeBuildings.add(building.getID());
 			}
 		}
 		if(closeBuildings.size() == 0) {
