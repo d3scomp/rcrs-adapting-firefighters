@@ -4,7 +4,10 @@
 *.log
 /test-results/
 /bin/
-/target/
+/target/classes/
+/target/maven-status/
+/target/maven-archiver/
+/target/adapting-firefighters-0.0.1.jar
 /.settings
 /scripts/test-results/
 /results
