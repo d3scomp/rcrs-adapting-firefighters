@@ -195,7 +195,7 @@ def printHelp():
 def extractScenarioArgs(args):
     # Check argument count (1st argument is this script name)
     if len(args) < 2:
-        raise ArgError("At least one scenario argument is required")
+        return []
     
     scenarioIndices = []
     for i in range(1, len(args)):
@@ -211,8 +211,10 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, signal_handler)
         
     try:
-        si = extractScenarioArgs(sys.argv)        
-        
+        si = extractScenarioArgs(sys.argv)
+        if not si:
+            si = range(len(scenarios))
+      
         start = time.time()
         for i in si:
             print("Simulating scenario {}".format(i))
