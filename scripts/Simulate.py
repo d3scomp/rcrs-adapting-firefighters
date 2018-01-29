@@ -84,31 +84,30 @@ def finalizeOldestSimulation():
     simulations.pop(0)
 
 
-def simulate(scenarioIndex):
-    scenario = scenarios[scenarioIndex]
-    scenarioDir = os.path.join(LOGS_DIR, "scenario_{}".format(scenarioIndex))
-    if not os.path.exists(scenarioDir):
-        os.makedirs(scenarioDir)
+def simulate(scenarioIndices):
+    for scenarioIndex in scenarioIndices:
+        print("Simulating scenario {}".format(scenarioIndex))
         
-    printDescription(scenario, scenarioDir)
-          
-    print('Spawning simulation processes...')
-    
-    # invoke number of iterations with the same configuration
-    for i in range(1,SIMULATION_ITERATIONS+1):
-        runDir = os.path.join(scenarioDir, "run_{}".format(i))
-        port = str(RCRS_PORT_BASE + 100*scenarioIndex + i)
-        params = prepareParameters(scenarioIndex, runDir, port)
-        print("Scenario {}, run {}".format(scenarioIndex, i))       
-        spawnSimulation(params, runDir, port, scenarioIndex, i)
+        scenario = scenarios[scenarioIndex]
+        scenarioDir = os.path.join(LOGS_DIR, "scenario_{}".format(scenarioIndex))
+        if not os.path.exists(scenarioDir):
+            os.makedirs(scenarioDir)
+            
+        printDescription(scenario, scenarioDir)
+        
+        # invoke number of iterations with the same configuration
+        for i in range(1,SIMULATION_ITERATIONS+1):
+            runDir = os.path.join(scenarioDir, "run_{}".format(i))
+            port = str(RCRS_PORT_BASE + 100*scenarioIndex + i)
+            params = prepareParameters(scenarioIndex, runDir, port)
+            print("Scenario {}, run {}".format(scenarioIndex, i))       
+            spawnSimulation(params, runDir, port, scenarioIndex, i)
         
     # finalize the rest
     while len(simulations) > 0:
         finalizeOldestSimulation()
-        
-    print("Simulation processes finished.")
    
-   
+
 def spawnSimulation(params, runDir, port, scenarioIndex, runIndex):
     
     serverLogs = os.path.join(runDir,  "server")
@@ -216,9 +215,7 @@ if __name__ == '__main__':
             si = range(len(scenarios))
       
         start = time.time()
-        for i in si:
-            print("Simulating scenario {}".format(i))
-            simulate(i)
+        simulate(si)
         end = time.time()
         
         print("All simulations lasted for {:.2f} mins".format((end-start)/60))
