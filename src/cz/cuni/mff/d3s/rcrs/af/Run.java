@@ -25,15 +25,17 @@ public class Run {
 		// Process arguments
 		Configuration.override(args);
 				
-		// Change target log file
-	    try(InputStream configStream = Run.class.getResourceAsStream( "/aflog4j.properties")) {
-			Properties props = new Properties();
-	        props.load(configStream);
-	        props.setProperty("log4j.appender.FILE.File", Configuration.LOG_DIR); 
-		    PropertyConfigurator.configure(props);
-	    } catch (IOException e) { 
-	        System.err.println("Error: Cannot load configuration file "); 
-	    }
+		if(Configuration.LOG_DIR != null) {
+			// Change target log file
+		    try(InputStream configStream = Run.class.getResourceAsStream( "/aflog4j.properties")) {
+				Properties props = new Properties();
+		        props.load(configStream);
+		        props.setProperty("log4j.appender.FILE.File", Configuration.LOG_DIR); 
+			    PropertyConfigurator.configure(props);
+		    } catch (IOException e) { 
+		        System.err.println("Error: Cannot load configuration file "); 
+		    }
+		}
 	    		
 		try {
 

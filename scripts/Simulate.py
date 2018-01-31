@@ -74,31 +74,37 @@ def finalizeOldestSimulation():
     simulated.pop(0)
 
 
-def simulate(scenarioIndex):
+def simulate(scenarioIndices):
     global totalSpawnedSimulations
-    scenario = scenarios[scenarioIndex]
+    for scenarioIndex in scenarioIndices:
+        print("Simulating scenario {} with signature {}"
+                  .format(scenarioIndex, getScenarioSignature(scenarioIndex)))
+            
+        scenario = scenarios[scenarioIndex]
           
-    print('Spawning simulation processes...')
+        print('Spawning simulation processes...')
+        
+        # invoke number of iterations with the same configuration
+        for i in range(1,SIMULATION_ITERATIONS+1):
+            params = prepareParameters(scenario)
+            if scenario[H3_MECHANISM]:
+                prepareH3Scenario(scenario, params)
+            elif scenario[H4_MECHANISM]:
+                prepareH4Scenario(scenario, params)
+            else:
+                logFile = getLogFile(scenario, totalSpawnedSimulations)
+                params.append("{}={}".format(LOG_DIR, logFile))
+                spawnSimulation(params, logFile)
     
-    # invoke number of iterations with the same configuration
-    for i in range(1,SIMULATION_ITERATIONS+1):
-        params = prepareParameters(scenario)
-        if scenario[H3_MECHANISM]:
-            prepareH3Scenario(scenario, params)
-        elif scenario[H4_MECHANISM]:
-            prepareH4Scenario(scenario, params)
-        else:
-            logFile = getLogFile(scenario, totalSpawnedSimulations)
-            params.append("{}={}".format(LOG_DIR, logFile))
-            spawnSimulation(params, logFile)
+        print("Results placed to {}".format(getScenarioSignature(scenarioIndex)))
         
     # finalize the rest
     while len(simulated) > 0:
         finalizeOldestSimulation()
-        
+   
     print("Simulation processes finished.")
-   
-   
+
+
 def spawnSimulation(params, logs):
     global totalSpawnedSimulations
     totalSpawnedSimulations += 1
@@ -303,11 +309,7 @@ if __name__ == '__main__':
         si = extractScenarioArgs(sys.argv)        
         
         start = time.time()
-        for i in si:
-            print("Simulating scenario {} with signature {}"
-                  .format(i, getScenarioSignature(i)))
-            simulate(i)
-            print("Results placed to {}".format(getScenarioSignature(i)))
+        simulate(si)
         end = time.time()
         
         print("All simulations lasted for {:.2f} mins".format((end-start)/60))
