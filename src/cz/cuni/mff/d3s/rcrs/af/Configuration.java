@@ -28,9 +28,9 @@ public class Configuration {
 	public static int PORT = Constants.DEFAULT_KERNEL_PORT_NUMBER;
 
 	
-	public static final int TS_WINDOW_CNT = 50;
-	public static final int TS_WINDOW_SIZE = 10;
-	public static final TTable.ALPHAS TS_ALPHA = TTable.ALPHAS.ALPHA_0_025;
+	public static int TS_WINDOW_CNT = 50;
+	public static int TS_WINDOW_SIZE = 10;
+	public static TTable.ALPHAS TS_ALPHA = TTable.ALPHAS.ALPHA_0_05;
 		
 	
 	public static boolean USE_EXTENDED_MODES = false;

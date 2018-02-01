@@ -16,7 +16,8 @@ from Configuration import *
 # Parameters names
 LOG_DIR = "LOG_DIR"
 
-
+TS_WINDOW_CNT = "TS_WINDOW_CNT"
+TS_WINDOW_SIZE = "TS_WINDOW_SIZE"
 USE_EXTENDED_MODES = "USE_EXTENDED_MODES"
 WATER_THRESHOLD = "WATER_THRESHOLD"
 WATER_NOISE_VARIANCE = "WATER_NOISE_VARIANCE"
@@ -30,18 +31,22 @@ FIRE_PROBABILITY_THRESHOLD = "FIRE_PROBABILITY_THRESHOLD"
 # Scenarios
 scenarios = []
 
-for variance in [0.1, 0.3, 0.5]:
+for variance in [0.3, 0.5]:
     for maxDistanceDetectability in [0.1, 0.3, 0.5]:
-        for fireProbabilityThreshold in [0.2, 0.5, 0.8]:
-            for useExtendedmodes in [False, True]:
-                scenarios.append({USE_EXTENDED_MODES: useExtendedmodes,
-                                  WATER_THRESHOLD: 0,
-                                  WATER_NOISE_VARIANCE: variance,
-                                  FIRE_MAX_DISTANCE_DETECTABILITY: maxDistanceDetectability,
-                                  FIRE_MAX_DETECTABLE_DISTANCE: 40000,
-                                  FIRE_UNERRING_DETECTABLE_DISTANCE: 8000,
-                                  FIRE_NOISE_VARIANCE: variance,
-                                  FIRE_PROBABILITY_THRESHOLD: fireProbabilityThreshold})
+        for fireProbabilityThreshold in [0.5, 0.7]:
+            for tswc in [2, 5, 10]:
+                for tsws in [2, 4, 8]:
+                    for useExtendedmodes in [False, True]:
+                        scenarios.append({USE_EXTENDED_MODES: useExtendedmodes,
+                                          TS_WINDOW_CNT: tswc,
+                                          TS_WINDOW_SIZE: tsws,
+                                          WATER_THRESHOLD: 0,
+                                          WATER_NOISE_VARIANCE: variance,
+                                          FIRE_MAX_DISTANCE_DETECTABILITY: maxDistanceDetectability,
+                                          FIRE_MAX_DETECTABLE_DISTANCE: 40000,
+                                          FIRE_UNERRING_DETECTABLE_DISTANCE: 8000,
+                                          FIRE_NOISE_VARIANCE: variance,
+                                          FIRE_PROBABILITY_THRESHOLD: fireProbabilityThreshold})
 
 # scenarios.append({USE_EXTENDED_MODES:False,
 #                   WATER_NOISE_VARIANCE:0.2,
