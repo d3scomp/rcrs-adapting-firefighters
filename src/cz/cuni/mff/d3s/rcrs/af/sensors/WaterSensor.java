@@ -11,7 +11,7 @@ public class WaterSensor extends Sensor {
 	
 	
 	public WaterSensor(FireFighter fireFighter) {
-		super(new NoiseFilter(WATER_NOISE_VARIANCE * fireFighter.getMaxWater()));
+		super("WaterSensor", new NoiseFilter(WATER_NOISE_VARIANCE * fireFighter.getMaxWater()));
 		this.fireFighter = fireFighter;
 	}
 	
@@ -20,5 +20,23 @@ public class WaterSensor extends Sensor {
 		return fireFighter.getWater();
 	}
 	
+	@Override
+	protected int getDistance() {
+		return 0;
+	}
 	
+	@Override
+	protected boolean onFire() {
+		return false;
+	}
+	
+	@Override
+	protected double getMaxLimit() {
+		return fireFighter.getMaxWater();
+	}
+	
+	@Override
+	protected double getMinLimit() {
+		return 0;
+	}
 }

@@ -5,8 +5,11 @@ import static cz.cuni.mff.d3s.rcrs.af.Configuration.TS_WINDOW_CNT;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.TS_WINDOW_SIZE;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.USE_EXTENDED_MODES;
 
+import java.util.Random;
+
 import cz.cuni.mff.d3s.rcrs.af.NoiseFilter;
 import cz.cuni.mff.d3s.tss.TimeSeries;
+import rescuecore2.log.Logger;
 
 public abstract class Sensor {
 	
@@ -14,12 +17,17 @@ public abstract class Sensor {
 		LESS_THAN, LESS_OR_EQUAL, GREATER_THAN, GREATER_OR_EQUAL;
 	}
 	
+	private static Random random = new Random();
+	private static final double LOG_BUILDING_FRACTION = 0.02; // Fraction of building, that are not on fire, to be logged
 	
+	private String sensorName;
 	private TimeSeries timeSeries;
+	private double sample;
 	private NoiseFilter noise;
 	
 	
-	protected Sensor(NoiseFilter noise) {
+	protected Sensor(String sensorName, NoiseFilter noise) {
+		this.sensorName = sensorName;
 		this.noise = noise;
 		
 		if(USE_EXTENDED_MODES) {
@@ -28,12 +36,41 @@ public abstract class Sensor {
 			timeSeries = null;
 		}
 	}
-	
+
 	protected abstract double getValue();
+	protected abstract int getDistance();
+	protected abstract boolean onFire();
+	protected abstract double getMaxLimit();
+	protected abstract double getMinLimit();
 	
 	public void sense(int time) {
+		double value = getValue();
+		sample = noise.generateNoise(value);
+		if(sample > getMaxLimit()) {
+			sample = getMaxLimit();
+		}
+		if(sample < getMinLimit()) {
+			sample = getMinLimit();
+		}
+		
 		if(timeSeries != null) {
-			timeSeries.addSample(noise.generateNoise(getValue()), time);
+			timeSeries.addSample(sample, time);
+		}
+		
+		if("FireSensor".equals(sensorName)) {
+			int distance = getDistance();
+			if(onFire()) {	
+				Logger.info(String.format("%s: t: %d; d: %d; v: %f; s: %f;", 
+						"onFire", time, distance, value, sample));
+			} else if(random.nextDouble() < LOG_BUILDING_FRACTION){
+				Logger.info(String.format("%s: t: %d; d: %d; v: %f; s: %f;", 
+						"notOnFire", time, distance, value, sample));
+			}
+		}
+		
+		if("WaterSensor".equals(sensorName)) {
+			Logger.info(String.format("%s: t: %d; v: %f; s: %f;", 
+					"water", time, value, sample));
 		}
 	}
 	
@@ -54,16 +91,15 @@ public abstract class Sensor {
 			}
 		}
 		
-		double noisedValue = noise.generateNoise(getValue());
 		switch(operation) {
 		case GREATER_THAN:
-			return noisedValue > level;
+			return sample > level;
 		case GREATER_OR_EQUAL:
-			return noisedValue >= level;
+			return sample >= level;
 		case LESS_THAN:
-			return noisedValue < level;
+			return sample < level;
 		case LESS_OR_EQUAL:
-			return noisedValue <= level;
+			return sample <= level;
 		default:
 			throw new UnsupportedOperationException("Operation " + operation + " not implemented");
 		}

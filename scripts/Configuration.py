@@ -22,7 +22,7 @@ class ArgError(Exception):
 # HW RESOURCES
 ###############################################################################
 
-CORES = 2
+CORES = 25
 ''' The number of processor cores to utilize. The number of simulations
     to run in parallel. '''
     
@@ -68,7 +68,7 @@ RCRS_PORT_BASE = 7100
 
 AGENTS_PORT_PARAM = "PORT"
 
-SIMULATION_ITERATIONS = 10
+SIMULATION_ITERATIONS = 25
 ''' The number of simulation iterations '''
 
 ###############################################################################

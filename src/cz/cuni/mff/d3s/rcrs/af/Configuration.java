@@ -49,6 +49,8 @@ public class Configuration {
 	
 	public static double FIRE_PROBABILITY_THRESHOLD = 0.6;
 	
+	public static double FALSE_POSITIV_FIRE_PROBABILITY = 0.1;
+	
 	
 	///////////////////////////////////////////////////////////////////////////
 

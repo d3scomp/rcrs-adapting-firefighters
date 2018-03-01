@@ -14,7 +14,6 @@ public class NoiseFilter {
 	}
 	
 	public double generateNoise(double mean) {
-		int sign = random.nextBoolean() ? 1 : -1;
-		return sign * random.nextGaussian() * Math.sqrt(variance) + mean;
+		return random.nextGaussian() * variance + mean;
 	}
 }
