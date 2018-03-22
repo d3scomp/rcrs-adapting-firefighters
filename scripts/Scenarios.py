@@ -32,45 +32,54 @@ FALSE_POSITIV_FIRE_PROBABILITY = "FALSE_POSITIV_FIRE_PROBABILITY"
 # Scenarios
 scenarios = []
 
-for variance in [0.1]:
-    for maxDistanceDetectability in [0.4]:
-        for fireProbabilityThreshold in [0.4]:
-            for falsePositiveFireProbability in [0.2]:
-                scenarios.append({USE_EXTENDED_MODES: False,
-                                  TS_WINDOW_CNT: 0,
-                                  TS_WINDOW_SIZE: 0,
-                                  WATER_THRESHOLD: 0,
-                                  WATER_NOISE_VARIANCE: variance,
-                                  FIRE_MAX_DISTANCE_DETECTABILITY: maxDistanceDetectability,
-                                  FIRE_MAX_DETECTABLE_DISTANCE: 40000,
-                                  FIRE_UNERRING_DETECTABLE_DISTANCE: 8000,
-                                  FIRE_NOISE_VARIANCE: variance,
-                                  FIRE_PROBABILITY_THRESHOLD: fireProbabilityThreshold,
-                                  FALSE_POSITIV_FIRE_PROBABILITY: falsePositiveFireProbability})
-                for tswc in [1, 2, 3]:
-                    for tsws in [1, 2, 3]:
-                        scenarios.append({USE_EXTENDED_MODES: True,
-                                          TS_WINDOW_CNT: tswc,
-                                          TS_WINDOW_SIZE: tsws,
-                                          WATER_THRESHOLD: 0,
-                                          WATER_NOISE_VARIANCE: variance,
-                                          FIRE_MAX_DISTANCE_DETECTABILITY: maxDistanceDetectability,
-                                          FIRE_MAX_DETECTABLE_DISTANCE: 40000,
-                                          FIRE_UNERRING_DETECTABLE_DISTANCE: 8000,
-                                          FIRE_NOISE_VARIANCE: variance,
-                                          FIRE_PROBABILITY_THRESHOLD: fireProbabilityThreshold,
-                                          FALSE_POSITIV_FIRE_PROBABILITY: falsePositiveFireProbability})
+for item in [{'fireProbabilityThreshold':0.4, 
+              'maxDistanceDetectability':0.4,
+              'falsePositiveFireProbability':0.2,
+              'variance':0.1},
+              {'fireProbabilityThreshold':0.5, 
+              'maxDistanceDetectability':0.4,
+              'falsePositiveFireProbability':0.3,
+              'variance':0.1},
+              {'fireProbabilityThreshold':0.4, 
+              'maxDistanceDetectability':0.5,
+              'falsePositiveFireProbability':0.2,
+              'variance':0.1},
+              {'fireProbabilityThreshold':0.5, 
+              'maxDistanceDetectability':0.5,
+              'falsePositiveFireProbability':0.3,
+              'variance':0.1},
+              {'fireProbabilityThreshold':0.5, 
+              'maxDistanceDetectability':0.4,
+              'falsePositiveFireProbability':0.2,
+              'variance':0.15},
+              {'fireProbabilityThreshold':0.5, 
+              'maxDistanceDetectability':0.5,
+              'falsePositiveFireProbability':0.2,
+              'variance':0.15}]:
+    scenarios.append({USE_EXTENDED_MODES: False,
+                      TS_WINDOW_CNT: 0,
+                      TS_WINDOW_SIZE: 0,
+                      WATER_THRESHOLD: 0,
+                      WATER_NOISE_VARIANCE: item['variance'],
+                      FIRE_MAX_DISTANCE_DETECTABILITY: item['maxDistanceDetectability'],
+                      FIRE_MAX_DETECTABLE_DISTANCE: 40000,
+                      FIRE_UNERRING_DETECTABLE_DISTANCE: 8000,
+                      FIRE_NOISE_VARIANCE: item['variance'],
+                      FIRE_PROBABILITY_THRESHOLD: item['fireProbabilityThreshold'],
+                      FALSE_POSITIV_FIRE_PROBABILITY: item['falsePositiveFireProbability']})
+    for ts in [(2, 4), (2, 5), (3, 3), (3, 4), (4, 2), (4, 3), (5, 2)]:
+        scenarios.append({USE_EXTENDED_MODES: True,
+                          TS_WINDOW_CNT: ts[0],
+                          TS_WINDOW_SIZE: ts[1],
+                          WATER_THRESHOLD: 0,
+                          WATER_NOISE_VARIANCE: item['variance'],
+                          FIRE_MAX_DISTANCE_DETECTABILITY: item['maxDistanceDetectability'],
+                          FIRE_MAX_DETECTABLE_DISTANCE: 40000,
+                          FIRE_UNERRING_DETECTABLE_DISTANCE: 8000,
+                          FIRE_NOISE_VARIANCE: item['variance'],
+                          FIRE_PROBABILITY_THRESHOLD: item['fireProbabilityThreshold'],
+                          FALSE_POSITIV_FIRE_PROBABILITY: item['falsePositiveFireProbability']})
 
-# scenarios.append({USE_EXTENDED_MODES:False,
-#                   WATER_NOISE_VARIANCE:0.2,
-#                   FIRE_MAX_DISTANCE_DETECTABILITY: 0.2,
-#                   FIRE_NOISE_VARIANCE: 0.2,
-#                   FIRE_PROBABILITY_THRESHOLD: 0.6})
-# scenarios.append({USE_EXTENDED_MODES:True,
-#                   WATER_NOISE_VARIANCE:0.2,
-#                   FIRE_MAX_DISTANCE_DETECTABILITY: 0.2,
-#                   FIRE_NOISE_VARIANCE: 0.2,
-#                   FIRE_PROBABILITY_THRESHOLD: 0.6})
 
 #################################################
 
