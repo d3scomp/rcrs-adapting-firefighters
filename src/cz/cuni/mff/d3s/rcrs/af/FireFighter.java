@@ -5,6 +5,7 @@ import static cz.cuni.mff.d3s.rcrs.af.Configuration.WATER_THRESHOLD;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import cz.cuni.mff.d3s.rcrs.af.comm.KnowledgeMsg;
+import cz.cuni.mff.d3s.rcrs.af.comm.Msg;
 import cz.cuni.mff.d3s.rcrs.af.modes.Mode;
 import cz.cuni.mff.d3s.rcrs.af.sensors.FireSensor;
 import cz.cuni.mff.d3s.rcrs.af.sensors.Sensor.Quantity;
@@ -24,39 +27,80 @@ import rescuecore2.standard.entities.Hydrant;
 import rescuecore2.standard.entities.Refuge;
 import rescuecore2.standard.entities.StandardEntity;
 import rescuecore2.standard.entities.StandardEntityURN;
+import rescuecore2.standard.entities.World;
 import rescuecore2.worldmodel.ChangeSet;
 import rescuecore2.worldmodel.EntityID;
 import sample.AbstractSampleAgent;
 
 public class FireFighter extends AbstractSampleAgent<FireBrigade> {
-	
-	
-	private final String id;
-	
+
+	// private final String id;
+
 	private static final String MAX_WATER_KEY = "fire.tank.maximum";
 	private static final String MAX_DISTANCE_KEY = "fire.extinguish.max-distance";
 	private static final String MAX_POWER_KEY = "fire.extinguish.max-sum";
-	
+
+	private final int CHANNEL_IN = 2;
+	private final int CHANNEL_OUT = 1;
+
 	private int maxWater;
 	private int maxDistance;
 	private int maxPower;
 
 	private Mode mode = Mode.Search;
 
-	private EntityID searchTarget = null;
-	private EntityID fireTarget = null;
-	private EntityID refillTarget = null;
-	
 	private Map<Building, FireSensor> fireSensor;
 	private WaterSensor waterSensor;
 
 	StandardEntity[] roads;
 	Set<EntityID> refillStations = new HashSet<>();
-	
+
+	// Knowledge ##############################################################
+
+	private final int id;
+	private final String sid;
+	public final static String KNOWLEDGE_ID = "id";
+
+	private EntityID fireTarget; // updated by mode switch
+	public final static String KNOWLEDGE_FIRE_TARGET = "fireTarget";
+
+	private EntityID helpTarget; // updated by mode switch
+	public final static String KNOWLEDGE_HELP_TARGET = "helpTarget";
+
+	private EntityID refillTarget; // updated by ensemble
+	public final static String KNOWLEDGE_REFILL_TARGET = "refillTarget";
+
+	private EntityID searchTarget;
+
+	// position; location()
+	public final static String KNOWLEDGE_POSITION = "position";
+
+	// water; me().getWater()
+	public final static String KNOWLEDGE_WATER = "water";
+
+	// extinguishing: mode == Extinguish
+	public final static String KNOWLEDGE_EXTINGUISHING = "extinguishing";
+
+	// extinguishing: mode == Refill || mode == MoveToRefill
+	public final static String KNOWLEDGE_REFILLING = "refilling";
+
+	private List<EntityID> burningBuildings = Collections.emptyList();
+	public final static String KNOWLEDGE_BURNING_BUILDINGS = "burningBuildings";
+
+	private boolean canDetectBuildings = true;
+	public final static String KNOWLEDGE_CAN_DETECT_BUILDINGS = "canDetectBuildings";
+
+	private int helpingFireFighter;
+	public final static String KNOWLEDGE_HELPING_FIREFIGHTER = "helpingFireFighter";
+
+	private int helpingDistance;
+	public final static String KNOWLEDGE_HELPING_DISTANCE = "helpingDistance";
+
 	// ########################################################################
 
 	public FireFighter(int id) {
-		this.id = String.format("FF%d", id);
+		this.id = id;
+		sid = String.format("FF%d", id);
 		maxWater = -1;
 		fireSensor = new HashMap<>();
 	}
@@ -71,20 +115,20 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 		maxPower = config.getIntValue(MAX_POWER_KEY);
 		Logger.info(toString() + " connected: max extinguish distance = " + maxDistance + ", max power = " + maxPower
 				+ ", max tank = " + maxWater);
-		
+
 		Collection<StandardEntity> entities = model.getEntitiesOfType(StandardEntityURN.ROAD);
 		roads = entities.toArray(new StandardEntity[entities.size()]);
-		
+
 		// Store refill stations and create fire sensors
 		for (StandardEntity entity : model) {
-            if (entity instanceof Hydrant || entity instanceof Refuge) {
-            	refillStations.add(entity.getID());
-            }
-            if (entity instanceof Building) {
-            	fireSensor.put((Building) entity, new FireSensor(this, (Building) entity));
-            }
-        }
-		
+			if (entity instanceof Hydrant || entity instanceof Refuge) {
+				refillStations.add(entity.getID());
+			}
+			if (entity instanceof Building) {
+				fireSensor.put((Building) entity, new FireSensor(this, (Building) entity));
+			}
+		}
+
 		waterSensor = new WaterSensor(this);
 	}
 
@@ -96,12 +140,25 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 	@Override
 	protected void think(int time, ChangeSet changes, Collection<Command> heard) {
 		long startTime = System.nanoTime();
-		
+
+		if (time == config.getIntValue(kernel.KernelConstants.IGNORE_AGENT_COMMANDS_KEY)) {
+			sendSubscribe(time, CHANNEL_IN);
+			Logger.info(sid + " subscribed to channel " + CHANNEL_IN);
+		}
+
+		for (EntityID eid : changes.getChangedEntities()) {
+			StandardEntity entity = model.getEntity(eid);
+			if (entity instanceof World) {
+				World world = (World) entity;
+				Logger.info(formatLog(time, "Wind speed: " + world.getWindForce() + " direction: " + world.getWindDirection()));
+			}
+		}
+
 		waterSensor.sense(time);
-		for(Building building : fireSensor.keySet()) {
+		for (Building building : fireSensor.keySet()) {
 			fireSensor.get(building).sense(time);
 		}
-			
+
 		switchMode(time);
 
 		// Act
@@ -142,22 +199,28 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			}
 			break;
 		case Refill:
-			if(!atRefill()) {
+			if (!atRefill()) {
 				Logger.error(formatLog(time, "Trying to refill at wrong place " + location().getID().getValue()));
 			} else {
 				Logger.info(formatLog(time, "refilling(" + getWater() + ")"));
 			}
 			sendRest(time);
 			break;
-		
+
 		default:
 			Logger.error(id + " in unknown mode " + mode);
 			break;
 
 		}
-		
+
+		// Send knowledge
+		Msg msg = new KnowledgeMsg(id, location().getID(), fireTarget, helpTarget, refillTarget, getWater(),
+				extinguishing(), refilling(), burningBuildings, canDetectBuildings, helpingFireFighter,
+				helpingDistance);
+		sendSpeak(time, CHANNEL_OUT, msg.getBytes());
+
 		long duration = System.nanoTime() - startTime;
-		Logger.info(formatLog(time, "thinking took " + duration/1000000 + " ms"));
+		Logger.info(formatLog(time, "thinking took " + duration / 1000000 + " ms"));
 	}
 
 	private void switchMode(int time) {
@@ -169,7 +232,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			if (waterSensor.isLevel(Quantity.LESS_OR_EQUAL, WATER_THRESHOLD)) {
 				// Plan for refill
 				List<EntityID> path = planShortestRoute(refillStations.toArray(new EntityID[refillStations.size()]));
-				if(path != null) {
+				if (path != null) {
 					refillTarget = getTarget(path);
 					mode = Mode.MoveToRefill;
 				} else {
@@ -178,7 +241,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 				break;
 			}
 			// Not next a building on fire?
-			if(findCloseBurningBuilding() == null) {
+			if (findCloseBurningBuilding() == null) {
 				// Plan to search fire
 				searchTarget = randomTarget();
 				mode = Mode.Search;
@@ -189,7 +252,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			break;
 		case MoveToFire:
 			// Target reached?
-			if(fireTarget == null || fireTarget.equals(location().getID())) { 
+			if (fireTarget == null || fireTarget.equals(location().getID())) {
 				mode = Mode.Extinguish;
 				break;
 			}
@@ -198,7 +261,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			break;
 		case MoveToRefill:
 			// Target reached?
-			if(refillTarget == null || refillTarget.equals(location().getID())) {
+			if (refillTarget == null || refillTarget.equals(location().getID())) {
 				mode = Mode.Refill;
 				break;
 			}
@@ -216,7 +279,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			if (burningBuilding != null) {
 				// Any known burning buildings?
 				List<EntityID> path = planShortestRoute(burningBuilding);
-				if(path != null) {
+				if (path != null) {
 					fireTarget = getTarget(path);
 					mode = Mode.MoveToFire;
 				} else {
@@ -248,32 +311,32 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 		}
 
 	}
-	
+
 	// Sensor readings ////////////////////////////////////////////////////////
-	
+
 	public double getMaxWater() {
-		if(maxWater == -1) {
-			throw new RuntimeException("The maxWater variable is not initialized. Calling getFFMaxWater() before postConnect()?");
+		if (maxWater == -1) {
+			throw new RuntimeException(
+					"The maxWater variable is not initialized. Calling getFFMaxWater() before postConnect()?");
 		}
-		
+
 		return maxWater;
 	}
-	
-	public double getWater() {
+
+	public int getWater() {
 		return me().getWater();
 	}
-	
+
 	public int getBuildingDistance(Building building) {
 		return model.getDistance(building, location());
 	}
-	
+
 	public boolean isBuildingOnFire(Building building) {
 		return building.isOnFire();
 	}
-	
+
 	///////////////////////////////////////////////////////////////////////////
-	
-	
+
 	private EntityID randomTarget() {
 		return roads[random.nextInt(roads.length)].getID();
 	}
@@ -282,12 +345,12 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 		ArrayList<EntityID> closeBuildings = new ArrayList<>();
 		// Can we extinguish any right now?
 		for (Building building : fireSensor.keySet()) {
-			if (model.getDistance(location(), building) < maxDistance*0.8
+			if (model.getDistance(location(), building) < maxDistance * 0.8
 					&& fireSensor.get(building).isLevel(Quantity.GREATER_OR_EQUAL, FIRE_PROBABILITY_THRESHOLD)) {
 				closeBuildings.add(building.getID());
 			}
 		}
-		if(closeBuildings.size() == 0) {
+		if (closeBuildings.size() == 0) {
 			return null;
 		}
 		return closeBuildings.get(random.nextInt(closeBuildings.size()));
@@ -306,22 +369,30 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			return null;
 		}
 	}
-	
+
 	private EntityID getTarget(List<EntityID> path) {
 		return path.get(path.size() - 1);
 	}
-	
+
 	public boolean atRefill() {
 		StandardEntity here = location();
 		return here instanceof Hydrant || here instanceof Refuge;
+	}
+	
+	private boolean extinguishing() {
+		return mode == Mode.Extinguish;
+	}
+
+	private boolean refilling() {
+		return mode == Mode.Refill;
 	}
 
 	private String formatLog(int time, String msg) {
 		return String.format("T[%d] L[%s] %s %s", time, location(), id, msg);
 	}
-	
+
 	@Override
 	public String toString() {
-		return id;
+		return sid;
 	}
 }

@@ -57,7 +57,7 @@ public abstract class Sensor {
 			timeSeries.addSample(sample, time);
 		}
 		
-		if("FireSensor".equals(sensorName)) {
+		/*if("FireSensor".equals(sensorName)) {
 			int distance = getDistance();
 			if(onFire()) {	
 				Logger.info(String.format("%s: t: %d; d: %d; v: %f; s: %f;", 
@@ -71,7 +71,7 @@ public abstract class Sensor {
 		if("WaterSensor".equals(sensorName)) {
 			Logger.info(String.format("%s: t: %d; v: %f; s: %f;", 
 					"water", time, value, sample));
-		}
+		}*/
 	}
 	
 	public boolean isLevel(Quantity operation, double level) {

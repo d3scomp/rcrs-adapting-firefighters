@@ -34,6 +34,8 @@ public class Configuration {
 		
 	
 	public static boolean USE_EXTENDED_MODES = false;
+
+	public static int MAX_SEPARATION_DISTANCE = 70_000;
 	
 	public static int WATER_THRESHOLD = 0;
 	
