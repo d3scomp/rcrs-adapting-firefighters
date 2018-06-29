@@ -1,23 +1,21 @@
 package cz.cuni.mff.d3s.rcrs.af.comm;
 
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_BURNING_BUILDINGS;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_FIRE_TARGET;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_DISTANCE;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_FIREFIGHTER;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ID;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_POSITION;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_MODE;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_REFILL_TARGET;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_WATER;
+
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import cz.cuni.mff.d3s.rcrs.af.modes.Mode;
 import rescuecore2.worldmodel.EntityID;
-
-
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ID;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_FIRE_TARGET;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_REFILL_TARGET;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_POSITION;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_WATER;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_EXTINGUISHING;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_REFILLING;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_BURNING_BUILDINGS;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_CAN_DETECT_BUILDINGS;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_FIREFIGHTER;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_DISTANCE;
 
 public class KnowledgeMsg extends Msg {
 
@@ -32,28 +30,23 @@ public class KnowledgeMsg extends Msg {
 	public final EntityID helpTarget;
 	public final EntityID refillTarget;
 	public final int water;
-	public final boolean extinguishing;
-	public final boolean refilling;
+	public final Mode mode;
 	public final List<EntityID> burningBuildings;
-	public final boolean canDetectBuildings;
 	public final int helpingFireFighter;
 	public final int helpingDistance;
 	
 	
 	public KnowledgeMsg(int id, EntityID position, EntityID fireTarget,
-			EntityID helpTarget, EntityID refillTarget, int water,
-			boolean extinguishing, boolean refilling, List<EntityID> burningBuildings,
-			boolean canDetectBuildings, int helpingFireFighter, int helpingDistance) {
+			EntityID helpTarget, EntityID refillTarget, int water, Mode mode,
+			List<EntityID> burningBuildings, int helpingFireFighter, int helpingDistance) {
 		this.id = id;
 		this.position = position;
 		this.fireTarget = fireTarget;
 		this.helpTarget = helpTarget;
 		this.refillTarget = refillTarget;
 		this.water = water;
-		this.extinguishing = extinguishing;
-		this.refilling = refilling;
+		this.mode = mode;
 		this.burningBuildings = burningBuildings;
-		this.canDetectBuildings = canDetectBuildings;
 		this.helpingFireFighter = helpingFireFighter;
 		this.helpingDistance = helpingDistance;
 	}
@@ -65,10 +58,8 @@ public class KnowledgeMsg extends Msg {
 		helpTarget = null;
 		refillTarget = null;
 		water = Integer.MIN_VALUE;
-		extinguishing = false;
-		refilling = false;
+		mode = Mode.Search;
 		burningBuildings = null;
-		canDetectBuildings = false;
 		helpingFireFighter = -1;
 		helpingDistance = Integer.MAX_VALUE;
 	}
@@ -78,10 +69,8 @@ public class KnowledgeMsg extends Msg {
 		// int id, int position, int fireTarget, int helpTarget, int refilTarget, int water,
 		// int helpingFireFighter, int helpingDistance,
 		int size = Integer.BYTES * 8
-		// boolean extinguishing, boolean refilling, boolean canDetectBuildings,
-				 + 3
-		// 1 byte burningBuildings.size,
-				 + 1
+		// byte mode, byte burningBuildings.size,
+				 + 2
 		// List<Integer> burningBuildings,
 				 + Integer.BYTES * burningBuildings.size()
 		// space for signature
@@ -115,14 +104,12 @@ public class KnowledgeMsg extends Msg {
 			data.putInt(-1);
 		}
 		data.putInt(water);
-		data.put(extinguishing ? (byte) 1 : (byte) 0);
-		data.put(refilling ? (byte) 1 : (byte) 0);
+		data.put(mode.getValue());
 		data.put((byte) burningBuildings.size());
 		for(EntityID burningBuilding : burningBuildings) {
 			data.putInt(burningBuilding.getValue());
 			entityBuffer.put(burningBuilding.getValue(), burningBuilding);
 		}
-		data.put(canDetectBuildings ? (byte) 1 : (byte) 0);
 		data.putInt(helpingFireFighter);
 		data.putInt(helpingDistance);
 				
@@ -153,19 +140,16 @@ public class KnowledgeMsg extends Msg {
 			refillTarget = entityBuffer.get(targetInt);
 		}
 		int water = data.getInt();
-		boolean extinguishing = data.get() == 0 ? false : true;
-		boolean refilling = data.get() == 0 ? false : true;
+		Mode mode = Mode.fromValue(data.get());
 		ArrayList<EntityID> burningBuildings = new ArrayList<>();
 		for(int i = data.get(); i > 0; i--) {
 			burningBuildings.add(entityBuffer.get(data.getInt()));
 		}
-		boolean canDetectBuildings = data.get() == 0 ? false : true;
 		int helpingFireFighter = data.getInt();
 		int helpingDistance = data.getInt();
 		
 		return new KnowledgeMsg(id, position, fireTarget, helpTarget, refillTarget,
-				water, extinguishing, refilling, burningBuildings, canDetectBuildings,
-				helpingFireFighter, helpingDistance);
+				water, mode, burningBuildings, helpingFireFighter, helpingDistance);
 	}
 
 	@Override
@@ -195,10 +179,8 @@ public class KnowledgeMsg extends Msg {
 				+ " " + KNOWLEDGE_FIRE_TARGET + "=" + (helpTarget != null ? helpTarget.getValue() : -1)
 				+ " " + KNOWLEDGE_REFILL_TARGET + "=" + (refillTarget != null ? refillTarget.getValue() : -1)
 				+ " " + KNOWLEDGE_WATER + "=" + water
-				+ " " + KNOWLEDGE_EXTINGUISHING + "=" + extinguishing
-				+ " " + KNOWLEDGE_REFILLING + "=" + refilling
+				+ " " + KNOWLEDGE_MODE + "=" + mode
 				+ " " + KNOWLEDGE_BURNING_BUILDINGS + "=[" + bb + "]"
-				+ " " + KNOWLEDGE_CAN_DETECT_BUILDINGS + "=" + canDetectBuildings
 				+ " " + KNOWLEDGE_HELPING_FIREFIGHTER + "=" + helpingFireFighter
 				+ " " + KNOWLEDGE_HELPING_DISTANCE + "=" + helpingDistance;
 	}

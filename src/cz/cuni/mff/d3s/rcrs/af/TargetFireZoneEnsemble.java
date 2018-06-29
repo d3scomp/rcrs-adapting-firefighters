@@ -2,23 +2,22 @@ package cz.cuni.mff.d3s.rcrs.af;
 
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.MAX_SEPARATION_DISTANCE;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_BURNING_BUILDINGS;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_EXTINGUISHING;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELP_TARGET;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_DISTANCE;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_FIREFIGHTER;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELP_TARGET;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ID;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_MODE;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_POSITION;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_REFILLING;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 
 import cz.cuni.mff.d3s.rcrs.af.comm.Msg;
 import cz.cuni.mff.d3s.rcrs.af.comm.TargetMsg;
+import cz.cuni.mff.d3s.rcrs.af.modes.Mode;
 import rescuecore2.log.Logger;
 import rescuecore2.standard.entities.StandardWorldModel;
 import rescuecore2.worldmodel.EntityID;
@@ -50,22 +49,22 @@ public class TargetFireZoneEnsemble extends Ensemble {
 				int coordId = (int) t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_ID));
 				int memberId = (int) t.get(Ensemble.getMemberFieldName(KNOWLEDGE_ID));
 				boolean coordNotMember = t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_HELP_TARGET)) == null;
-				@SuppressWarnings("unchecked")
-				boolean coordExtinguishing = (boolean) t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_EXTINGUISHING))
-						&& !((List<EntityID>)t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_BURNING_BUILDINGS))).isEmpty();
+//				@SuppressWarnings("unchecked")
+				boolean coordExtinguishing = t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_MODE)) == Mode.Extinguish;
+//						&& !((List<EntityID>)t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_BURNING_BUILDINGS))).isEmpty();
 				EntityID memberHelpTarget = (EntityID) t.get(Ensemble.getMemberFieldName(KNOWLEDGE_HELP_TARGET));
 				int helpingFireFighter = (int) t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_HELPING_FIREFIGHTER));
 				int helpingDistance = (int) t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_HELPING_DISTANCE));
 				boolean memberIsFree = memberHelpTarget == null;
 				boolean alreadyAMember = !memberIsFree && memberId == helpingFireFighter && memberHelpTarget.equals(coordPosition);
-				boolean memberRefilling = (boolean) t.get(Ensemble.getMemberFieldName(KNOWLEDGE_REFILLING));
+				boolean memberSearching = t.get(Ensemble.getMemberFieldName(KNOWLEDGE_MODE)) == Mode.Search;
 				
 				int newDistance = model.getDistance(memberPosition, coordPosition);
 				
 				boolean newIsCloser = newDistance < helpingDistance
 						&& newDistance < MAX_SEPARATION_DISTANCE;
 				
-				boolean satisfied = coordNotMember && coordExtinguishing && !memberRefilling
+				boolean satisfied = coordNotMember && coordExtinguishing && !memberSearching
 						&& ((memberIsFree && newIsCloser) || alreadyAMember);
 				if(satisfied) {
 					Logger.debug(String.format("TFZE:\n"
@@ -79,12 +78,12 @@ public class TargetFireZoneEnsemble extends Ensemble {
 							+ "\tnDistance: %d\n"
 							+ "\tmIsFree: %s\n"
 							+ "\tmAlreadyM: %s\n"
-							+ "\tmRefilling: %s\n"
+							+ "\tmSearching: %s\n"
 							+ "\tisCloser: %s\n"
 							+ "\tSAT: %s", coordId, memberId, coordNotMember, coordExtinguishing,
 							memberHelpTarget == null ? -1 : memberHelpTarget.getValue(),
 							helpingFireFighter, helpingDistance, newDistance, memberIsFree,
-							alreadyAMember, memberRefilling, newIsCloser, satisfied));
+							alreadyAMember, memberSearching, newIsCloser, satisfied));
 					computedDistance = newDistance;
 					Logger.info("TargetFireZoneEnsemble satisfied for " + "coord FF" + coordId + " and member FF" + memberId);
 				}
@@ -104,7 +103,7 @@ public class TargetFireZoneEnsemble extends Ensemble {
 		return new HashSet<>(Arrays.asList(new String[] {
 				KNOWLEDGE_HELP_TARGET,
 				KNOWLEDGE_POSITION,
-				KNOWLEDGE_EXTINGUISHING,
+				KNOWLEDGE_MODE,
 				KNOWLEDGE_BURNING_BUILDINGS,
 				KNOWLEDGE_HELPING_FIREFIGHTER}));
 	}
@@ -114,7 +113,7 @@ public class TargetFireZoneEnsemble extends Ensemble {
 		return new HashSet<>(Arrays.asList(new String[] {
 				KNOWLEDGE_HELP_TARGET,
 				KNOWLEDGE_POSITION,
-				KNOWLEDGE_EXTINGUISHING}));
+				KNOWLEDGE_MODE}));
 	}
 	
 	@Override

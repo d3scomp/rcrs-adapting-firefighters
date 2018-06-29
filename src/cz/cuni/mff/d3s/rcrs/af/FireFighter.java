@@ -13,11 +13,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import cz.cuni.mff.d3s.rcrs.af.comm.BuildingsMsg;
 import cz.cuni.mff.d3s.rcrs.af.comm.KnowledgeMsg;
 import cz.cuni.mff.d3s.rcrs.af.comm.Msg;
 import cz.cuni.mff.d3s.rcrs.af.comm.RefillMsg;
-import cz.cuni.mff.d3s.rcrs.af.comm.TargetMsg;
 import cz.cuni.mff.d3s.rcrs.af.modes.Mode;
 import cz.cuni.mff.d3s.rcrs.af.sensors.FireSensor;
 import cz.cuni.mff.d3s.rcrs.af.sensors.Sensor.Quantity;
@@ -50,8 +48,6 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 	private int maxDistance;
 	private int maxPower;
 
-	private Mode mode = Mode.Search;
-
 	private Map<Building, FireSensor> fireSensor;
 	private WaterSensor waterSensor;
 
@@ -64,10 +60,10 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 	private final String sid;
 	public final static String KNOWLEDGE_ID = "id";
 
-	private EntityID fireTarget; // updated by mode switch
+	private EntityID fireTarget;
 	public final static String KNOWLEDGE_FIRE_TARGET = "fireTarget";
 
-	private EntityID helpTarget; // updated by mode switch
+	private EntityID helpTarget; // updated by ensemble
 	public final static String KNOWLEDGE_HELP_TARGET = "helpTarget";
 
 	private EntityID refillTarget; // updated by ensemble
@@ -81,17 +77,11 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 	// water; me().getWater()
 	public final static String KNOWLEDGE_WATER = "water";
 
-	// extinguishing: mode == Extinguish
-	public final static String KNOWLEDGE_EXTINGUISHING = "extinguishing";
-
-	// extinguishing: mode == Refill || mode == MoveToRefill
-	public final static String KNOWLEDGE_REFILLING = "refilling";
+	private Mode mode = Mode.Search;
+	public final static String KNOWLEDGE_MODE = "mode";
 
 	private List<EntityID> burningBuildings = Collections.emptyList();
 	public final static String KNOWLEDGE_BURNING_BUILDINGS = "burningBuildings";
-
-	private boolean canDetectBuildings = true;
-	public final static String KNOWLEDGE_CAN_DETECT_BUILDINGS = "canDetectBuildings";
 
 	private int helpingFireFighter;
 	public final static String KNOWLEDGE_HELPING_FIREFIGHTER = "helpingFireFighter";
@@ -160,8 +150,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 
 		// Send knowledge
 		Msg msg = new KnowledgeMsg(id, location().getID(), fireTarget, helpTarget, refillTarget, getWater(),
-				extinguishing(), refilling(), burningBuildings, canDetectBuildings, helpingFireFighter,
-				helpingDistance);
+				mode, burningBuildings, helpingFireFighter, helpingDistance);
 		sendSpeak(time, CHANNEL_OUT, msg.getBytes());
 
 		// Send rest
@@ -187,7 +176,8 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			Msg command = Msg.fromBytes(message.getContent());
 			Logger.debug(formatLog(time, "heard " + message));
 
-			if (command instanceof TargetMsg) {
+			// TODO:
+			/*if (command instanceof TargetMsg) {
 				TargetMsg targetMsg = (TargetMsg) command;
 				if (targetMsg.memberId == id) {
 					Logger.info(formatLog(time, "received " + targetMsg));
@@ -201,7 +191,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 					helpingDistance = targetMsg.helpingDistance;
 					Logger.info(formatLog(time, "help from FF" + helpingFireFighter));
 				}
-			}
+			}*/
 			if (command instanceof RefillMsg) {
 				RefillMsg refillMsg = (RefillMsg) command;
 				if (refillMsg.memberId == id) {
@@ -218,14 +208,15 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 					}
 				}
 			}
-			if (command instanceof BuildingsMsg) {
+			// TODO:
+			/*if (command instanceof BuildingsMsg) {
 				BuildingsMsg buildingsMsg = (BuildingsMsg) command;
 				if (buildingsMsg.id == id && !canDetectBuildings) {
 					Logger.info(formatLog(time, "received " + buildingsMsg));
 					burningBuildings = buildingsMsg.burningBuildings;
 					Logger.info(formatLog(time, "injected with burning buildings"));
 				}
-			}
+			}*/
 		}
 	}
 
@@ -429,14 +420,6 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 	public boolean atRefill() {
 		StandardEntity here = location();
 		return here instanceof Hydrant || here instanceof Refuge;
-	}
-
-	private boolean extinguishing() {
-		return mode == Mode.Extinguish;
-	}
-
-	private boolean refilling() {
-		return mode == Mode.Refill;
 	}
 
 	private String formatLog(int time, String msg) {

@@ -1,15 +1,13 @@
 package cz.cuni.mff.d3s.rcrs.af;
 
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_BURNING_BUILDINGS;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_CAN_DETECT_BUILDINGS;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_EXTINGUISHING;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_FIRE_TARGET;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_DISTANCE;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_FIREFIGHTER;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELP_TARGET;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ID;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_POSITION;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_REFILLING;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_MODE;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_REFILL_TARGET;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_WATER;
 
@@ -48,10 +46,8 @@ public class FFComponent implements IComponent {
 		knowledge.put(KNOWLEDGE_REFILL_TARGET, msg.refillTarget);
 		knowledge.put(KNOWLEDGE_POSITION, msg.position);
 		knowledge.put(KNOWLEDGE_WATER, msg.water);
-		knowledge.put(KNOWLEDGE_EXTINGUISHING, msg.extinguishing);
-		knowledge.put(KNOWLEDGE_REFILLING, msg.refilling);
+		knowledge.put(KNOWLEDGE_MODE, msg.mode);
 		knowledge.put(KNOWLEDGE_BURNING_BUILDINGS, msg.burningBuildings);
-		knowledge.put(KNOWLEDGE_CAN_DETECT_BUILDINGS, msg.canDetectBuildings);
 		knowledge.put(KNOWLEDGE_HELPING_FIREFIGHTER, msg.helpingFireFighter);
 		knowledge.put(KNOWLEDGE_HELPING_DISTANCE, msg.helpingDistance);
 	}
