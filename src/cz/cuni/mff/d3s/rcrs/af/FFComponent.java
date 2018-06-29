@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 
 import cz.cuni.mff.d3s.rcrs.af.comm.KnowledgeMsg;
+import rescuecore2.worldmodel.EntityID;
 
 /**
  * Mirror component for {@link FireFighter} on the {@link FireStation} side.
@@ -63,6 +64,10 @@ public class FFComponent implements IComponent {
 	@Override
 	public Set<String> getExposedKnowledge(){
 		return knowledge.keySet();
+	}
+	
+	public EntityID getPosition() {
+		return (EntityID) knowledge.get(KNOWLEDGE_POSITION);
 	}
 	
 	@Override

@@ -19,6 +19,7 @@ import rescuecore2.standard.entities.StandardEntity;
 import rescuecore2.standard.entities.StandardEntityURN;
 import rescuecore2.standard.messages.AKSpeak;
 import rescuecore2.worldmodel.ChangeSet;
+import rescuecore2.worldmodel.EntityID;
 
 public class FireStation extends StandardAgent<Building> {
 
@@ -73,14 +74,35 @@ public class FireStation extends StandardAgent<Building> {
 				if (msg == null) {
 					continue;
 				}
-				Logger.info(String.format("at %d %s received %s", time, sid, msg));
+//				Logger.info(String.format("at %d %s received %s", time, sid, msg));
 				IComponent c = components.containsKey(msg.getSid()) ? components.get(msg.getSid()) : new FFComponent();
 				c.loadKnowledge(msg, time);
 				components.put(c.getSid(), c);
 			}
 		}
 		
-		// TODO: check vacant hydrants
+		// check vacant refill stations
+		for(String c1 : components.keySet()) {
+			if(components.get(c1) instanceof RefillComponent) {
+				RefillComponent refillStation = (RefillComponent) components.get(c1);
+				boolean vacant = true;
+				
+				for(String c2 : components.keySet()) {
+					if(components.get(c2) instanceof FFComponent) {
+						FFComponent fireFighter = (FFComponent) components.get(c2);
+						
+						EntityID ffPositionId = fireFighter.getPosition();
+						EntityID rsId = refillStation.getId();
+						if(ffPositionId.equals(rsId)) {
+							Logger.info(String.format("%s occupied by %s", refillStation, fireFighter));
+							vacant = false;
+						}
+					}
+				}
+				
+				refillStation.setVacant(vacant);
+			}
+		}
 
 		// Evaluate ensembles
 		for (String cId : components.keySet()) {
@@ -94,7 +116,8 @@ public class FireStation extends StandardAgent<Building> {
 				for (Ensemble ensemble : ensembles) {
 					if (ensemble.isSatisfied(coordinator, member)) {
 						Logger.info(String.format("Ensemble %s satisfied for %s and %s",
-								ensemble.getClass(), coordinator.getSid(), member.getSid()));
+								ensemble.getClass().getSimpleName(), coordinator.getSid(),
+								member.getSid()));
 						Msg msg = ensemble.getMessage(coordinator, member);
 						sendSpeak(time, CHANNEL_OUT, msg.getBytes());
 						Logger.info(String.format("at %d %s sending msg %s", time, sid, msg));

@@ -33,6 +33,10 @@ public class RefillComponent implements IComponent {
 		return knowledge.keySet();
 	}
 	
+	public void setVacant(boolean vacant) {
+		knowledge.put(KNOWLEDGE_REFILL_VACANT, vacant);
+	}
+	
 	public EntityID getId() {
 		return refillStation;
 	}
@@ -44,7 +48,7 @@ public class RefillComponent implements IComponent {
 
 	@Override
 	public String toString() {
-		return String.format("RS %d", refillStation.getValue());
+		return getSid();
 	}
 
 	@Override
