@@ -1,19 +1,19 @@
 package cz.cuni.mff.d3s.rcrs.af.comm;
 
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_BURNING_BUILDINGS;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ENTITY_ID;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_FIRE_TARGET;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_DISTANCE;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_FIREFIGHTER;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ID;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ENTITY_ID;
-import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_POSITION;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_MODE;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_POSITION;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_REFILL_TARGET;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_WATER;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import cz.cuni.mff.d3s.rcrs.af.modes.Mode;
 import rescuecore2.worldmodel.EntityID;
@@ -33,14 +33,14 @@ public class KnowledgeMsg extends Msg {
 	public final EntityID refillTarget;
 	public final int water;
 	public final Mode mode;
-	public final List<EntityID> burningBuildings;
+	public final Set<EntityID> burningBuildings;
 	public final int helpingFireFighter;
 	public final int helpingDistance;
 	
 	
 	public KnowledgeMsg(int id, EntityID eid, EntityID position, EntityID fireTarget,
 			EntityID helpTarget, EntityID refillTarget, int water, Mode mode,
-			List<EntityID> burningBuildings, int helpingFireFighter, int helpingDistance) {
+			Set<EntityID> burningBuildings, int helpingFireFighter, int helpingDistance) {
 		this.id = id;
 		this.eid = eid;
 		this.position = position;
@@ -156,7 +156,7 @@ public class KnowledgeMsg extends Msg {
 		}
 		int water = data.getInt();
 		Mode mode = Mode.fromValue(data.get());
-		ArrayList<EntityID> burningBuildings = new ArrayList<>();
+		Set<EntityID> burningBuildings = new HashSet<>();
 		for(int i = data.get(); i > 0; i--) {
 			burningBuildings.add(entityBuffer.get(data.getInt()));
 		}

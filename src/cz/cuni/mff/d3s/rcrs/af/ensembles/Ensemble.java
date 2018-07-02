@@ -1,4 +1,4 @@
-package cz.cuni.mff.d3s.rcrs.af;
+package cz.cuni.mff.d3s.rcrs.af.ensembles;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 import cz.cuni.mff.d3s.rcrs.af.comm.Msg;
+import cz.cuni.mff.d3s.rcrs.af.components.IComponent;
 
 public abstract class Ensemble {
 

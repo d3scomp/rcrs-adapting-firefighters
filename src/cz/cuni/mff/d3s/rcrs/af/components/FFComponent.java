@@ -1,4 +1,4 @@
-package cz.cuni.mff.d3s.rcrs.af;
+package cz.cuni.mff.d3s.rcrs.af.components;
 
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_BURNING_BUILDINGS;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_FIRE_TARGET;
@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import cz.cuni.mff.d3s.rcrs.af.FireFighter;
+import cz.cuni.mff.d3s.rcrs.af.FireStation;
 import cz.cuni.mff.d3s.rcrs.af.comm.KnowledgeMsg;
 import rescuecore2.worldmodel.EntityID;
 

@@ -77,4 +77,13 @@ public abstract class Sensor {
 			throw new UnsupportedOperationException("Operation " + operation + " not implemented");
 		}
 	}
+	
+	public double getMean() {
+		if(timeSeries != null) {
+			return timeSeries.getMean().getMean();
+		}
+		
+		return sample;
+	}
+	
 }

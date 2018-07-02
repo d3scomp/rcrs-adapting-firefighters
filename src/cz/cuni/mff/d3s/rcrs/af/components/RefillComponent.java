@@ -1,4 +1,4 @@
-package cz.cuni.mff.d3s.rcrs.af;
+package cz.cuni.mff.d3s.rcrs.af.components;
 
 import java.util.HashMap;
 import java.util.Map;

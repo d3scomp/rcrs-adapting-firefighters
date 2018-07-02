@@ -1,4 +1,4 @@
-package cz.cuni.mff.d3s.rcrs.af;
+package cz.cuni.mff.d3s.rcrs.af.ensembles;
 
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.MAX_SEPARATION_DISTANCE;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_BURNING_BUILDINGS;
@@ -6,6 +6,7 @@ import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_DISTANCE;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_FIREFIGHTER;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELP_TARGET;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ID;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ENTITY_ID;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_MODE;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_POSITION;
 
@@ -15,8 +16,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import cz.cuni.mff.d3s.rcrs.af.FireStation;
 import cz.cuni.mff.d3s.rcrs.af.comm.Msg;
 import cz.cuni.mff.d3s.rcrs.af.comm.TargetMsg;
+import cz.cuni.mff.d3s.rcrs.af.components.IComponent;
 import cz.cuni.mff.d3s.rcrs.af.modes.Mode;
 import rescuecore2.log.Logger;
 import rescuecore2.standard.entities.StandardWorldModel;
@@ -28,15 +31,15 @@ public class TargetFireZoneEnsemble extends Ensemble {
 	
 	private static TargetFireZoneEnsemble INSTANCE = null;
 	
-	public static TargetFireZoneEnsemble getInstance(StandardWorldModel model) {
+	public static TargetFireZoneEnsemble getInstance(StandardWorldModel model, FireStation fireStation) {
 		if(INSTANCE == null) {
-			INSTANCE = new TargetFireZoneEnsemble(model);
+			INSTANCE = new TargetFireZoneEnsemble(model, fireStation);
 		}
 		
 		return INSTANCE;
 	}
 	
-	private TargetFireZoneEnsemble(StandardWorldModel model) {
+	private TargetFireZoneEnsemble(StandardWorldModel model, FireStation fireStation) {
 		super(new Predicate<Map<String,Object>>(){
 			@Override
 			public boolean test(Map<String, Object> t) {
@@ -47,7 +50,9 @@ public class TargetFireZoneEnsemble extends Ensemble {
 				}
 
 				int coordId = (int) t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_ID));
+				EntityID coordEid = (EntityID) t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_ENTITY_ID));
 				int memberId = (int) t.get(Ensemble.getMemberFieldName(KNOWLEDGE_ID));
+				EntityID memberEid = (EntityID) t.get(Ensemble.getMemberFieldName(KNOWLEDGE_ENTITY_ID));
 				boolean coordNotMember = t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_HELP_TARGET)) == null;
 //				@SuppressWarnings("unchecked")
 				boolean coordExtinguishing = t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_MODE)) == Mode.Extinguish;
@@ -60,12 +65,13 @@ public class TargetFireZoneEnsemble extends Ensemble {
 				boolean memberSearching = t.get(Ensemble.getMemberFieldName(KNOWLEDGE_MODE)) == Mode.Search;
 				
 				int newDistance = model.getDistance(memberPosition, coordPosition);
+				boolean newDistanceDecreasing = fireStation.getFFDistanceLrb(coordEid, memberEid) < 0;
 				
 				boolean newIsCloser = newDistance < helpingDistance
 						&& newDistance < MAX_SEPARATION_DISTANCE;
 				
-				boolean satisfied = coordNotMember && coordExtinguishing && !memberSearching
-						&& ((memberIsFree && newIsCloser) || alreadyAMember);
+				boolean satisfied = coordNotMember && coordExtinguishing && memberSearching
+						&& ((memberIsFree && newIsCloser && newDistanceDecreasing) || alreadyAMember);
 				if(satisfied) {
 					Logger.debug(String.format("TFZE:\n"
 							+ "\tcId: FF%d\n"
@@ -101,7 +107,10 @@ public class TargetFireZoneEnsemble extends Ensemble {
 	@Override
 	public Set<String> getAssumedCoordKnowledge() {
 		return new HashSet<>(Arrays.asList(new String[] {
+				KNOWLEDGE_ID,
+				KNOWLEDGE_ENTITY_ID,
 				KNOWLEDGE_HELP_TARGET,
+				KNOWLEDGE_HELPING_DISTANCE,
 				KNOWLEDGE_POSITION,
 				KNOWLEDGE_MODE,
 				KNOWLEDGE_BURNING_BUILDINGS,
@@ -111,6 +120,8 @@ public class TargetFireZoneEnsemble extends Ensemble {
 	@Override
 	public Set<String> getAssumedMemberKnowledge() {
 		return new HashSet<>(Arrays.asList(new String[] {
+				KNOWLEDGE_ID,
+				KNOWLEDGE_ENTITY_ID,
 				KNOWLEDGE_HELP_TARGET,
 				KNOWLEDGE_POSITION,
 				KNOWLEDGE_MODE}));

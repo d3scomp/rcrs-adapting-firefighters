@@ -4,8 +4,8 @@ import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_BURNING_BUILDINGS;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ID;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import rescuecore2.worldmodel.EntityID;
 
@@ -17,10 +17,10 @@ public class BuildingsMsg extends Msg {
 	}
 	
 	public final int id;
-	public final List<EntityID> burningBuildings;
+	public final Set<EntityID> burningBuildings;
 	
 	
-	public BuildingsMsg(int id, List<EntityID> burningBuildings) {
+	public BuildingsMsg(int id, Set<EntityID> burningBuildings) {
 		this.id = id;
 		this.burningBuildings = burningBuildings;
 	}
@@ -56,7 +56,7 @@ public class BuildingsMsg extends Msg {
 	@Override
 	protected Msg fromMsgBytes(ByteBuffer data) {
 		int id = data.getInt();
-		ArrayList<EntityID> burningBuildings = new ArrayList<>();
+		Set<EntityID> burningBuildings = new HashSet<>();
 		for(int i = data.get(); i > 0; i--) {
 			burningBuildings.add(entityBuffer.get(data.getInt()));
 		}

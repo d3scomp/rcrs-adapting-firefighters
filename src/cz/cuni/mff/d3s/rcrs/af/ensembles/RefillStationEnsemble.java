@@ -1,10 +1,10 @@
-package cz.cuni.mff.d3s.rcrs.af;
+package cz.cuni.mff.d3s.rcrs.af.ensembles;
 
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ID;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_POSITION;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_REFILL_TARGET;
-import static cz.cuni.mff.d3s.rcrs.af.RefillComponent.KNOWLEDGE_REFILL_ID;
-import static cz.cuni.mff.d3s.rcrs.af.RefillComponent.KNOWLEDGE_REFILL_VACANT;
+import static cz.cuni.mff.d3s.rcrs.af.components.RefillComponent.KNOWLEDGE_REFILL_ID;
+import static cz.cuni.mff.d3s.rcrs.af.components.RefillComponent.KNOWLEDGE_REFILL_VACANT;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -14,6 +14,7 @@ import java.util.function.Predicate;
 
 import cz.cuni.mff.d3s.rcrs.af.comm.Msg;
 import cz.cuni.mff.d3s.rcrs.af.comm.RefillMsg;
+import cz.cuni.mff.d3s.rcrs.af.components.IComponent;
 import rescuecore2.log.Logger;
 import rescuecore2.standard.entities.StandardWorldModel;
 import rescuecore2.worldmodel.EntityID;
