@@ -5,6 +5,7 @@ import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_FIRE_TARGET;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_DISTANCE;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_HELPING_FIREFIGHTER;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ID;
+import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_ENTITY_ID;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_POSITION;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_MODE;
 import static cz.cuni.mff.d3s.rcrs.af.FireFighter.KNOWLEDGE_REFILL_TARGET;
@@ -25,6 +26,7 @@ public class KnowledgeMsg extends Msg {
 	}
 	
 	public final int id;
+	public final EntityID eid;
 	public final EntityID position;
 	public final EntityID fireTarget;
 	public final EntityID helpTarget;
@@ -36,10 +38,11 @@ public class KnowledgeMsg extends Msg {
 	public final int helpingDistance;
 	
 	
-	public KnowledgeMsg(int id, EntityID position, EntityID fireTarget,
+	public KnowledgeMsg(int id, EntityID eid, EntityID position, EntityID fireTarget,
 			EntityID helpTarget, EntityID refillTarget, int water, Mode mode,
 			List<EntityID> burningBuildings, int helpingFireFighter, int helpingDistance) {
 		this.id = id;
+		this.eid = eid;
 		this.position = position;
 		this.fireTarget = fireTarget;
 		this.helpTarget = helpTarget;
@@ -53,6 +56,7 @@ public class KnowledgeMsg extends Msg {
 	
 	private KnowledgeMsg() {
 		id = Integer.MIN_VALUE;
+		eid = null;
 		position = null;
 		fireTarget = null;
 		helpTarget = null;
@@ -66,9 +70,9 @@ public class KnowledgeMsg extends Msg {
 	
 	@Override
 	protected ByteBuffer getMsgBytes() {
-		// int id, int position, int fireTarget, int helpTarget, int refilTarget, int water,
-		// int helpingFireFighter, int helpingDistance,
-		int size = Integer.BYTES * 8
+		// int id, int eid, int position, int fireTarget, int helpTarget,
+		// int refilTarget, int water, int helpingFireFighter, int helpingDistance,
+		int size = Integer.BYTES * 9
 		// byte mode, byte burningBuildings.size,
 				 + 2
 		// List<Integer> burningBuildings,
@@ -79,6 +83,12 @@ public class KnowledgeMsg extends Msg {
 		ByteBuffer data = ByteBuffer.allocate(size);
 		
 		data.putInt(id);
+		if(eid != null) {
+			data.putInt(eid.getValue());
+			entityBuffer.put(eid.getValue(), eid);
+		} else {
+			data.putInt(-1);
+		}
 		if(position != null) {
 			data.putInt(position.getValue());
 			entityBuffer.put(position.getValue(), position);
@@ -119,6 +129,11 @@ public class KnowledgeMsg extends Msg {
 	@Override
 	protected Msg fromMsgBytes(ByteBuffer data) {
 		int id = data.getInt();
+		int eidInt = data.getInt();
+		EntityID eid = null;
+		if(eidInt != -1) {
+			eid = entityBuffer.get(eidInt);
+		}
 		int positionInt = data.getInt();
 		EntityID position = null;
 		if(positionInt != -1) {
@@ -148,7 +163,7 @@ public class KnowledgeMsg extends Msg {
 		int helpingFireFighter = data.getInt();
 		int helpingDistance = data.getInt();
 		
-		return new KnowledgeMsg(id, position, fireTarget, helpTarget, refillTarget,
+		return new KnowledgeMsg(id, eid, position, fireTarget, helpTarget, refillTarget,
 				water, mode, burningBuildings, helpingFireFighter, helpingDistance);
 	}
 
@@ -174,6 +189,7 @@ public class KnowledgeMsg extends Msg {
 		
 		return super.toString()
 				+ " " + KNOWLEDGE_ID + "=" + id
+				+ " " + KNOWLEDGE_ENTITY_ID + "=" + eid
 				+ " " + KNOWLEDGE_POSITION + "=" + (position != null ? position.getValue() : -1)
 				+ " " + KNOWLEDGE_FIRE_TARGET + "=" + (fireTarget != null ? fireTarget.getValue() : -1)
 				+ " " + KNOWLEDGE_FIRE_TARGET + "=" + (helpTarget != null ? helpTarget.getValue() : -1)
