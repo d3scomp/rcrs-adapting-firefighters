@@ -22,7 +22,6 @@ import cz.cuni.mff.d3s.rcrs.af.sensors.Sensor.Quantity;
 import cz.cuni.mff.d3s.rcrs.af.sensors.WaterSensor;
 import cz.cuni.mff.d3s.rcrs.af.sensors.WindDirectionSensor;
 import cz.cuni.mff.d3s.rcrs.af.sensors.WindSpeedSensor;
-import rescuecore2.log.Logger;
 import rescuecore2.messages.Command;
 import rescuecore2.standard.entities.Building;
 import rescuecore2.standard.entities.FireBrigade;
@@ -38,6 +37,7 @@ import sample.AbstractSampleAgent;
 public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 
 	private static final boolean LOG_FIRE_FIGHTER = true;
+	private final Log log;
 
 	private static final String MAX_WATER_KEY = "fire.tank.maximum";
 	private static final String MAX_DISTANCE_KEY = "fire.extinguish.max-distance";
@@ -101,6 +101,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 	public FireFighter(int id) {
 		this.id = id;
 		sid = String.format("FF%d", id);
+		log = new Log(sid, LOG_FIRE_FIGHTER);		
 		maxWater = -1;
 		fireSensor = new HashMap<>();
 	}
@@ -113,8 +114,8 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 		maxWater = config.getIntValue(MAX_WATER_KEY);
 		maxDistance = config.getIntValue(MAX_DISTANCE_KEY);
 		maxPower = config.getIntValue(MAX_POWER_KEY);
-		Logger.info(toString() + " connected: max extinguish distance = " + maxDistance + ", max power = " + maxPower
-				+ ", max tank = " + maxWater);
+		log.i(0, "connected: max extinguish distance = %d, max power = %d, max tank = %d",
+				maxDistance, maxPower, maxWater);
 
 		Collection<StandardEntity> entities = model.getEntitiesOfType(StandardEntityURN.ROAD);
 		roads = entities.toArray(new StandardEntity[entities.size()]);
@@ -146,7 +147,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 
 		if (time == config.getIntValue(kernel.KernelConstants.IGNORE_AGENT_COMMANDS_KEY)) {
 			sendSubscribe(time, CHANNEL_IN);
-			logI(sid + " subscribed to channel " + CHANNEL_IN);
+			log.i(time, "subscribed to channel %d", CHANNEL_IN);
 		}
 		
 		// Sense
@@ -173,7 +174,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 		}
 
 		long duration = System.nanoTime() - startTime;
-		logI(formatLog(time, "thinking took " + duration / 1000000 + " ms"));
+		log.i(time, "thinking took %d ms", duration / 1000000);
 	}
 
 	private void processCommands(int time, Collection<Command> heard) {
@@ -188,7 +189,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 
 			AKSpeak message = (AKSpeak) nextCom;
 			Msg command = Msg.fromBytes(message.getContent());
-			logD(formatLog(time, "heard " + message));
+			log.d(time, "heard %s", message);
 
 			// TODO:
 			/*if (command instanceof TargetMsg) {
@@ -209,7 +210,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			if (command instanceof RefillMsg) {
 				RefillMsg refillMsg = (RefillMsg) command;
 				if (refillMsg.memberId == id) {
-					logI(formatLog(time, "received " + refillMsg));
+					log.i(time, "received %s", refillMsg);
 					if (refillTarget == null) {
 						refillTarget = refillMsg.coordId;
 					} else {
@@ -225,7 +226,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			if (command instanceof BuildingsMsg) {
 				BuildingsMsg buildingsMsg = (BuildingsMsg) command;
 				if (buildingsMsg.id != id) {
-					logI(formatLog(time, "received " + buildingsMsg));
+					log.i(time, "received %s", buildingsMsg);
 					burningBuildings.put(buildingsMsg.id, buildingsMsg.burningBuildings);
 				}
 			}
@@ -280,12 +281,12 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			EntityID burningBuilding = findCloseBurningBuilding();
 			if (burningBuilding != null) {
 				// Any known burning buildings?
-				List<EntityID> path = planShortestRoute(burningBuilding);
+				List<EntityID> path = planShortestRoute(time, burningBuilding);
 				if (path != null) {
 					fireTarget = getTarget(path);
 					mode = Mode.MoveToFire;
 				} else {
-					logE(formatLog(time, "no burning building reachable"));
+					log.e(time, "no burning building reachable");
 				}
 			} else {
 				// Search burning buildings
@@ -303,13 +304,13 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			break;
 		}
 		default:
-			logE(formatLog(time, "in unknown mode " + mode));
+			log.e(time, "in unknown mode %s", mode);
 			mode = Mode.Search;
 			break;
 		}
 
 		if (modeSwitched) {
-			logI(formatLog(time, "switching to " + mode));
+			log.i(time, "switching to %s", mode);
 		}
 	}
 
@@ -317,52 +318,52 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 		// Act
 		switch (mode) {
 		case Search:
-			logI(formatLog(time, "searching"));
+			log.i(time, "searching");
 			// TODO: search nearest closest building on fire + wind interpolation
 			if (searchTarget == null) {
 				searchTarget = randomTarget();
 			} else if (searchTarget.equals(location().getID())) {
 				searchTarget = randomTarget();
 			}
-			logI(formatLog(time, "moving towards search target: " + searchTarget.getValue()));
-			sendMove(time, planShortestRoute(searchTarget));
+			log.i(time, "moving towards search target: %s", searchTarget);
+			sendMove(time, planShortestRoute(time, searchTarget));
 			break;
 		case MoveToFire:
 			if (fireTarget != null) {
-				logI(formatLog(time, "moving towards fire target: " + fireTarget.getValue()));
-				sendMove(time, planShortestRoute(fireTarget));
+				log.i(time, "moving towards fire target: %s", fireTarget);
+				sendMove(time, planShortestRoute(time, fireTarget));
 			} else {
-				logE(formatLog(time, " in MoveToFireMode missing fireTarget"));
+				log.e(time, " in MoveToFireMode missing fireTarget");
 			}
 			break;
 		case MoveToRefill:
 			if (refillTarget != null) {
-				logI(formatLog(time, "moving towards refill target: " + refillTarget.getValue()));
-				sendMove(time, planShortestRoute(refillTarget));
+				log.i(time, "moving towards refill target: %s", refillTarget);
+				sendMove(time, planShortestRoute(time, refillTarget));
 			} else {
-				logI(formatLog(time, "in MoveToRefillMode missing refillTarget"));
+				log.i(time, "in MoveToRefillMode missing refillTarget");
 			}
 			break;
 		case Extinguish:
 			EntityID building = findCloseBurningBuilding();
 			if (building != null) {
-				logI(formatLog(time, "extinguishing(" + building.getValue() + ")[" + getWater() + "]"));
+				log.i(time, "extinguishing(%s)[%d]", building, getWater());
 				sendExtinguish(time, building, maxPower);
 			} else {
-				logW(formatLog(time, "Trying to extinguish null."));
+				log.w(time, "Trying to extinguish null.");
 			}
 			break;
 		case Refill:
 			if (!atRefill()) {
-				logE(formatLog(time, "Trying to refill at wrong place " + location().getID().getValue()));
+				log.e(time, "Trying to refill at wrong place %s", location().getID());
 			} else {
-				logI(formatLog(time, "refilling(" + getWater() + ")"));
+				log.i(time, "refilling(%d)", getWater());
 			}
 			// Send rest after sending knowledge
 			break;
 
 		default:
-			logE(id + " in unknown mode " + mode);
+			log.e(time, "in unknown mode: %s", mode);
 			break;
 
 		}
@@ -422,15 +423,14 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 		return closeBuildings.get(random.nextInt(closeBuildings.size()));
 	}
 	
-	private List<EntityID> planShortestRoute(EntityID... targets) {
+	private List<EntityID> planShortestRoute(int time, EntityID... targets) {
 		List<EntityID> path = search.breadthFirstSearch(me().getPosition(), targets);
 		if (path != null) {
-			logI(formatLog(0, "planed route to " + path.get(path.size() - 1)));
+			log.i(time, "planed route to %s", path.get(path.size() - 1));
 			return path;
 		} else {
 			for (EntityID target : targets) {
-				logW(formatLog(0, "couldn't plan a path to " + target));
-				;
+				log.w(time, "couldn't plan a path to %s", target);
 			}
 			return null;
 		}
@@ -460,34 +460,6 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 	public boolean atRefill() {
 		StandardEntity here = location();
 		return here instanceof Hydrant || here instanceof Refuge;
-	}
-	
-	private void logD(String msg) {
-		if(LOG_FIRE_FIGHTER) {
-			Logger.debug(msg);
-		}
-	}
-	
-	private void logI(String msg) {
-		if(LOG_FIRE_FIGHTER) {
-			Logger.info(msg);
-		}
-	}
-	
-	private void logW(String msg) {
-		if(LOG_FIRE_FIGHTER) {
-			Logger.warn(msg);
-		}
-	}
-	
-	private void logE(String msg) {
-		if(LOG_FIRE_FIGHTER) {
-			Logger.error(msg);
-		}
-	}
-	
-	private String formatLog(int time, String msg) {
-		return String.format("T[%d] L[%s] %s %s", time, location(), sid, msg);
 	}
 
 	@Override

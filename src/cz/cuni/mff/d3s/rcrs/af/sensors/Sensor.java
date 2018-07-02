@@ -86,4 +86,11 @@ public abstract class Sensor {
 		return sample;
 	}
 	
+	public double getLrb() {
+		if(timeSeries != null) {
+			return timeSeries.getLrb().getMean();
+		}
+		
+		return 0;
+	}
 }
