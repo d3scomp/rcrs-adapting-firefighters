@@ -1,5 +1,6 @@
 package cz.cuni.mff.d3s.rcrs.af;
 
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.WIND_DEFINED_TARGET_PROBABILITY;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.FIRE_PROBABILITY_THRESHOLD;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.WATER_THRESHOLD;
 
@@ -38,9 +39,9 @@ import sample.AbstractSampleAgent;
 public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 
 	private enum MsgClass {
-		General, Communication, Modes, Action;
+		General, Communication, Modes, Action, Wind;
 	}
-	
+
 	private final Log log;
 
 	private static final String MAX_WATER_KEY = "fire.tank.maximum";
@@ -65,7 +66,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 	// Knowledge ##############################################################
 
 	private final String sid;
-	
+
 	private final int id;
 	public final static String KNOWLEDGE_ID = "id";
 	// eid; getID()
@@ -105,7 +106,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 	public FireFighter(int id) {
 		this.id = id;
 		sid = String.format("FF%d", id);
-		log = new Log(sid, MsgClass.General);		
+		log = new Log(sid, MsgClass.Wind);
 		maxWater = -1;
 		fireSensor = new HashMap<>();
 	}
@@ -153,7 +154,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			sendSubscribe(time, CHANNEL_IN);
 			log.i(time, MsgClass.Communication, "subscribed to channel %d", CHANNEL_IN);
 		}
-		
+
 		// Sense
 		windDirectionSensor.sense(time);
 		windSpeedSensor.sense(time);
@@ -196,21 +197,16 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			log.d(time, MsgClass.Communication, "heard %s", message);
 
 			// TODO:
-			/*if (command instanceof TargetMsg) {
-				TargetMsg targetMsg = (TargetMsg) command;
-				if (targetMsg.memberId == id) {
-					Logger.info(formatLog(time, "received " + targetMsg));
-					helpTarget = targetMsg.coordTarget;
-					helpingDistance = targetMsg.helpingDistance;
-					Logger.info(formatLog(time, "help towards " + helpTarget));
-				}
-				if (targetMsg.coordId == id) {
-					Logger.info(formatLog(time, "received " + targetMsg));
-					helpingFireFighter = targetMsg.memberId;
-					helpingDistance = targetMsg.helpingDistance;
-					Logger.info(formatLog(time, "help from FF" + helpingFireFighter));
-				}
-			}*/
+			/*
+			 * if (command instanceof TargetMsg) { TargetMsg targetMsg = (TargetMsg)
+			 * command; if (targetMsg.memberId == id) { Logger.info(formatLog(time,
+			 * "received " + targetMsg)); helpTarget = targetMsg.coordTarget;
+			 * helpingDistance = targetMsg.helpingDistance; Logger.info(formatLog(time,
+			 * "help towards " + helpTarget)); } if (targetMsg.coordId == id) {
+			 * Logger.info(formatLog(time, "received " + targetMsg)); helpingFireFighter =
+			 * targetMsg.memberId; helpingDistance = targetMsg.helpingDistance;
+			 * Logger.info(formatLog(time, "help from FF" + helpingFireFighter)); } }
+			 */
 			if (command instanceof RefillMsg) {
 				RefillMsg refillMsg = (RefillMsg) command;
 				if (refillMsg.memberId == id) {
@@ -323,11 +319,8 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 		switch (mode) {
 		case Search:
 			log.i(time, MsgClass.Modes, "searching");
-			// TODO: search nearest closest building on fire + wind interpolation
-			if (searchTarget == null) {
-				searchTarget = randomTarget();
-			} else if (searchTarget.equals(location().getID())) {
-				searchTarget = randomTarget();
+			if (searchTarget == null || searchTarget.equals(location().getID())) {
+				searchTarget = newSearchTarget(time);
 			}
 			log.i(time, MsgClass.Action, "moving towards search target: %s", searchTarget);
 			sendMove(time, planShortestRoute(time, searchTarget));
@@ -399,21 +392,30 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 	public boolean isBuildingOnFire(Building building) {
 		return building.isOnFire();
 	}
-	
+
 	private void senseBurningBuildings() {
 		burningBuildings.get(id).clear();
-		for(StandardEntity entity : model.getEntitiesOfType(StandardEntityURN.BUILDING)) {
+		for (StandardEntity entity : model.getEntitiesOfType(StandardEntityURN.BUILDING)) {
 			Building building = (Building) entity;
-			if(building.isOnFire()) {
+			if (building.isOnFire()) {
 				burningBuildings.get(id).add(building.getID());
 			}
 		}
 	}
-	
+
 	///////////////////////////////////////////////////////////////////////////
 
 	private EntityID randomTarget() {
 		return roads[random.nextInt(roads.length)].getID();
+	}
+
+	private StandardEntity randomTarget(Collection<StandardEntity> targets) {
+		if (targets.size() == 0) {
+			return null;
+		}
+
+		StandardEntity[] ta = targets.toArray(new StandardEntity[targets.size()]);
+		return ta[random.nextInt(ta.length)];
 	}
 
 	public EntityID findCloseBurningBuilding() {
@@ -430,7 +432,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 		}
 		return closeBuildings.get(random.nextInt(closeBuildings.size()));
 	}
-	
+
 	private List<EntityID> planShortestRoute(int time, EntityID... targets) {
 		List<EntityID> path = search.breadthFirstSearch(me().getPosition(), targets);
 		if (path != null) {
@@ -443,37 +445,48 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			return null;
 		}
 	}
-	
+
 	private EntityID getClosestAssumedBurningBuilding() {
 		int distance = Integer.MAX_VALUE;
 		EntityID result = null;
-		
-		for(int ff : burningBuildings.keySet()) {
-			for(EntityID building : burningBuildings.get(ff)) {
+
+		for (int ff : burningBuildings.keySet()) {
+			for (EntityID building : burningBuildings.get(ff)) {
 				int newDistance = model.getDistance(getID(), building);
-				if(newDistance < distance) {
+				if (newDistance < distance) {
 					result = building;
 					distance = newDistance;
 				}
 			}
 		}
-		
+
 		return result;
 	}
-	
-	private EntityID newSearchTarget() {
+
+	private EntityID newSearchTarget(int time) {
 		EntityID building = getClosestAssumedBurningBuilding();
-		if(building != null) {
+		if (building != null && random.nextDouble() < WIND_DEFINED_TARGET_PROBABILITY) {
+			log.i(time, MsgClass.Wind, "Searching around burning building %s", building);
 			double direction = windDirectionSensor.getMean();
 			double speed = windSpeedSensor.getMean();
-			double shift_y = Math.cos(Math.toRadians(direction)) * speed;
-			double shift_x = Math.sin(Math.toRadians(direction)) * speed;
-			
-			Pair<Integer, Integer> location = location().getLocation(model);
-			// TODO:
-			
+			double shiftY = Math.cos(Math.toRadians(direction)) * speed;
+			double shiftX = Math.sin(Math.toRadians(direction)) * speed;
+			log.i(time, MsgClass.Wind, "Wind direction %.2f speed %.2f shift x %.2f y %.2f",
+					direction, speed, shiftX, shiftY);
+
+			Pair<Integer, Integer> location = model.getEntity(building).getLocation(model);
+			int targetX = location.first() + (int) shiftX;
+			int targetY = location.second() + (int) shiftY;
+			Collection<StandardEntity> targets = model.getObjectsInRange(targetX, targetY, (int) speed / 4);
+
+			StandardEntity target = randomTarget(targets);
+			if (target != null) {
+				log.i(time, MsgClass.Wind, "Selected search target %s", target);				
+				return target.getID();
+			}
 		}
 		
+		log.i(time, MsgClass.Wind, "Random search target");
 		return randomTarget();
 	}
 
