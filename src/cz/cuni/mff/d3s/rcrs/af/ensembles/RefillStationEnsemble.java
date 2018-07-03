@@ -15,7 +15,6 @@ import java.util.function.Predicate;
 import cz.cuni.mff.d3s.rcrs.af.comm.Msg;
 import cz.cuni.mff.d3s.rcrs.af.comm.RefillMsg;
 import cz.cuni.mff.d3s.rcrs.af.components.IComponent;
-import rescuecore2.log.Logger;
 import rescuecore2.standard.entities.StandardWorldModel;
 import rescuecore2.worldmodel.EntityID;
 
@@ -36,7 +35,7 @@ public class RefillStationEnsemble extends Ensemble {
 		super(new Predicate<Map<String,Object>>(){
 			@Override
 			public boolean test(Map<String, Object> t) {
-				int memberId = (int) t.get(Ensemble.getMemberFieldName(KNOWLEDGE_ID));
+				//int memberId = (int) t.get(Ensemble.getMemberFieldName(KNOWLEDGE_ID));
 				EntityID memberPosition = (EntityID) t.get(Ensemble.getMemberFieldName(KNOWLEDGE_POSITION));
 				EntityID memberRefill = (EntityID) t.get(Ensemble.getMemberFieldName(KNOWLEDGE_REFILL_TARGET));
 				EntityID coordId = (EntityID) t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_REFILL_ID));
@@ -47,8 +46,6 @@ public class RefillStationEnsemble extends Ensemble {
 				}
 				
 				if(memberPosition.equals(coordId)) {
-					Logger.info(String.format("RS%d in ensemble with FF%d",
-							coordId.getValue(), memberId));
 					return true;
 				}
 				
@@ -64,8 +61,6 @@ public class RefillStationEnsemble extends Ensemble {
 				int newDistance = model.getDistance(memberPosition, coordId);
 				
 				if(newDistance <= currentDistance) {
-					Logger.info(String.format("RS%d in ensemble with FF%d",
-							coordId.getValue(), memberId));
 					return true;
 				}
 				return false;

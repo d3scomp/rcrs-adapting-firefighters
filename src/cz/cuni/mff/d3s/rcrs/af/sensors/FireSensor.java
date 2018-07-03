@@ -7,7 +7,6 @@ import static cz.cuni.mff.d3s.rcrs.af.Configuration.FIRE_NOISE_VARIANCE;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.FIRE_UNERRING_DETECTABLE_DISTANCE;
 
 import cz.cuni.mff.d3s.rcrs.af.FireFighter;
-import rescuecore2.log.Logger;
 import rescuecore2.standard.entities.Building;
 
 public class FireSensor extends Sensor {
@@ -48,7 +47,6 @@ public class FireSensor extends Sensor {
 				value = FALSE_POSITIV_FIRE_PROBABILITY;
 			} else {
 				double probability = slope * distance + offset;
-				Logger.info(String.format("Distance: %d Fire: %f", distance, probability));
 				// Linear detectability with respect to the distance
 				value = probability;
 			}

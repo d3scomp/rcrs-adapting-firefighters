@@ -32,7 +32,10 @@ import rescuecore2.worldmodel.EntityID;
 
 public class FireStation extends StandardAgent<Building> {
 
-	private static final boolean LOG_FIRE_STATION = false;
+	private enum MsgClass {
+		General, Communication, Ensemble, Components;
+	}
+	
 	private final Log log;
 	
 	private final String sid;
@@ -45,7 +48,7 @@ public class FireStation extends StandardAgent<Building> {
 
 	public FireStation(int id) {
 		this.sid = String.format("FS%d", id);
-		log = new Log(sid, LOG_FIRE_STATION);
+		log = new Log(sid, MsgClass.General);
 	}
 
 	@Override
@@ -53,7 +56,7 @@ public class FireStation extends StandardAgent<Building> {
 		super.postConnect();
 		model.indexClass(StandardEntityURN.BUILDING, StandardEntityURN.REFUGE, StandardEntityURN.HYDRANT,
 				StandardEntityURN.GAS_STATION);
-		log.i(0, "connected");
+		log.i(0, MsgClass.General, "connected");
 
 		// Create refill components
 		for (StandardEntity refill : model) {
@@ -77,7 +80,7 @@ public class FireStation extends StandardAgent<Building> {
 	protected void think(int time, ChangeSet changes, Collection<Command> heard) {
 		if (time == config.getIntValue(kernel.KernelConstants.IGNORE_AGENT_COMMANDS_KEY)) {
 			sendSubscribe(time, CHANNEL_IN);
-			log.i(time, "subscribed to channel %d", CHANNEL_IN);
+			log.i(time, MsgClass.Communication, "subscribed to channel %d", CHANNEL_IN);
 		}
 		if (time == (config.getIntValue(kernel.KernelConstants.IGNORE_AGENT_COMMANDS_KEY) + 2)) {
 			// All fire fighter components should be registered by now
@@ -105,7 +108,7 @@ public class FireStation extends StandardAgent<Building> {
 				if (msg == null) {
 					continue;
 				}
-				log.i(time, "received %s", msg);
+				log.i(time, MsgClass.Communication, "received %s", msg);
 				IComponent c = components.containsKey(msg.getSid()) ? components.get(msg.getSid()) : new FFComponent();
 				c.loadKnowledge(msg, time);
 				components.put(c.getSid(), c);
@@ -130,7 +133,7 @@ public class FireStation extends StandardAgent<Building> {
 						EntityID ffPositionId = fireFighter.getPosition();
 						EntityID rsId = refillStation.getId();
 						if (ffPositionId.equals(rsId)) {
-							log.i(time, "%s occupied by %s", refillStation, fireFighter);
+							log.i(time, MsgClass.Components, "%s occupied by %s", refillStation, fireFighter);
 							vacant = false;
 						}
 					}
@@ -151,11 +154,11 @@ public class FireStation extends StandardAgent<Building> {
 				IComponent member = components.get(mId);
 				for (Ensemble ensemble : ensembles) {
 					if (ensemble.isSatisfied(coordinator, member)) {
-//						Logger.info(String.format("Ensemble %s satisfied for %s and %s",
-//								ensemble.getClass().getSimpleName(), coordinator.getSid(), member.getSid()));
+						log.i(time, MsgClass.Ensemble, "Ensemble %s satisfied for %s and %s",
+								ensemble.getClass().getSimpleName(), coordinator.getSid(), member.getSid());
 						Msg msg = ensemble.getMessage(coordinator, member);
 						sendSpeak(time, CHANNEL_OUT, msg.getBytes());
-						log.i(time, "sending msg %s", msg);
+						log.i(time, MsgClass.Communication, "sending msg %s", msg);
 					}
 				}
 			}
@@ -175,7 +178,7 @@ public class FireStation extends StandardAgent<Building> {
 				return sensor.getLrb();
 			}
 		}
-		log.w(0, "getFFDistanceLrb default value for %d and %d",
+		log.w(0, MsgClass.General, "getFFDistanceLrb default value for %d and %d",
 				fireFighter1.getValue(), fireFighter2.getValue());
 		return 0;
 	}
