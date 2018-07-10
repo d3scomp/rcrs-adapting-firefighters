@@ -1,8 +1,8 @@
 package cz.cuni.mff.d3s.rcrs.af;
 
-import static cz.cuni.mff.d3s.rcrs.af.Configuration.WIND_DEFINED_TARGET_PROBABILITY;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.FIRE_PROBABILITY_THRESHOLD;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.WATER_THRESHOLD;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.WIND_DEFINED_TARGET_PROBABILITY;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,6 +17,7 @@ import cz.cuni.mff.d3s.rcrs.af.comm.BuildingsMsg;
 import cz.cuni.mff.d3s.rcrs.af.comm.KnowledgeMsg;
 import cz.cuni.mff.d3s.rcrs.af.comm.Msg;
 import cz.cuni.mff.d3s.rcrs.af.comm.RefillMsg;
+import cz.cuni.mff.d3s.rcrs.af.comm.TargetMsg;
 import cz.cuni.mff.d3s.rcrs.af.modes.Mode;
 import cz.cuni.mff.d3s.rcrs.af.sensors.FireSensor;
 import cz.cuni.mff.d3s.rcrs.af.sensors.Sensor.Quantity;
@@ -106,7 +107,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 	public FireFighter(int id) {
 		this.id = id;
 		sid = String.format("FF%d", id);
-		log = new Log(sid, MsgClass.Wind);
+		log = new Log(sid);
 		maxWater = -1;
 		fireSensor = new HashMap<>();
 	}
@@ -185,6 +186,8 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 	private void processCommands(int time, Collection<Command> heard) {
 		// Erase fields that needs to be specified by ensembles
 		refillTarget = null;
+		helpTarget = null;
+		helpingDistance = Integer.MAX_VALUE;
 
 		// If fire station issued a command follow it.
 		for (Command nextCom : heard) {
@@ -196,17 +199,19 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			Msg command = Msg.fromBytes(message.getContent());
 			log.d(time, MsgClass.Communication, "heard %s", message);
 
-			// TODO:
-			/*
-			 * if (command instanceof TargetMsg) { TargetMsg targetMsg = (TargetMsg)
-			 * command; if (targetMsg.memberId == id) { Logger.info(formatLog(time,
-			 * "received " + targetMsg)); helpTarget = targetMsg.coordTarget;
-			 * helpingDistance = targetMsg.helpingDistance; Logger.info(formatLog(time,
-			 * "help towards " + helpTarget)); } if (targetMsg.coordId == id) {
-			 * Logger.info(formatLog(time, "received " + targetMsg)); helpingFireFighter =
-			 * targetMsg.memberId; helpingDistance = targetMsg.helpingDistance;
-			 * Logger.info(formatLog(time, "help from FF" + helpingFireFighter)); } }
-			 */
+			if (command instanceof TargetMsg) {
+				TargetMsg targetMsg = (TargetMsg) command;
+				if (targetMsg.memberId == id) {
+					log.i(time, MsgClass.Communication, "received %s", targetMsg);
+					helpTarget = targetMsg.coordTarget;
+					helpingDistance = targetMsg.helpingDistance;
+				}
+				if (targetMsg.coordId == id) {
+					log.i(time, MsgClass.Communication, "received %s", targetMsg);
+					helpingFireFighter = targetMsg.memberId;
+					helpingDistance = targetMsg.helpingDistance;
+				}
+			}
 			if (command instanceof RefillMsg) {
 				RefillMsg refillMsg = (RefillMsg) command;
 				if (refillMsg.memberId == id) {
@@ -298,6 +303,12 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			// Found burning building?
 			if (findCloseBurningBuilding() != null) {
 				mode = Mode.Extinguish;
+				break;
+			}
+			// Someone needs help
+			if(helpTarget != null) {
+				fireTarget = helpTarget;
+				mode = Mode.MoveToFire;
 				break;
 			}
 			modeSwitched = false;
@@ -471,8 +482,8 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			double speed = windSpeedSensor.getMean();
 			double shiftY = Math.cos(Math.toRadians(direction)) * speed;
 			double shiftX = Math.sin(Math.toRadians(direction)) * speed;
-			log.i(time, MsgClass.Wind, "Wind direction %.2f speed %.2f shift x %.2f y %.2f",
-					direction, speed, shiftX, shiftY);
+			log.i(time, MsgClass.Wind, "Wind direction %.2f speed %.2f shift x %.2f y %.2f", direction, speed, shiftX,
+					shiftY);
 
 			Pair<Integer, Integer> location = model.getEntity(building).getLocation(model);
 			int targetX = location.first() + (int) shiftX;
@@ -481,11 +492,11 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 
 			StandardEntity target = randomTarget(targets);
 			if (target != null) {
-				log.i(time, MsgClass.Wind, "Selected search target %s", target);				
+				log.i(time, MsgClass.Wind, "Selected search target %s", target);
 				return target.getID();
 			}
 		}
-		
+
 		log.i(time, MsgClass.Wind, "Random search target");
 		return randomTarget();
 	}

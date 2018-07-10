@@ -93,4 +93,8 @@ public abstract class Sensor {
 		
 		return 0;
 	}
+	
+	public double getLastSample() {
+		return sample;
+	}
 }

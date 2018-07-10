@@ -72,27 +72,24 @@ public class TargetFireZoneEnsemble extends Ensemble {
 				
 				boolean satisfied = coordNotMember && coordExtinguishing && memberSearching
 						&& ((memberIsFree && newIsCloser && newDistanceDecreasing) || alreadyAMember);
-				if(satisfied) {
+				//if(satisfied) {
 					Logger.debug(String.format("TFZE:\n"
 							+ "\tcId: FF%d\n"
 							+ "\tmId: FF%d\n"
-							+ "\tcNotMember: %s\n"
-							+ "\tcExtinguish: %s\n"
-							+ "\tmHelpTarget: %d\n"
-							+ "\tcHelp: FF%d\n"
-							+ "\thDistance: %d\n"
-							+ "\tnDistance: %d\n"
-							+ "\tmIsFree: %s\n"
-							+ "\tmAlreadyM: %s\n"
-							+ "\tmSearching: %s\n"
-							+ "\tisCloser: %s\n"
+							+ "\tcoordNotMember: %s\n"
+							+ "\tcoordExtinguishing: %s\n"
+							+ "\tmemberSearching: %s\n"
+							+ "\tmemberIsFree: %s\n"
+							+ "\tnewIsCloser: %s\n"
+							+ "\tnewDistanceDecreasing: %s\n"
+							+ "\tLrb: %f\n"
+							+ "\talreadyAMember: %s\n"
 							+ "\tSAT: %s", coordId, memberId, coordNotMember, coordExtinguishing,
-							memberHelpTarget == null ? -1 : memberHelpTarget.getValue(),
-							helpingFireFighter, helpingDistance, newDistance, memberIsFree,
-							alreadyAMember, memberSearching, newIsCloser, satisfied));
+							memberSearching, memberIsFree, newIsCloser, newDistanceDecreasing,
+							fireStation.getFFDistanceLrb(coordEid, memberEid),
+							alreadyAMember, satisfied));
 					computedDistance = newDistance;
-					Logger.info("TargetFireZoneEnsemble satisfied for " + "coord FF" + coordId + " and member FF" + memberId);
-				}
+				//}
 				
 				return satisfied;
 			}

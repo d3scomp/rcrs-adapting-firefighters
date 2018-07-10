@@ -33,7 +33,7 @@ import rescuecore2.worldmodel.EntityID;
 public class FireStation extends StandardAgent<Building> {
 
 	private enum MsgClass {
-		General, Communication, Ensemble, Components;
+		General, Communication, Ensemble, Components, Distance;
 	}
 	
 	private final Log log;
@@ -48,7 +48,7 @@ public class FireStation extends StandardAgent<Building> {
 
 	public FireStation(int id) {
 		this.sid = String.format("FS%d", id);
-		log = new Log(sid, MsgClass.General);
+		log = new Log(sid, MsgClass.General, MsgClass.Distance);
 	}
 
 	@Override
@@ -92,8 +92,8 @@ public class FireStation extends StandardAgent<Building> {
 			}
 			for (FFComponent f1 : ff) {
 				for (FFComponent f2 : ff) {
-					if (f1 != f2) {
-						fireFighterDistances.add(new FFDistanceSensor(this, f1.getEId(), f2.getEId()));
+					if (f1.getEId().getValue() < f2.getEId().getValue()) {
+						fireFighterDistances.add(new FFDistanceSensor(this, f1, f2));
 					}
 				}
 			}
@@ -118,6 +118,8 @@ public class FireStation extends StandardAgent<Building> {
 		// sense distances between fire fighters
 		for(FFDistanceSensor sensor : fireFighterDistances) {
 			sensor.sense(time);
+			log.i(time, MsgClass.Distance, "Distance between %s and %s: %.2f",
+					sensor.fireFighter1, sensor.fireFighter2, sensor.getLastSample());
 		}
 
 		// check vacant refill stations
@@ -167,19 +169,32 @@ public class FireStation extends StandardAgent<Building> {
 		sendRest(time);
 	}
 
-	public double getFFDistance(EntityID fireFighter1, EntityID fireFighter2) {
-		return model.getDistance(fireFighter1, fireFighter2);
+	public double getFFDistance(FFComponent fireFighter1, FFComponent fireFighter2) {
+		return model.getDistance(fireFighter1.getPosition(), fireFighter2.getPosition());
 	}
 	
 	public double getFFDistanceLrb(EntityID fireFighter1, EntityID fireFighter2) {
+		if(fireFighter1.getValue() == fireFighter2.getValue()) {
+			return 0;
+		}
+		
+		EntityID f1 = fireFighter1;
+		EntityID f2 = fireFighter2;
+		if(fireFighter1.getValue() > fireFighter2.getValue()) {
+			f1 = fireFighter2;
+			f2 = fireFighter1;
+		}
 		for(FFDistanceSensor sensor : fireFighterDistances) {
-			if(sensor.fireFighter1.equals(fireFighter1) &&
-					sensor.fireFighter2.equals(fireFighter2)) {
-				return sensor.getLrb();
+			if(sensor.fireFighter1.getEId().equals(f1) &&
+					sensor.fireFighter2.getEId().equals(f2)) {
+				double lrb = sensor.getLrb();
+				log.i(0, MsgClass.Distance, "Lrb for %s and %s: %.2f",
+						f1, f2, lrb);
+				return lrb;
 			}
 		}
 		log.w(0, MsgClass.General, "getFFDistanceLrb default value for %d and %d",
-				fireFighter1.getValue(), fireFighter2.getValue());
+				f1.getValue(), f2.getValue());
 		return 0;
 	}
 	

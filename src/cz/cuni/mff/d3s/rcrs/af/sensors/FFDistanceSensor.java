@@ -1,16 +1,16 @@
 package cz.cuni.mff.d3s.rcrs.af.sensors;
 
 import cz.cuni.mff.d3s.rcrs.af.FireStation;
-import rescuecore2.worldmodel.EntityID;
+import cz.cuni.mff.d3s.rcrs.af.components.FFComponent;
 
 public class FFDistanceSensor extends Sensor {
 
 	private final FireStation fireStation;
-	public final EntityID fireFighter1;
-	public final EntityID fireFighter2;
+	public final FFComponent fireFighter1;
+	public final FFComponent fireFighter2;
 	
 	
-	public FFDistanceSensor(FireStation fireStation, EntityID fireFighter1, EntityID fireFighter2) {
+	public FFDistanceSensor(FireStation fireStation, FFComponent fireFighter1, FFComponent fireFighter2) {
 		super(new NoiseFilter(0));
 		this.fireStation = fireStation;
 		this.fireFighter1 = fireFighter1;
