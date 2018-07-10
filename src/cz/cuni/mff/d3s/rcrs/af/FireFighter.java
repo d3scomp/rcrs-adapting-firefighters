@@ -300,15 +300,15 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			}
 			break;
 		case Search: {
-			// Found burning building?
-			if (findCloseBurningBuilding() != null) {
-				mode = Mode.Extinguish;
-				break;
-			}
 			// Someone needs help
 			if(helpTarget != null) {
 				fireTarget = helpTarget;
 				mode = Mode.MoveToFire;
+				break;
+			}
+			// Found burning building?
+			if (findCloseBurningBuilding() != null) {
+				mode = Mode.Extinguish;
 				break;
 			}
 			modeSwitched = false;

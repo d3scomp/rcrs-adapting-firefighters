@@ -48,7 +48,7 @@ public class FireStation extends StandardAgent<Building> {
 
 	public FireStation(int id) {
 		this.sid = String.format("FS%d", id);
-		log = new Log(sid, MsgClass.General, MsgClass.Distance);
+		log = new Log(sid);
 	}
 
 	@Override
@@ -190,6 +190,9 @@ public class FireStation extends StandardAgent<Building> {
 				double lrb = sensor.getLrb();
 				log.i(0, MsgClass.Distance, "Lrb for %s and %s: %.2f",
 						f1, f2, lrb);
+				if(Double.isNaN(lrb)) {
+					lrb = 0;
+				}
 				return lrb;
 			}
 		}
