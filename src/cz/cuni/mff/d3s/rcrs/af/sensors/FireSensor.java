@@ -7,8 +7,6 @@ import static cz.cuni.mff.d3s.rcrs.af.Configuration.FIRE_NOISE_VARIANCE;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.FIRE_UNERRING_DETECTABLE_DISTANCE;
 
 import cz.cuni.mff.d3s.rcrs.af.FireFighter;
-import cz.cuni.mff.d3s.rcrs.af.NoiseFilter;
-import rescuecore2.log.Logger;
 import rescuecore2.standard.entities.Building;
 
 public class FireSensor extends Sensor {
@@ -24,7 +22,7 @@ public class FireSensor extends Sensor {
 
 	public FireSensor(FireFighter fireFighter, Building building) {
 		// FIRE_NOISE_VARIANCE is in percentage
-		super("FireSensor", new NoiseFilter(FIRE_NOISE_VARIANCE * maxLimit));
+		super(new NoiseFilter(FIRE_NOISE_VARIANCE * maxLimit));
 		this.fireFighter = fireFighter;
 		this.building = building;
 
@@ -49,7 +47,6 @@ public class FireSensor extends Sensor {
 				value = FALSE_POSITIV_FIRE_PROBABILITY;
 			} else {
 				double probability = slope * distance + offset;
-				Logger.info(String.format("Distance: %d Fire: %f", distance, probability));
 				// Linear detectability with respect to the distance
 				value = probability;
 			}
@@ -59,16 +56,6 @@ public class FireSensor extends Sensor {
 		}
 
 		return value;
-	}
-
-	@Override
-	protected int getDistance() {
-		return fireFighter.getBuildingDistance(building);
-	}
-
-	@Override
-	protected boolean onFire() {
-		return fireFighter.isBuildingOnFire(building);
 	}
 	
 	@Override

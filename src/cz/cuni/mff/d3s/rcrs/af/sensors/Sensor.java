@@ -5,11 +5,7 @@ import static cz.cuni.mff.d3s.rcrs.af.Configuration.TS_WINDOW_CNT;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.TS_WINDOW_SIZE;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.USE_EXTENDED_MODES;
 
-import java.util.Random;
-
-import cz.cuni.mff.d3s.rcrs.af.NoiseFilter;
 import cz.cuni.mff.d3s.tss.TimeSeries;
-import rescuecore2.log.Logger;
 
 public abstract class Sensor {
 	
@@ -17,17 +13,12 @@ public abstract class Sensor {
 		LESS_THAN, LESS_OR_EQUAL, GREATER_THAN, GREATER_OR_EQUAL;
 	}
 	
-	private static Random random = new Random();
-	private static final double LOG_BUILDING_FRACTION = 0.02; // Fraction of building, that are not on fire, to be logged
-	
-	private String sensorName;
 	private TimeSeries timeSeries;
 	private double sample;
 	private NoiseFilter noise;
 	
 	
-	protected Sensor(String sensorName, NoiseFilter noise) {
-		this.sensorName = sensorName;
+	protected Sensor(NoiseFilter noise) {
 		this.noise = noise;
 		
 		if(USE_EXTENDED_MODES) {
@@ -38,8 +29,6 @@ public abstract class Sensor {
 	}
 
 	protected abstract double getValue();
-	protected abstract int getDistance();
-	protected abstract boolean onFire();
 	protected abstract double getMaxLimit();
 	protected abstract double getMinLimit();
 	
@@ -55,22 +44,6 @@ public abstract class Sensor {
 		
 		if(timeSeries != null) {
 			timeSeries.addSample(sample, time);
-		}
-		
-		if("FireSensor".equals(sensorName)) {
-			int distance = getDistance();
-			if(onFire()) {	
-				Logger.info(String.format("%s: t: %d; d: %d; v: %f; s: %f;", 
-						"onFire", time, distance, value, sample));
-			} else if(random.nextDouble() < LOG_BUILDING_FRACTION){
-				Logger.info(String.format("%s: t: %d; d: %d; v: %f; s: %f;", 
-						"notOnFire", time, distance, value, sample));
-			}
-		}
-		
-		if("WaterSensor".equals(sensorName)) {
-			Logger.info(String.format("%s: t: %d; v: %f; s: %f;", 
-					"water", time, value, sample));
 		}
 	}
 	
@@ -103,5 +76,25 @@ public abstract class Sensor {
 		default:
 			throw new UnsupportedOperationException("Operation " + operation + " not implemented");
 		}
+	}
+	
+	public double getMean() {
+		if(timeSeries != null) {
+			return timeSeries.getMean().getMean();
+		}
+		
+		return sample;
+	}
+	
+	public double getLrb() {
+		if(timeSeries != null) {
+			return timeSeries.getLrb().getMean();
+		}
+		
+		return 0;
+	}
+	
+	public double getLastSample() {
+		return sample;
 	}
 }

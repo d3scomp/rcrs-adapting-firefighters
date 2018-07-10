@@ -34,6 +34,8 @@ public class Configuration {
 		
 	
 	public static boolean USE_EXTENDED_MODES = false;
+
+	public static int MAX_SEPARATION_DISTANCE = 70_000;
 	
 	public static int WATER_THRESHOLD = 0;
 	
@@ -50,6 +52,8 @@ public class Configuration {
 	public static double FIRE_PROBABILITY_THRESHOLD = 0.6;
 	
 	public static double FALSE_POSITIV_FIRE_PROBABILITY = 0.1;
+	
+	public static double WIND_DEFINED_TARGET_PROBABILITY = 0.2;
 	
 	
 	///////////////////////////////////////////////////////////////////////////

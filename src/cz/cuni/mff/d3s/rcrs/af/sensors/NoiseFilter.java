@@ -1,4 +1,4 @@
-package cz.cuni.mff.d3s.rcrs.af;
+package cz.cuni.mff.d3s.rcrs.af.sensors;
 
 import java.util.Random;
 
