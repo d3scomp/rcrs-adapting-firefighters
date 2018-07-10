@@ -53,6 +53,8 @@ public class Configuration {
 	
 	public static double FALSE_POSITIV_FIRE_PROBABILITY = 0.1;
 	
+	public static double WIND_DEFINED_TARGET_PROBABILITY = 0.2;
+	
 	
 	///////////////////////////////////////////////////////////////////////////
 
