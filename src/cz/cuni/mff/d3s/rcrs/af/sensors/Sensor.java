@@ -1,11 +1,17 @@
 package cz.cuni.mff.d3s.rcrs.af.sensors;
 
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.TIME_SERIES_MODE;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.TS_ALPHA;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.TS_WINDOW_CNT;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.TS_WINDOW_SIZE;
-import static cz.cuni.mff.d3s.rcrs.af.Configuration.USE_EXTENDED_MODES;
 
+import java.util.List;
+
+import cz.cuni.mff.d3s.rcrs.af.Configuration.TimeSeriesMode;
 import cz.cuni.mff.d3s.tss.TimeSeries;
+import cz.cuni.mff.d3s.tss.arima.Arima;
+import cz.cuni.mff.d3s.tss.arima.ArimaOrder;
+import cz.cuni.mff.d3s.tss.arima.FittingStrategy;
 
 public abstract class Sensor {
 	
@@ -17,13 +23,21 @@ public abstract class Sensor {
 	private double sample;
 	private NoiseFilter noise;
 	
+	ArimaOrder arimaOrder;
+	
 	
 	protected Sensor(NoiseFilter noise) {
 		this.noise = noise;
 		
-		if(USE_EXTENDED_MODES) {
+		switch(TIME_SERIES_MODE) {
+		case LR:
 			timeSeries = new TimeSeries(TS_WINDOW_CNT, TS_WINDOW_SIZE);
-		} else {
+			break;
+		case ARIMA: // TODO
+			timeSeries = new TimeSeries(TS_WINDOW_CNT, TS_WINDOW_SIZE);
+			arimaOrder = ArimaOrder.order(1, 1, 1); 
+			break;
+		default:
 			timeSeries = null;
 		}
 	}
@@ -50,6 +64,22 @@ public abstract class Sensor {
 	public boolean isLevel(Quantity operation, double level) {
 		
 		if(timeSeries != null) {
+			if(TIME_SERIES_MODE == TimeSeriesMode.ARIMA) {
+				Arima model = getArimaModel();
+				switch(operation) {
+				case GREATER_THAN:
+					return model.getMean().isGreaterThan(level, TS_ALPHA);
+				case GREATER_OR_EQUAL:
+					return model.getMean().isGreaterOrEqualTo(level, TS_ALPHA);
+				case LESS_THAN:
+					return model.getMean().isLessThan(level, TS_ALPHA);
+				case LESS_OR_EQUAL:
+					return model.getMean().isLessOrEqualTo(level, TS_ALPHA);
+				default:
+					throw new UnsupportedOperationException("Operation " + operation + " not implemented");
+				}
+			}
+			
 			switch(operation) {
 			case GREATER_THAN:
 				return timeSeries.getMean().isGreaterThan(level, TS_ALPHA);
@@ -80,6 +110,10 @@ public abstract class Sensor {
 	
 	public double getMean() {
 		if(timeSeries != null) {
+			if(TIME_SERIES_MODE == TimeSeriesMode.ARIMA) {
+				Arima model = getArimaModel();
+				return model.getMean().getMean();
+			}
 			return timeSeries.getMean().getMean();
 		}
 		
@@ -88,13 +122,30 @@ public abstract class Sensor {
 	
 	public double getLrb() {
 		if(timeSeries != null) {
+			if(TIME_SERIES_MODE == TimeSeriesMode.ARIMA) {
+				Arima model = getArimaModel();
+				return model.getLrb().getMean();
+			}
 			return timeSeries.getLrb().getMean();
 		}
 		
 		return 0;
 	}
 	
+	public Arima getArimaModel() {
+		double[] samples = timeSeries.getSamples();
+		List<Integer> times = timeSeries.getTimes();
+		cz.cuni.mff.d3s.tss.arima.TimeSeries series = cz.cuni.mff.d3s.tss.arima.TimeSeries.from(samples, times);
+		series.setTimePeriod(samples.length);
+		
+		return new Arima(series, arimaOrder, samples.length, FittingStrategy.CSS, null);
+	}
+	
 	public double getLastSample() {
 		return sample;
+	}
+	
+	public double[] getSamples() {
+		return timeSeries.getSamples();
 	}
 }

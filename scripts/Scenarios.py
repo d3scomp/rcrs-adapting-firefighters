@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 '''
 Created on Jan 8, 2016
 
@@ -18,7 +20,12 @@ LOG_DIR = "LOG_DIR"
 
 TS_WINDOW_CNT = "TS_WINDOW_CNT"
 TS_WINDOW_SIZE = "TS_WINDOW_SIZE"
-USE_EXTENDED_MODES = "USE_EXTENDED_MODES"
+
+TIME_SERIES_MODE = "TIME_SERIES_MODE"
+TS_MODE_NONE = "None"
+TS_MODE_LR = "LR"
+TS_MODE_ARIMA = "ARIMA"
+
 WATER_THRESHOLD = "WATER_THRESHOLD"
 WATER_NOISE_VARIANCE = "WATER_NOISE_VARIANCE"
 FIRE_MAX_DISTANCE_DETECTABILITY = "FIRE_MAX_DISTANCE_DETECTABILITY"
@@ -33,7 +40,7 @@ WIND_DEFINED_TARGET_PROBABILITY = "WIND_DEFINED_TARGET_PROBABILITY"
 # Scenarios
 scenarios = []
 
-scenarios.append({USE_EXTENDED_MODES: False,
+scenarios.append({TIME_SERIES_MODE: TS_MODE_NONE,
                       TS_WINDOW_CNT: 0,
                       TS_WINDOW_SIZE: 0,
                       WATER_THRESHOLD: 0,
@@ -44,9 +51,9 @@ scenarios.append({USE_EXTENDED_MODES: False,
                       FIRE_NOISE_VARIANCE: 0,
                       FIRE_PROBABILITY_THRESHOLD: 0.5,
                       FALSE_POSITIV_FIRE_PROBABILITY: 0.2})
-scenarios.append({USE_EXTENDED_MODES: True,
-                      TS_WINDOW_CNT: 3,
-                      TS_WINDOW_SIZE: 3,
+scenarios.append({TIME_SERIES_MODE: TS_MODE_ARIMA,
+                      TS_WINDOW_CNT: 5,
+                      TS_WINDOW_SIZE: 5,
                       WATER_THRESHOLD: 0,
                       WATER_NOISE_VARIANCE: 0,
                       FIRE_MAX_DISTANCE_DETECTABILITY: 0.5,
@@ -80,7 +87,7 @@ for item in [{'fireProbabilityThreshold':0.4,
               'maxDistanceDetectability':0.5,
               'falsePositiveFireProbability':0.2,
               'variance':0.15}]:
-    scenarios.append({USE_EXTENDED_MODES: False,
+    scenarios.append({TIME_SERIES_MODE: TS_MODE_NONE,
                       TS_WINDOW_CNT: 0,
                       TS_WINDOW_SIZE: 0,
                       WATER_THRESHOLD: 0,
@@ -92,7 +99,7 @@ for item in [{'fireProbabilityThreshold':0.4,
                       FIRE_PROBABILITY_THRESHOLD: item['fireProbabilityThreshold'],
                       FALSE_POSITIV_FIRE_PROBABILITY: item['falsePositiveFireProbability']})
     for ts in [(2, 4), (2, 5), (3, 3), (3, 4), (4, 2), (4, 3), (5, 2)]:
-        scenarios.append({USE_EXTENDED_MODES: True,
+        scenarios.append({TIME_SERIES_MODE: TS_MODE_ARIMA,
                           TS_WINDOW_CNT: ts[0],
                           TS_WINDOW_SIZE: ts[1],
                           WATER_THRESHOLD: 0,
