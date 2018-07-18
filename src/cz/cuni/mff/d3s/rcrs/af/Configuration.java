@@ -22,6 +22,9 @@ public class Configuration {
 	// SIMULATION CONFIGURATION
 	///////////////////////////////////////////////////////////////////////////
 
+	public enum TimeSeriesMode {
+		None, LR, ARIMA;
+	}
 	
 	public static String LOG_DIR = null;
 	
@@ -33,7 +36,7 @@ public class Configuration {
 	public static TTable.ALPHAS TS_ALPHA = TTable.ALPHAS.ALPHA_0_05;
 		
 	
-	public static boolean USE_EXTENDED_MODES = false;
+	public static TimeSeriesMode TIME_SERIES_MODE = TimeSeriesMode.None;
 
 	public static int MAX_SEPARATION_DISTANCE = 70_000;
 	
@@ -111,6 +114,12 @@ public class Configuration {
 				double v = Double.parseDouble(value);
 				field.set(null, v);
 			} catch (Exception e) {
+				Logger.error(e.getMessage());
+			}
+		} else if (type == TimeSeriesMode.class) {
+			try {
+				field.set(null, TimeSeriesMode.valueOf(value));
+			} catch(Exception e) {
 				Logger.error(e.getMessage());
 			}
 		} else if (type == String.class) {

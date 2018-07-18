@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 '''
 Created on Dec 8, 2015
 
@@ -47,7 +49,7 @@ def analyzeLog(runDir):
                 try:
                     result = float(match.group(1))
                 except ValueError:
-                    print match.group(1), 'error - not a float number'
+                    print(match.group(1) + " error - not a float number")
     
     print("Found result " + str(result))
 
