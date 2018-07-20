@@ -26,6 +26,8 @@ TS_MODE_NONE = "None"
 TS_MODE_LR = "LR"
 TS_MODE_ARIMA = "ARIMA"
 
+WIND_DEFINED_TARGET_PROBABILITY = "WIND_DEFINED_TARGET_PROBABILITY"
+
 WATER_THRESHOLD = "WATER_THRESHOLD"
 WATER_NOISE_VARIANCE = "WATER_NOISE_VARIANCE"
 FIRE_MAX_DISTANCE_DETECTABILITY = "FIRE_MAX_DISTANCE_DETECTABILITY"
@@ -43,17 +45,19 @@ scenarios = []
 scenarios.append({TIME_SERIES_MODE: TS_MODE_NONE,
                       TS_WINDOW_CNT: 0,
                       TS_WINDOW_SIZE: 0,
+                      WIND_DEFINED_TARGET_PROBABILITY: 0,
                       WATER_THRESHOLD: 0,
                       WATER_NOISE_VARIANCE: 0,
-                      FIRE_MAX_DISTANCE_DETECTABILITY: 0.5,
+                      FIRE_MAX_DISTANCE_DETECTABILITY: 0.8,
                       FIRE_MAX_DETECTABLE_DISTANCE: 40000,
                       FIRE_UNERRING_DETECTABLE_DISTANCE: 8000,
                       FIRE_NOISE_VARIANCE: 0,
-                      FIRE_PROBABILITY_THRESHOLD: 0.5,
-                      FALSE_POSITIV_FIRE_PROBABILITY: 0.2})
+                      FIRE_PROBABILITY_THRESHOLD: 0.6,
+                      FALSE_POSITIV_FIRE_PROBABILITY: 0.01})
 scenarios.append({TIME_SERIES_MODE: TS_MODE_ARIMA,
                       TS_WINDOW_CNT: 5,
                       TS_WINDOW_SIZE: 5,
+                      WIND_DEFINED_TARGET_PROBABILITY: 1,
                       WATER_THRESHOLD: 0,
                       WATER_NOISE_VARIANCE: 0,
                       FIRE_MAX_DISTANCE_DETECTABILITY: 0.5,
@@ -90,6 +94,7 @@ for item in [{'fireProbabilityThreshold':0.4,
     scenarios.append({TIME_SERIES_MODE: TS_MODE_NONE,
                       TS_WINDOW_CNT: 0,
                       TS_WINDOW_SIZE: 0,
+                      WIND_DEFINED_TARGET_PROBABILITY: 0,
                       WATER_THRESHOLD: 0,
                       WATER_NOISE_VARIANCE: item['variance'],
                       FIRE_MAX_DISTANCE_DETECTABILITY: item['maxDistanceDetectability'],
@@ -102,6 +107,7 @@ for item in [{'fireProbabilityThreshold':0.4,
         scenarios.append({TIME_SERIES_MODE: TS_MODE_ARIMA,
                           TS_WINDOW_CNT: ts[0],
                           TS_WINDOW_SIZE: ts[1],
+                          WIND_DEFINED_TARGET_PROBABILITY: 1,
                           WATER_THRESHOLD: 0,
                           WATER_NOISE_VARIANCE: item['variance'],
                           FIRE_MAX_DISTANCE_DETECTABILITY: item['maxDistanceDetectability'],
