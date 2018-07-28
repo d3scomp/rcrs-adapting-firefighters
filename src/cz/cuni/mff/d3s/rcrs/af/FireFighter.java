@@ -3,6 +3,7 @@ package cz.cuni.mff.d3s.rcrs.af;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.FIRE_PROBABILITY_THRESHOLD;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.WATER_THRESHOLD;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.WIND_DEFINED_TARGET_PROBABILITY;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.WIND_DEFINED_TARGET_DISTANCE;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -505,7 +506,9 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 
 	private EntityID newSearchTarget(int time) {
 		EntityID building = getClosestAssumedBurningBuilding();
-		if (building != null && random.nextDouble() < WIND_DEFINED_TARGET_PROBABILITY) {
+		if (building != null
+				&& model.getDistance(building, getID()) < WIND_DEFINED_TARGET_DISTANCE
+				&& random.nextDouble() < WIND_DEFINED_TARGET_PROBABILITY) {
 			log.i(time, MsgClass.Wind, "Searching around burning building %s", building);
 			double direction = windDirectionSensor.getMean();
 			double speed = windSpeedSensor.getMean();
