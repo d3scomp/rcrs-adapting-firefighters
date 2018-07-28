@@ -58,6 +58,8 @@ public class Configuration {
 	
 	public static double WIND_DEFINED_TARGET_PROBABILITY = 0.2;
 	
+	public static int WIND_DEFINED_TARGET_DISTANCE = 100000;
+	
 	
 	///////////////////////////////////////////////////////////////////////////
 
