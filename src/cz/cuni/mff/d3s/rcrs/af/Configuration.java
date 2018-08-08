@@ -60,6 +60,16 @@ public class Configuration {
 	
 	public static int WIND_DEFINED_TARGET_DISTANCE = 100000;
 	
+	public static int ARIMA_FORECAST_LENGTH = 3;
+	
+	public static double ARIMA_CONFIDENCE = 0.95;
+	
+	public static int ARIMA_ORDER_P = 1;
+	
+	public static int ARIMA_ORDER_D = 1;
+	
+	public static int ARIMA_ORDER_Q = 1;
+	
 	
 	///////////////////////////////////////////////////////////////////////////
 

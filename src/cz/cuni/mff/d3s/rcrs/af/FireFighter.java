@@ -2,13 +2,9 @@ package cz.cuni.mff.d3s.rcrs.af;
 
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.FIRE_PROBABILITY_THRESHOLD;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.WATER_THRESHOLD;
-import static cz.cuni.mff.d3s.rcrs.af.Configuration.WIND_DEFINED_TARGET_PROBABILITY;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.WIND_DEFINED_TARGET_DISTANCE;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.WIND_DEFINED_TARGET_PROBABILITY;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -29,10 +25,6 @@ import cz.cuni.mff.d3s.rcrs.af.sensors.Sensor.Quantity;
 import cz.cuni.mff.d3s.rcrs.af.sensors.WaterSensor;
 import cz.cuni.mff.d3s.rcrs.af.sensors.WindDirectionSensor;
 import cz.cuni.mff.d3s.rcrs.af.sensors.WindSpeedSensor;
-import cz.cuni.mff.d3s.tss.arima.Arima;
-import cz.cuni.mff.d3s.tss.arima.ArimaOrder;
-import cz.cuni.mff.d3s.tss.arima.FittingStrategy;
-import cz.cuni.mff.d3s.tss.arima.TimeSeries;
 import rescuecore2.messages.Command;
 import rescuecore2.misc.Pair;
 import rescuecore2.standard.entities.Building;

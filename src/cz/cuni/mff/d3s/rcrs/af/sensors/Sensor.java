@@ -4,14 +4,17 @@ import static cz.cuni.mff.d3s.rcrs.af.Configuration.TIME_SERIES_MODE;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.TS_ALPHA;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.TS_WINDOW_CNT;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.TS_WINDOW_SIZE;
-
-import java.util.List;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.ARIMA_FORECAST_LENGTH;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.ARIMA_CONFIDENCE;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.ARIMA_ORDER_P;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.ARIMA_ORDER_D;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.ARIMA_ORDER_Q;
 
 import cz.cuni.mff.d3s.rcrs.af.Configuration.TimeSeriesMode;
 import cz.cuni.mff.d3s.tss.TimeSeries;
-import cz.cuni.mff.d3s.tss.arima.Arima;
-import cz.cuni.mff.d3s.tss.arima.ArimaOrder;
-import cz.cuni.mff.d3s.tss.arima.FittingStrategy;
+import com.github.signaflo.timeseries.forecast.Forecast;
+import com.github.signaflo.timeseries.model.arima.Arima;
+import com.github.signaflo.timeseries.model.arima.ArimaOrder;
 
 public abstract class Sensor {
 	
@@ -33,9 +36,9 @@ public abstract class Sensor {
 		case LR:
 			timeSeries = new TimeSeries(TS_WINDOW_CNT, TS_WINDOW_SIZE);
 			break;
-		case ARIMA: // TODO
+		case ARIMA:
 			timeSeries = new TimeSeries(TS_WINDOW_CNT, TS_WINDOW_SIZE);
-			arimaOrder = ArimaOrder.order(1, 1, 1); 
+			arimaOrder = ArimaOrder.order(ARIMA_ORDER_P, ARIMA_ORDER_D, ARIMA_ORDER_Q); 
 			break;
 		default:
 			timeSeries = null;
@@ -65,16 +68,16 @@ public abstract class Sensor {
 		
 		if(timeSeries != null) {
 			if(TIME_SERIES_MODE == TimeSeriesMode.ARIMA) {
-				Arima model = getArimaModel();
+				Forecast forecast = getArimaForecast();
 				switch(operation) {
 				case GREATER_THAN:
-					return model.getMean().isGreaterThan(level, TS_ALPHA);
+					return forecast.pointEstimates().mean() > level;
 				case GREATER_OR_EQUAL:
-					return model.getMean().isGreaterOrEqualTo(level, TS_ALPHA);
+					return forecast.pointEstimates().mean() >= level;
 				case LESS_THAN:
-					return model.getMean().isLessThan(level, TS_ALPHA);
+					return forecast.pointEstimates().mean() < level;
 				case LESS_OR_EQUAL:
-					return model.getMean().isLessOrEqualTo(level, TS_ALPHA);
+					return forecast.pointEstimates().mean() <= level;
 				default:
 					throw new UnsupportedOperationException("Operation " + operation + " not implemented");
 				}
@@ -111,8 +114,8 @@ public abstract class Sensor {
 	public double getMean() {
 		if(timeSeries != null) {
 			if(TIME_SERIES_MODE == TimeSeriesMode.ARIMA) {
-				Arima model = getArimaModel();
-				return model.getMean().getMean();
+				Forecast forecast = getArimaForecast();
+				return forecast.pointEstimates().mean();
 			}
 			return timeSeries.getMean().getMean();
 		}
@@ -123,8 +126,8 @@ public abstract class Sensor {
 	public double getLrb() {
 		if(timeSeries != null) {
 			if(TIME_SERIES_MODE == TimeSeriesMode.ARIMA) {
-				Arima model = getArimaModel();
-				return model.getLrb().getMean();
+				Forecast forecast = getArimaForecast();
+				return computeLrbMean(forecast);
 			}
 			return timeSeries.getLrb().getMean();
 		}
@@ -132,20 +135,40 @@ public abstract class Sensor {
 		return 0;
 	}
 	
-	public Arima getArimaModel() {
+	public Forecast getArimaForecast() {
 		double[] samples = timeSeries.getSamples();
-		List<Integer> times = timeSeries.getTimes();
-		cz.cuni.mff.d3s.tss.arima.TimeSeries series = cz.cuni.mff.d3s.tss.arima.TimeSeries.from(samples, times);
-		series.setTimePeriod(samples.length);
+		com.github.signaflo.timeseries.TimeSeries series = com.github.signaflo.timeseries.TimeSeries.from(samples);
 		
-		return new Arima(series, arimaOrder, samples.length, FittingStrategy.CSS, null);
+		Arima model = Arima.model(series, arimaOrder);
+		return model.forecast(ARIMA_FORECAST_LENGTH, ARIMA_CONFIDENCE);
+	}
+	
+	private double computeLrbMean(Forecast forecast) {
+		com.github.signaflo.timeseries.TimeSeries series = forecast.pointEstimates();
+		if (series.size() <= 0) {
+			return Double.NaN;
+		}
+		double totalTimeSum = 0;
+		double totalTimeSquaresSum = 0;
+		double totalSampleTimeSum = 0;
+		for(int i = 0; i < series.size(); i++) {
+			totalTimeSum += i;
+			totalTimeSquaresSum += i*i;
+			totalSampleTimeSum = i*series.at(i);
+		}
+				
+		double x = totalTimeSum;
+		double x2 = totalTimeSquaresSum;
+		double y = series.sum();
+		double xy = totalSampleTimeSum;
+
+		double nom = xy - x*y / series.size();
+		double denom = x2 - x*x / series.size();
+
+		return denom != 0 ? nom / denom : Double.NaN;
 	}
 	
 	public double getLastSample() {
 		return sample;
-	}
-	
-	public double[] getSamples() {
-		return timeSeries.getSamples();
 	}
 }
