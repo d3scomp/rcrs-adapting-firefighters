@@ -23,7 +23,7 @@ public class Configuration {
 	///////////////////////////////////////////////////////////////////////////
 
 	public enum TimeSeriesMode {
-		None, LR, ARIMA;
+		None, LR;
 	}
 	
 	public static String LOG_DIR = null;
@@ -62,13 +62,23 @@ public class Configuration {
 	
 	public static int ARIMA_FORECAST_LENGTH = 3;
 	
-	public static double ARIMA_CONFIDENCE = 0.95;
+	public static int FIRE_ARIMA_ORDER_P = 1;
 	
-	public static int ARIMA_ORDER_P = 1;
+	public static int FIRE_ARIMA_ORDER_D = 1;
 	
-	public static int ARIMA_ORDER_D = 1;
+	public static int FIRE_ARIMA_ORDER_Q = 1;
 	
-	public static int ARIMA_ORDER_Q = 1;
+	public static int WATER_ARIMA_ORDER_P = 1;
+	
+	public static int WATER_ARIMA_ORDER_D = 1;
+	
+	public static int WATER_ARIMA_ORDER_Q = 1;
+
+	public static int WIND_ARIMA_ORDER_P = 1;
+	
+	public static int WIND_ARIMA_ORDER_D = 1;
+	
+	public static int WIND_ARIMA_ORDER_Q = 1;
 	
 	
 	///////////////////////////////////////////////////////////////////////////

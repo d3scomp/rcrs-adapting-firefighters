@@ -1,5 +1,9 @@
 package cz.cuni.mff.d3s.rcrs.af.sensors;
 
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.WIND_ARIMA_ORDER_P;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.WIND_ARIMA_ORDER_D;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.WIND_ARIMA_ORDER_Q;
+
 import rescuecore2.standard.entities.StandardEntity;
 import rescuecore2.standard.entities.StandardEntityURN;
 import rescuecore2.standard.entities.StandardWorldModel;
@@ -10,7 +14,7 @@ public class WindSpeedSensor extends Sensor {
 	private StandardWorldModel model;
 
 	public WindSpeedSensor(StandardWorldModel model) {
-		super(new NoiseFilter(0));
+		super(new NoiseFilter(0), WIND_ARIMA_ORDER_P, WIND_ARIMA_ORDER_D, WIND_ARIMA_ORDER_Q);
 		this.model = model;
 	}
 

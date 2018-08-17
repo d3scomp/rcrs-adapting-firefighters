@@ -69,7 +69,7 @@ public class TargetFireZoneEnsemble extends Ensemble {
 				boolean memberSearching = t.get(Ensemble.getMemberFieldName(KNOWLEDGE_MODE)) == Mode.Search;
 				
 				int newDistance = model.getDistance(memberPosition, coordPosition);
-				boolean newDistanceDecreasing = fireStation.getFFDistanceLrb(coordEid, memberEid) < 0;
+				boolean newDistanceDecreasing = fireStation.isFFDistanceLrbLessThan(coordEid, memberEid , 0);
 				
 				boolean newIsCloser = newDistance < helpingDistance
 						&& newDistance < MAX_SEPARATION_DISTANCE;
@@ -86,12 +86,12 @@ public class TargetFireZoneEnsemble extends Ensemble {
 						+ "\tmemberIsFree: %s\n"
 						+ "\tnewIsCloser: %s\n"
 						+ "\tnewDistanceDecreasing: %s\n"
-						+ "\tLrb: %f\n"
+						+ "\tLrb: %s\n"
 						+ "\talreadyAMember: %s\n"
 						+ "\tSAT: %s",
 						coordId, memberId, coordNotMember, coordExtinguishing,
 						memberSearching, memberIsFree, newIsCloser, newDistanceDecreasing,
-						fireStation.getFFDistanceLrb(coordEid, memberEid),
+						fireStation.isFFDistanceLrbLessThan(coordEid, memberEid, 0),
 						alreadyAMember, satisfied);
 					
 				computedDistance = newDistance;

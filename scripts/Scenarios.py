@@ -24,7 +24,6 @@ TS_WINDOW_SIZE = "TS_WINDOW_SIZE"
 TIME_SERIES_MODE = "TIME_SERIES_MODE"
 TS_MODE_NONE = "None"
 TS_MODE_LR = "LR"
-TS_MODE_ARIMA = "ARIMA"
 
 WATER_THRESHOLD = "WATER_THRESHOLD"
 WATER_NOISE_VARIANCE = "WATER_NOISE_VARIANCE"
@@ -39,11 +38,16 @@ FALSE_POSITIV_FIRE_PROBABILITY = "FALSE_POSITIV_FIRE_PROBABILITY"
 WIND_DEFINED_TARGET_PROBABILITY = "WIND_DEFINED_TARGET_PROBABILITY"
 WIND_DEFINED_TARGET_DISTANCE = "WIND_DEFINED_TARGET_DISTANCE"
 
-ARIMA_FORECAST_LENGTH = "ARIMA_FORECAST_LENGTH"
-ARIMA_CONFIDENCE = "ARIMA_CONFIDENCE"
-ARIMA_ORDER_P = "ARIMA_ORDER_P"
-ARIMA_ORDER_D = "ARIMA_ORDER_D"
-ARIMA_ORDER_Q = "ARIMA_ORDER_Q"
+ARIMA_FORECAST_LENGTH = "ARIMA_FORECAST_LENGTH"    
+FIRE_ARIMA_ORDER_P = "FIRE_ARIMA_ORDER_P";
+FIRE_ARIMA_ORDER_D = "FIRE_ARIMA_ORDER_D";
+FIRE_ARIMA_ORDER_Q = "FIRE_ARIMA_ORDER_Q";
+WATER_ARIMA_ORDER_P = "WATER_ARIMA_ORDER_P";
+WATER_ARIMA_ORDER_D = "WATER_ARIMA_ORDER_D";
+WATER_ARIMA_ORDER_Q = "WATER_ARIMA_ORDER_Q";
+WIND_ARIMA_ORDER_P = "WIND_ARIMA_ORDER_P";
+WIND_ARIMA_ORDER_D = "WIND_ARIMA_ORDER_D";
+WIND_ARIMA_ORDER_Q = "WIND_ARIMA_ORDER_Q";
 
 # Scenarios
 scenarios = []
@@ -117,7 +121,7 @@ scenarios = []
 #                               WIND_DEFINED_TARGET_DISTANCE: wdist})
 
 scenarios.append({TIME_SERIES_MODE: TS_MODE_NONE,
-                           WATER_THRESHOLD: 0,
+                           WATER_THRESHOLD: 1000,
                            WATER_NOISE_VARIANCE: 0.1,
                            FIRE_MAX_DISTANCE_DETECTABILITY: 0.4,
                            FIRE_MAX_DETECTABLE_DISTANCE: 40000,
@@ -127,29 +131,79 @@ scenarios.append({TIME_SERIES_MODE: TS_MODE_NONE,
                            FALSE_POSITIV_FIRE_PROBABILITY: 0.2,
                            WIND_DEFINED_TARGET_PROBABILITY: 0.3,
                            WIND_DEFINED_TARGET_DISTANCE: 50000})
-for forecast_length in [1, 3, 5, 10]:
-    for confidence in [0.05, 0.5, 0.95]:
-        for p in [0, 1]:
-            for d in [0, 1]:
-                for q in [0, 1]:
-                    scenarios.append({TIME_SERIES_MODE: TS_MODE_ARIMA,
-                                    TS_WINDOW_CNT: 2,
-                                    TS_WINDOW_SIZE: 4,
-                                    WATER_THRESHOLD: 0,
-                                    WATER_NOISE_VARIANCE: 0.1,
-                                    FIRE_MAX_DISTANCE_DETECTABILITY: 0.4,
-                                    FIRE_MAX_DETECTABLE_DISTANCE: 40000,
-                                    FIRE_UNERRING_DETECTABLE_DISTANCE: 8000,
-                                    FIRE_NOISE_VARIANCE: 0.1,
-                                    FIRE_PROBABILITY_THRESHOLD: 0.4,
-                                    FALSE_POSITIV_FIRE_PROBABILITY: 0.2,
-                                    WIND_DEFINED_TARGET_PROBABILITY: 0.3,
-                                    WIND_DEFINED_TARGET_DISTANCE: 50000,             
-                                    ARIMA_FORECAST_LENGTH: forecast_length,
-                                    ARIMA_CONFIDENCE: confidence,
-                                    ARIMA_ORDER_P: p,
-                                    ARIMA_ORDER_D: d,
-                                    ARIMA_ORDER_Q: q})
+for fl in [1, 3]:
+    for fao in [(0, 0, 0), (0, 0, 1), (0, 1, 0), (0, 1, 1), (1, 0, 0), (1, 0, 1), (1, 1, 0), (1, 1, 1)]:
+        scenarios.append({TIME_SERIES_MODE: TS_MODE_LR,
+                          TS_WINDOW_CNT: 2,
+                          TS_WINDOW_SIZE: 4,
+                          WATER_THRESHOLD: 1000,
+                          WATER_NOISE_VARIANCE: 0.1,
+                          FIRE_MAX_DISTANCE_DETECTABILITY: 0.4,
+                          FIRE_MAX_DETECTABLE_DISTANCE: 40000,
+                          FIRE_UNERRING_DETECTABLE_DISTANCE: 8000,
+                          FIRE_NOISE_VARIANCE: 0.1,
+                          FIRE_PROBABILITY_THRESHOLD: 0.4,
+                          FALSE_POSITIV_FIRE_PROBABILITY: 0.2,
+                          WIND_DEFINED_TARGET_PROBABILITY: 0.3,
+                          WIND_DEFINED_TARGET_DISTANCE: 50000,             
+                          ARIMA_FORECAST_LENGTH: fl,
+                          FIRE_ARIMA_ORDER_P: fao[0],
+                          FIRE_ARIMA_ORDER_D: fao[1],
+                          FIRE_ARIMA_ORDER_Q: fao[2],
+                          WIND_ARIMA_ORDER_P: 0,
+                          WIND_ARIMA_ORDER_D: 0,
+                          WIND_ARIMA_ORDER_Q: 0,
+                          WATER_ARIMA_ORDER_P: 0,
+                          WATER_ARIMA_ORDER_D: 0,
+                          WATER_ARIMA_ORDER_Q: 0})
+    for wiao in [(0, 0, 0), (0, 0, 1), (0, 1, 0), (0, 1, 1), (1, 0, 0), (1, 0, 1), (1, 1, 0), (1, 1, 1)]:
+        scenarios.append({TIME_SERIES_MODE: TS_MODE_LR,
+                          TS_WINDOW_CNT: 2,
+                          TS_WINDOW_SIZE: 4,
+                          WATER_THRESHOLD: 1000,
+                          WATER_NOISE_VARIANCE: 0.1,
+                          FIRE_MAX_DISTANCE_DETECTABILITY: 0.4,
+                          FIRE_MAX_DETECTABLE_DISTANCE: 40000,
+                          FIRE_UNERRING_DETECTABLE_DISTANCE: 8000,
+                          FIRE_NOISE_VARIANCE: 0.1,
+                          FIRE_PROBABILITY_THRESHOLD: 0.4,
+                          FALSE_POSITIV_FIRE_PROBABILITY: 0.2,
+                          WIND_DEFINED_TARGET_PROBABILITY: 0.3,
+                          WIND_DEFINED_TARGET_DISTANCE: 50000,             
+                          ARIMA_FORECAST_LENGTH: fl,
+                          FIRE_ARIMA_ORDER_P: 0,
+                          FIRE_ARIMA_ORDER_D: 0,
+                          FIRE_ARIMA_ORDER_Q: 0,
+                          WIND_ARIMA_ORDER_P: wiao[0],
+                          WIND_ARIMA_ORDER_D: wiao[1],
+                          WIND_ARIMA_ORDER_Q: wiao[2],
+                          WATER_ARIMA_ORDER_P: 0,
+                          WATER_ARIMA_ORDER_D: 0,
+                          WATER_ARIMA_ORDER_Q: 0})
+    for waao in [(0, 0, 0), (0, 0, 1), (0, 1, 0), (0, 1, 1), (1, 0, 0), (1, 0, 1), (1, 1, 0), (1, 1, 1)]:
+        scenarios.append({TIME_SERIES_MODE: TS_MODE_LR,
+                          TS_WINDOW_CNT: 2,
+                          TS_WINDOW_SIZE: 4,
+                          WATER_THRESHOLD: 1000,
+                          WATER_NOISE_VARIANCE: 0.1,
+                          FIRE_MAX_DISTANCE_DETECTABILITY: 0.4,
+                          FIRE_MAX_DETECTABLE_DISTANCE: 40000,
+                          FIRE_UNERRING_DETECTABLE_DISTANCE: 8000,
+                          FIRE_NOISE_VARIANCE: 0.1,
+                          FIRE_PROBABILITY_THRESHOLD: 0.4,
+                          FALSE_POSITIV_FIRE_PROBABILITY: 0.2,
+                          WIND_DEFINED_TARGET_PROBABILITY: 0.3,
+                          WIND_DEFINED_TARGET_DISTANCE: 50000,             
+                          ARIMA_FORECAST_LENGTH: fl,
+                          FIRE_ARIMA_ORDER_P: 0,
+                          FIRE_ARIMA_ORDER_D: 0,
+                          FIRE_ARIMA_ORDER_Q: 0,
+                          WIND_ARIMA_ORDER_P: 0,
+                          WIND_ARIMA_ORDER_D: 0,
+                          WIND_ARIMA_ORDER_Q: 0,
+                          WATER_ARIMA_ORDER_P: waao[0],
+                          WATER_ARIMA_ORDER_D: waao[1],
+                          WATER_ARIMA_ORDER_Q: waao[2]})
                 
 #################################################
 

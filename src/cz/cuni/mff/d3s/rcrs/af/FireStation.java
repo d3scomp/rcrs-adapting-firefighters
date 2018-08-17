@@ -173,9 +173,9 @@ public class FireStation extends StandardAgent<Building> {
 		return model.getDistance(fireFighter1.getPosition(), fireFighter2.getPosition());
 	}
 	
-	public double getFFDistanceLrb(EntityID fireFighter1, EntityID fireFighter2) {
+	public boolean isFFDistanceLrbLessThan(EntityID fireFighter1, EntityID fireFighter2, int threshold) {
 		if(fireFighter1.getValue() == fireFighter2.getValue()) {
-			return 0;
+			return false;
 		}
 		
 		EntityID f1 = fireFighter1;
@@ -187,18 +187,12 @@ public class FireStation extends StandardAgent<Building> {
 		for(FFDistanceSensor sensor : fireFighterDistances) {
 			if(sensor.fireFighter1.getEId().equals(f1) &&
 					sensor.fireFighter2.getEId().equals(f2)) {
-				double lrb = sensor.getLrb();
-				log.i(0, MsgClass.Distance, "Lrb for %s and %s: %.2f",
-						f1, f2, lrb);
-				if(Double.isNaN(lrb)) {
-					lrb = 0;
-				}
-				return lrb;
+				return sensor.isLrbBelow(threshold);
 			}
 		}
-		log.w(0, MsgClass.General, "getFFDistanceLrb default value for %d and %d",
+		log.w(0, MsgClass.General, "isFFDistanceLrbLessThan default value for %d and %d",
 				f1.getValue(), f2.getValue());
-		return 0;
+		return false;
 	}
 	
 	@Override

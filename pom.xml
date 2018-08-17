@@ -58,11 +58,6 @@
 			<artifactId>TimeSeriesStatistics4J</artifactId>
 			<version>1.0.0</version>
 		</dependency>
-		<dependency>
-			<groupId>com.github.signaflo</groupId>
-			<artifactId>timeseries</artifactId>
-			<version>0.4</version>
-		</dependency>
 	</dependencies>
 	<repositories>
 		<repository>

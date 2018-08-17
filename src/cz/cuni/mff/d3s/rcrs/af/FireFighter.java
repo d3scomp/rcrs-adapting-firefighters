@@ -266,7 +266,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 		switch (mode) {
 		case Extinguish:
 			// Are we out of water?
-			if (waterSensor.isLevel(Quantity.LESS_OR_EQUAL, WATER_THRESHOLD)) {
+			if (waterSensor.isLevel(Quantity.LESS_THAN, WATER_THRESHOLD)) {
 				mode = Mode.MoveToRefill;
 				break;
 			}
@@ -456,7 +456,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 		// Can we extinguish any right now?
 		for (Building building : fireSensor.keySet()) {
 			if (model.getDistance(location(), building) < maxDistance * 0.8
-					&& fireSensor.get(building).isLevel(Quantity.GREATER_OR_EQUAL, FIRE_PROBABILITY_THRESHOLD)) {
+					&& fireSensor.get(building).isLevel(Quantity.GREATER_THAN, FIRE_PROBABILITY_THRESHOLD)) {
 				closeBuildings.add(building.getID());
 			}
 		}

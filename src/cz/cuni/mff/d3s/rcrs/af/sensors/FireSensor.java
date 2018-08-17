@@ -5,6 +5,9 @@ import static cz.cuni.mff.d3s.rcrs.af.Configuration.FIRE_MAX_DETECTABLE_DISTANCE
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.FIRE_MAX_DISTANCE_DETECTABILITY;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.FIRE_NOISE_VARIANCE;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.FIRE_UNERRING_DETECTABLE_DISTANCE;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.FIRE_ARIMA_ORDER_P;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.FIRE_ARIMA_ORDER_D;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.FIRE_ARIMA_ORDER_Q;
 
 import cz.cuni.mff.d3s.rcrs.af.FireFighter;
 import rescuecore2.standard.entities.Building;
@@ -22,7 +25,8 @@ public class FireSensor extends Sensor {
 
 	public FireSensor(FireFighter fireFighter, Building building) {
 		// FIRE_NOISE_VARIANCE is in percentage
-		super(new NoiseFilter(FIRE_NOISE_VARIANCE * maxLimit));
+		super(new NoiseFilter(FIRE_NOISE_VARIANCE * maxLimit),
+				FIRE_ARIMA_ORDER_P, FIRE_ARIMA_ORDER_D, FIRE_ARIMA_ORDER_Q);
 		this.fireFighter = fireFighter;
 		this.building = building;
 

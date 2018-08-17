@@ -1,6 +1,9 @@
 package cz.cuni.mff.d3s.rcrs.af.sensors;
 
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.WATER_NOISE_VARIANCE;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.WATER_ARIMA_ORDER_P;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.WATER_ARIMA_ORDER_D;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.WATER_ARIMA_ORDER_Q;
 
 import cz.cuni.mff.d3s.rcrs.af.FireFighter;
 
@@ -10,7 +13,8 @@ public class WaterSensor extends Sensor {
 	
 	
 	public WaterSensor(FireFighter fireFighter) {
-		super(new NoiseFilter(WATER_NOISE_VARIANCE * fireFighter.getMaxWater()));
+		super(new NoiseFilter(WATER_NOISE_VARIANCE * fireFighter.getMaxWater()),
+				WATER_ARIMA_ORDER_P, WATER_ARIMA_ORDER_D, WATER_ARIMA_ORDER_Q);
 		this.fireFighter = fireFighter;
 	}
 	
