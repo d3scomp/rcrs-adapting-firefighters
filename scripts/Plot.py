@@ -207,7 +207,8 @@ if __name__ == '__main__':
         for scenario in scenarioIndices:
             if scenario in failedSimulations:
                 print("For scenario {} there failed {} simulation(s).".format(scenario, failedSimulations[scenario]))
-    except ArgError:
+    except ArgError as e:
+        print(str(e))
         printHelp()
     except Exception as e:
         print(e.__str__())

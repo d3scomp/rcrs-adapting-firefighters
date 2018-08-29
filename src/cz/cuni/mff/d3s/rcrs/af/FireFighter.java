@@ -156,27 +156,6 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			sendSubscribe(time, CHANNEL_IN);
 			log.i(time, MsgClass.Communication, "subscribed to channel %d", CHANNEL_IN);
 		}
-		
-		/*if(time == 25) {
-			double[] samples = windDirectionSensor.getSamples();
-			TimeSeries series = TimeSeries.from(samples, );
-			series.setTimePeriod(samples.length);
-			ArimaOrder order = ArimaOrder.order(1, 1, 1);
-			Arima arima = new Arima(series, order, samples.length, FittingStrategy.CSS, null);
-			File f = new File("series");
-			try(BufferedWriter writer = new BufferedWriter(new FileWriter(f))){
-				for(double d : samples) {
-					writer.write(String.format("%.1f ", d));
-				}
-				writer.write(System.lineSeparator());
-				for(double d : arima.getFittedModel().getFitted()) {
-					writer.write(String.format("%.1f ", d));
-				}
-				writer.write(System.lineSeparator());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}*/
 
 		// Sense
 		windDirectionSensor.sense(time);
@@ -270,7 +249,13 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 				mode = Mode.MoveToRefill;
 				break;
 			}
+			if(!waterSensor.isLevel(Quantity.LESS_THAN, WATER_THRESHOLD)
+					&& !waterSensor.isLevel(Quantity.GREATER_THAN, WATER_THRESHOLD)) {
+				mode = Mode.SearchTowardsRefill;
+				break;
+			}
 			// Not next a building on fire?
+			// Water above threshold
 			if (findCloseBurningBuilding() == null) {
 				// Plan to search fire
 				searchTarget = randomTarget();
@@ -282,7 +267,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			break;
 		case MoveToFire:
 			// Target reached?
-			if (fireTarget == null || fireTarget.equals(location().getID())) {
+			if (fireTarget == null || isClose(fireTarget, location().getID())) {
 				mode = Mode.Extinguish;
 				break;
 			}
@@ -293,6 +278,20 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			// Target reached?
 			if (refillTarget != null && refillTarget.equals(location().getID())) {
 				mode = Mode.Refill;
+				break;
+			}
+			// Otherwise keep moving
+			modeSwitched = false;
+			break;
+		case SearchTowardsRefill:
+			// Target reached?
+			if (refillTarget != null && refillTarget.equals(location().getID())) {
+				mode = Mode.Refill;
+				break;
+			}
+			// Water depleted?
+			if (waterSensor.isLevel(Quantity.LESS_THAN, WATER_THRESHOLD)) {
+				mode = Mode.MoveToRefill;
 				break;
 			}
 			// Otherwise keep moving
@@ -376,14 +375,31 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 				log.w(time, MsgClass.General, "in MoveToRefillMode missing refillTarget");
 			}
 			break;
+		case SearchTowardsRefill:
+			log.i(time, MsgClass.Modes, "searching towards refill");
+			{
+				EntityID building = findCloseBurningBuilding();
+				if (building != null) {
+					log.i(time, MsgClass.Action, "extinguishing(%s)[%d]", building, getWater());
+					sendExtinguish(time, building, maxPower);
+				} else if (refillTarget != null) {
+					log.i(time, MsgClass.Action, "searching towards refill target: %s", refillTarget);
+					sendMove(time, planShortestRoute(time, refillTarget));
+				} else {
+					log.w(time, MsgClass.General, "in MoveToRefillMode missing refillTarget");
+				}
+			}
+			break;
 		case Extinguish:
 			log.i(time, MsgClass.Modes, "extinguishing");
-			EntityID building = findCloseBurningBuilding();
-			if (building != null) {
-				log.i(time, MsgClass.Action, "extinguishing(%s)[%d]", building, getWater());
-				sendExtinguish(time, building, maxPower);
-			} else {
-				log.w(time, MsgClass.General, "Trying to extinguish null.");
+			{
+				EntityID building = findCloseBurningBuilding();
+				if (building != null) {
+					log.i(time, MsgClass.Action, "extinguishing(%s)[%d]", building, getWater());
+					sendExtinguish(time, building, maxPower);
+				} else {
+					log.w(time, MsgClass.General, "Trying to extinguish null.");
+				}
 			}
 			break;
 		case Refill:
@@ -455,7 +471,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 		ArrayList<EntityID> closeBuildings = new ArrayList<>();
 		// Can we extinguish any right now?
 		for (Building building : fireSensor.keySet()) {
-			if (model.getDistance(location(), building) < maxDistance * 0.8
+			if (model.getDistance(location(), building) < (maxDistance * 0.8)
 					&& fireSensor.get(building).isLevel(Quantity.GREATER_THAN, FIRE_PROBABILITY_THRESHOLD)) {
 				closeBuildings.add(building.getID());
 			}
@@ -464,6 +480,10 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			return null;
 		}
 		return closeBuildings.get(random.nextInt(closeBuildings.size()));
+	}
+	
+	private boolean isClose(EntityID place1, EntityID place2) {
+		return model.getDistance(place1, place2) < (maxDistance * 0.1);
 	}
 
 	private List<EntityID> planShortestRoute(int time, EntityID... targets) {

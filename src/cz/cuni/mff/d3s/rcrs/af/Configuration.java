@@ -31,8 +31,8 @@ public class Configuration {
 	public static int PORT = Constants.DEFAULT_KERNEL_PORT_NUMBER;
 
 	
-	public static int TS_WINDOW_CNT = 50;
-	public static int TS_WINDOW_SIZE = 10;
+	public static int TS_WINDOW_CNT = 2;
+	public static int TS_WINDOW_SIZE = 4;
 	public static TTable.ALPHAS TS_ALPHA = TTable.ALPHAS.ALPHA_0_05;
 		
 	
@@ -60,9 +60,9 @@ public class Configuration {
 	
 	public static int WIND_DEFINED_TARGET_DISTANCE = 100000;
 	
-	public static int ARIMA_FORECAST_LENGTH = 3;
+	public static int ARIMA_FORECAST_LENGTH = 1;
 	
-	public static int FIRE_ARIMA_ORDER_P = 1;
+	public static int FIRE_ARIMA_ORDER_P = 0;
 	
 	public static int FIRE_ARIMA_ORDER_D = 1;
 	
@@ -70,15 +70,15 @@ public class Configuration {
 	
 	public static int WATER_ARIMA_ORDER_P = 1;
 	
-	public static int WATER_ARIMA_ORDER_D = 1;
+	public static int WATER_ARIMA_ORDER_D = 0;
 	
-	public static int WATER_ARIMA_ORDER_Q = 1;
+	public static int WATER_ARIMA_ORDER_Q = 0;
 
-	public static int WIND_ARIMA_ORDER_P = 1;
+	public static int WIND_ARIMA_ORDER_P = 0;
 	
 	public static int WIND_ARIMA_ORDER_D = 1;
 	
-	public static int WIND_ARIMA_ORDER_Q = 1;
+	public static int WIND_ARIMA_ORDER_Q = 0;
 	
 	
 	///////////////////////////////////////////////////////////////////////////
