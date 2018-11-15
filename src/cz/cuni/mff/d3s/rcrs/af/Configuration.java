@@ -56,9 +56,17 @@ public class Configuration {
 	
 	public static double FALSE_POSITIV_FIRE_PROBABILITY = 0.1;
 	
+	public static int FIRE_MAX_HELP_DISTANCE = 200000;
+	
 	public static double WIND_DEFINED_TARGET_PROBABILITY = 0.2;
 	
 	public static int WIND_DEFINED_TARGET_DISTANCE = 100000;
+
+	public static double PEOPLE_NOISE_VARIANCE = 0.3;
+	
+	public static int AVG_PEOPLE_PER_FLOOR = 50;
+	
+	public static int VAR_PEOPLE_PER_FLOOR = 20;
 	
 	public static int ARIMA_FORECAST_LENGTH = 1;
 	
@@ -79,7 +87,7 @@ public class Configuration {
 	public static int WIND_ARIMA_ORDER_D = 1;
 	
 	public static int WIND_ARIMA_ORDER_Q = 0;
-	
+		
 	
 	///////////////////////////////////////////////////////////////////////////
 

@@ -7,6 +7,8 @@ import static cz.cuni.mff.d3s.rcrs.af.Configuration.WIND_DEFINED_TARGET_PROBABIL
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,6 +23,7 @@ import cz.cuni.mff.d3s.rcrs.af.comm.RefillMsg;
 import cz.cuni.mff.d3s.rcrs.af.comm.TargetMsg;
 import cz.cuni.mff.d3s.rcrs.af.modes.Mode;
 import cz.cuni.mff.d3s.rcrs.af.sensors.FireSensor;
+import cz.cuni.mff.d3s.rcrs.af.sensors.PeopleSensor;
 import cz.cuni.mff.d3s.rcrs.af.sensors.Sensor.Quantity;
 import cz.cuni.mff.d3s.rcrs.af.sensors.WaterSensor;
 import cz.cuni.mff.d3s.rcrs.af.sensors.WindDirectionSensor;
@@ -61,9 +64,11 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 	private WaterSensor waterSensor;
 	private WindDirectionSensor windDirectionSensor;
 	private WindSpeedSensor windSpeedSensor;
+	private Map<Building, PeopleSensor> peopleSensor;
 
-	StandardEntity[] roads;
-	Set<EntityID> refillStations = new HashSet<>();
+	private final BuildingRegistry buildingRegistry;
+	private StandardEntity[] roads;
+	private Set<EntityID> refillStations = new HashSet<>();
 
 	// Knowledge ##############################################################
 
@@ -105,12 +110,15 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 
 	// ########################################################################
 
-	public FireFighter(int id) {
+	public FireFighter(int id, BuildingRegistry buildingRegistry) {
 		this.id = id;
+		this.buildingRegistry = buildingRegistry;
+		
 		sid = String.format("FF%d", id);
 		log = new Log(sid, MsgClass.General);
 		maxWater = -1;
 		fireSensor = new HashMap<>();
+		peopleSensor = new HashMap<>();
 	}
 
 	@Override
@@ -127,13 +135,14 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 		Collection<StandardEntity> entities = model.getEntitiesOfType(StandardEntityURN.ROAD);
 		roads = entities.toArray(new StandardEntity[entities.size()]);
 
-		// Store refill stations and create fire sensors
+		// Store refill stations and create sensors
 		for (StandardEntity entity : model) {
 			if (entity instanceof Hydrant || entity instanceof Refuge) {
 				refillStations.add(entity.getID());
 			}
 			if (entity instanceof Building) {
 				fireSensor.put((Building) entity, new FireSensor(this, (Building) entity));
+				peopleSensor.put((Building) entity, new PeopleSensor(buildingRegistry, (Building) entity)); 
 			}
 		}
 
@@ -165,6 +174,13 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			fireSensor.get(building).sense(time);
 		}
 		senseBurningBuildings();
+		for (Building building : peopleSensor.keySet()) {
+			peopleSensor.get(building).sense(time);
+			if (model.getDistance(location(), building) < maxDistance) {
+				buildingRegistry.updateBuilding(building);
+			}
+		}
+		
 
 		processCommands(time, heard);
 		switchMode(time);
@@ -241,7 +257,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 
 	private void switchMode(int time) {
 		boolean modeSwitched = true;
-
+		
 		switch (mode) {
 		case Extinguish:
 			// Are we out of water?
@@ -468,19 +484,29 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 	}
 
 	public EntityID findCloseBurningBuilding() {
-		ArrayList<EntityID> closeBuildings = new ArrayList<>();
+		ArrayList<Building> closeBuildings = new ArrayList<>();
 		// Can we extinguish any right now?
 		for (Building building : fireSensor.keySet()) {
 			if (model.getDistance(location(), building) < (maxDistance * 0.8)
 					&& fireSensor.get(building).isLevel(Quantity.GREATER_THAN, FIRE_PROBABILITY_THRESHOLD)) {
-				closeBuildings.add(building.getID());
+				closeBuildings.add(building);
 			}
 		}
 		if (closeBuildings.size() == 0) {
 			return null;
 		}
-		return closeBuildings.get(random.nextInt(closeBuildings.size()));
+
+		// Sort them according to the people inside
+		Collections.sort(closeBuildings, new Comparator<Building>() {
+			@Override
+			public int compare(Building b1, Building b2) {
+				return peopleSensor.get(b1).compareTo(peopleSensor.get(b2));
+			}});
+		
+		return closeBuildings.get(closeBuildings.size()-1).getID();
 	}
+	
+	
 	
 	private boolean isClose(EntityID place1, EntityID place2) {
 		return model.getDistance(place1, place2) < (maxDistance * 0.1);

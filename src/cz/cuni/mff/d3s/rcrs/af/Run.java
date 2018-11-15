@@ -64,12 +64,14 @@ public class Run {
 
 	private static void connect(ComponentLauncher launcher, Config config)
 			throws InterruptedException, ConnectionException {
+		BuildingRegistry buildingRegistry = new BuildingRegistry();
+
 		int unit_number = 0;
 		try {
 			while (true) {
 				unit_number++;
 				Logger.info("Connecting fire brigade " + (unit_number) + "...");
-				launcher.connect(new FireFighter(unit_number));
+				launcher.connect(new FireFighter(unit_number, buildingRegistry));
 				Logger.info("success");
 			}
 		} catch (ComponentConnectionException e) {
@@ -81,7 +83,7 @@ public class Run {
 			while (true) {
 				unit_number++;
 				Logger.info("Connecting fire station " + (unit_number) + "...");
-				launcher.connect(new FireStation(unit_number));
+				launcher.connect(new FireStation(unit_number, buildingRegistry));
 				Logger.info("success");
 			}
 		} catch (ComponentConnectionException e) {

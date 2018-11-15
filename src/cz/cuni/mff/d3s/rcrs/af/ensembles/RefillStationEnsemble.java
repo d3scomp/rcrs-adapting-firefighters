@@ -46,10 +46,7 @@ public class RefillStationEnsemble extends Ensemble {
 				EntityID memberRefill = (EntityID) t.get(Ensemble.getMemberFieldName(KNOWLEDGE_REFILL_TARGET));
 				EntityID coordId = (EntityID) t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_REFILL_ID));
 				boolean coordVacant = (boolean) t.get(Ensemble.getCoordinatorFieldName(KNOWLEDGE_REFILL_VACANT));
-				
-				if(memberId != 1)
-					return false;
-				
+								
 				log.i(0, msgClass.Ensemble,
 						"\n\tcoordId: %s\n"
 						+ "\tcoordVacant: %s\n"

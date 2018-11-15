@@ -53,6 +53,9 @@ KERNEL_LOG_FILE = "kernel.log"
 KERNEL_STARTED_FILE = "started.log"
 ''' The name of the file containing runtime logs produced by a simulation. '''
 
+CLIENT_LOG_FILE = "client.log"
+''' The name of the file containing runtime logs produced by a client components. '''
+
 DESCRIPTION_FILE = "description.txt"
 
 ###############################################################################
@@ -68,7 +71,7 @@ RCRS_PORT_BASE = 7100
 
 AGENTS_PORT_PARAM = "PORT"
 
-SIMULATION_ITERATIONS = 25
+SIMULATION_ITERATIONS = 1
 ''' The number of simulation iterations '''
 
 ###############################################################################

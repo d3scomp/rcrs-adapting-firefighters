@@ -1,14 +1,14 @@
 package cz.cuni.mff.d3s.rcrs.af.sensors;
 
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.ARIMA_FORECAST_LENGTH;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.TIME_SERIES_MODE;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.TS_ALPHA;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.TS_WINDOW_CNT;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.TS_WINDOW_SIZE;
-import static cz.cuni.mff.d3s.rcrs.af.Configuration.ARIMA_FORECAST_LENGTH;
 
 import cz.cuni.mff.d3s.tss.TimeSeries;
 
-public abstract class Sensor {
+public abstract class Sensor implements Comparable<Sensor> {
 	
 	public enum Quantity {
 		LESS_THAN, GREATER_THAN;
@@ -71,7 +71,7 @@ public abstract class Sensor {
 			throw new UnsupportedOperationException("Operation " + operation + " not implemented");
 		}
 	}
-	
+		
 	public double getMean() {
 		if(timeSeries != null) {
 			return timeSeries.getMean().getMean();
@@ -94,6 +94,23 @@ public abstract class Sensor {
 		}
 		
 		return false;
+	}
+	
+	@Override
+	public int compareTo(Sensor other) {
+		if(timeSeries != null) {
+			if(timeSeries.getMean().isLessThan(other.timeSeries.getMean())) {
+				return -1;
+			}
+			if(timeSeries.getMean().isGreaterThan(other.timeSeries.getMean())) {
+				return 1;
+			}
+			
+			// Neither of the above with confidence
+			return 0;
+		}
+		
+		return Double.compare(sample, other.sample);
 	}
 	
 	public double getLastSample() {

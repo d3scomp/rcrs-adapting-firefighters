@@ -17,7 +17,7 @@ import cz.cuni.mff.d3s.rcrs.af.components.RefillComponent;
 import cz.cuni.mff.d3s.rcrs.af.ensembles.BurningBuildingsEnsemble;
 import cz.cuni.mff.d3s.rcrs.af.ensembles.Ensemble;
 import cz.cuni.mff.d3s.rcrs.af.ensembles.RefillStationEnsemble;
-import cz.cuni.mff.d3s.rcrs.af.ensembles.TargetFireZoneEnsemble;
+import cz.cuni.mff.d3s.rcrs.af.ensembles.TargetFireZoneEnsemble2;
 import cz.cuni.mff.d3s.rcrs.af.sensors.FFDistanceSensor;
 import rescuecore2.messages.Command;
 import rescuecore2.standard.components.StandardAgent;
@@ -33,8 +33,11 @@ import rescuecore2.worldmodel.EntityID;
 public class FireStation extends StandardAgent<Building> {
 
 	private enum MsgClass {
-		General, Communication, Ensemble, Components, Distance;
+		General, Communication, Ensemble, Components, Distance, Stat;
 	}
+	
+	private static final String MAX_DISTANCE_KEY = "fire.extinguish.max-distance";
+	private int maxDistance;
 	
 	private final Log log;
 	
@@ -45,10 +48,14 @@ public class FireStation extends StandardAgent<Building> {
 	private final Set<Ensemble> ensembles = new HashSet<>();
 	private final Map<String, IComponent> components = new HashMap<>();
 	private final List<FFDistanceSensor> fireFighterDistances = new ArrayList<>();
+	
+	private final BuildingRegistry buildingRegistry;
 
-	public FireStation(int id) {
+	public FireStation(int id, BuildingRegistry buildingRegistry) {
 		this.sid = String.format("FS%d", id);
-		log = new Log(sid);
+		this.buildingRegistry = buildingRegistry;
+		
+		log = new Log(sid, MsgClass.Stat);
 	}
 
 	@Override
@@ -56,6 +63,8 @@ public class FireStation extends StandardAgent<Building> {
 		super.postConnect();
 		model.indexClass(StandardEntityURN.BUILDING, StandardEntityURN.REFUGE, StandardEntityURN.HYDRANT,
 				StandardEntityURN.GAS_STATION);
+		maxDistance = config.getIntValue(MAX_DISTANCE_KEY);
+		
 		log.i(0, MsgClass.General, "connected");
 
 		// Create refill components
@@ -66,7 +75,8 @@ public class FireStation extends StandardAgent<Building> {
 			}
 		}
 
-		ensembles.add(TargetFireZoneEnsemble.getInstance(model, this));
+		//ensembles.add(TargetFireZoneEnsemble.getInstance(model, this));
+		ensembles.add(TargetFireZoneEnsemble2.getInstance(model, this));
 		ensembles.add(RefillStationEnsemble.getInstance(model));
 		ensembles.add(BurningBuildingsEnsemble.getInstance());
 	}
@@ -166,6 +176,11 @@ public class FireStation extends StandardAgent<Building> {
 			}
 		}
 
+		// Print statistics
+		buildingRegistry.calculate();
+		log.i(time, MsgClass.Stat, "Survivors: %d; Casualties: %d;",
+				buildingRegistry.getSurvivors(), buildingRegistry.getCasualties());
+		
 		sendRest(time);
 	}
 
@@ -193,6 +208,10 @@ public class FireStation extends StandardAgent<Building> {
 		log.w(0, MsgClass.General, "isFFDistanceLrbLessThan default value for %d and %d",
 				f1.getValue(), f2.getValue());
 		return false;
+	}
+	
+	public int getMaxDistance() {
+		return maxDistance;
 	}
 	
 	@Override
