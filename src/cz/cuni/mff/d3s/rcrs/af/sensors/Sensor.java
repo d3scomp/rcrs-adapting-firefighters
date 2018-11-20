@@ -6,6 +6,7 @@ import static cz.cuni.mff.d3s.rcrs.af.Configuration.TS_ALPHA;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.TS_WINDOW_CNT;
 import static cz.cuni.mff.d3s.rcrs.af.Configuration.TS_WINDOW_SIZE;
 
+import cz.cuni.mff.d3s.rcrs.af.Configuration.TimeSeriesMode;
 import cz.cuni.mff.d3s.tss.TimeSeries;
 
 public abstract class Sensor implements Comparable<Sensor> {
@@ -16,13 +17,18 @@ public abstract class Sensor implements Comparable<Sensor> {
 	
 	private TimeSeries timeSeries;
 	private double sample;
-	private NoiseFilter noise;	
+	private NoiseFilter noise;
+	private int lastSampleTime;
 	
 	protected Sensor(NoiseFilter noise, int arimaP, int arimaD, int arimaQ) {
 		this.noise = noise;
+		lastSampleTime = 0;
 		
 		switch(TIME_SERIES_MODE) {
 		case LR:
+			timeSeries = new TimeSeries(TS_WINDOW_CNT, TS_WINDOW_SIZE);
+			break;
+		case ARIMA:
 			timeSeries = new TimeSeries(TS_WINDOW_CNT, TS_WINDOW_SIZE, arimaP, arimaD, arimaQ);
 			break;
 		default:
@@ -36,6 +42,8 @@ public abstract class Sensor implements Comparable<Sensor> {
 	
 	public void sense(int time) {
 		double value = getValue();
+		lastSampleTime = time;
+		
 		sample = noise.generateNoise(value);
 		if(sample > getMaxLimit()) {
 			sample = getMaxLimit();
@@ -50,8 +58,19 @@ public abstract class Sensor implements Comparable<Sensor> {
 	}
 	
 	public boolean isLevel(Quantity operation, double level) {
+
+		if(TIME_SERIES_MODE == TimeSeriesMode.LR) {		
+			switch(operation) {
+			case GREATER_THAN:
+				return timeSeries.getLr(lastSampleTime).isGreaterThan(level, TS_ALPHA);
+			case LESS_THAN:
+				return timeSeries.getLr(lastSampleTime).isLessThan(level, TS_ALPHA);
+			default:
+				throw new UnsupportedOperationException("Operation " + operation + " not implemented");
+			}
+		}
 		
-		if(timeSeries != null) {		
+		if(TIME_SERIES_MODE == TimeSeriesMode.ARIMA) {		
 			switch(operation) {
 			case GREATER_THAN:
 				return timeSeries.afAbove(level, ARIMA_FORECAST_LENGTH, TS_ALPHA);

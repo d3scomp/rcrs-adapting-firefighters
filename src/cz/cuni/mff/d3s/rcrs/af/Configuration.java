@@ -23,7 +23,7 @@ public class Configuration {
 	///////////////////////////////////////////////////////////////////////////
 
 	public enum TimeSeriesMode {
-		None, LR;
+		None, LR, ARIMA;
 	}
 	
 	public static String LOG_DIR = null;
