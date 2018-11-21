@@ -53,6 +53,9 @@ WATER_ARIMA_ORDER_Q = "WATER_ARIMA_ORDER_Q";
 WIND_ARIMA_ORDER_P = "WIND_ARIMA_ORDER_P";
 WIND_ARIMA_ORDER_D = "WIND_ARIMA_ORDER_D";
 WIND_ARIMA_ORDER_Q = "WIND_ARIMA_ORDER_Q";
+PEOPLE_ARIMA_ORDER_P = "PEOPLE_ARIMA_ORDER_P";
+PEOPLE_ARIMA_ORDER_D = "PEOPLE_ARIMA_ORDER_D";
+PEOPLE_ARIMA_ORDER_Q = "PEOPLE_ARIMA_ORDER_Q";
 
 # Scenarios
 scenarios = []
@@ -125,6 +128,29 @@ scenarios = []
 #                               WIND_DEFINED_TARGET_PROBABILITY: wind,
 #                               WIND_DEFINED_TARGET_DISTANCE: wdist})
 
+for item in [{'fireProbabilityThreshold':0.4,
+              'maxDistanceDetectability':0.4,
+              'falsePositiveFireProbability':0.2,
+              'variance':0.1}]:
+    for ts in [(2, 3), (2, 4), (3, 3)]:
+        for p in [0, 1]:
+            for d in [0, 1]:
+                for q in [0, 1]:
+                    scenarios.append({TIME_SERIES_MODE: TS_MODE_ARIMA,
+                                  TS_WINDOW_CNT: ts[0],
+                                  TS_WINDOW_SIZE: ts[1],
+                                  WATER_THRESHOLD: 0,
+                                  WATER_NOISE_VARIANCE: item['variance'],
+                                  FIRE_MAX_DISTANCE_DETECTABILITY: item['maxDistanceDetectability'],
+                                  FIRE_MAX_DETECTABLE_DISTANCE: 40000,
+                                  FIRE_UNERRING_DETECTABLE_DISTANCE: 8000,
+                                  FIRE_NOISE_VARIANCE: item['variance'],
+                                  FIRE_PROBABILITY_THRESHOLD: item['fireProbabilityThreshold'],
+                                  FALSE_POSITIV_FIRE_PROBABILITY: item['falsePositiveFireProbability'],
+                                  PEOPLE_ARIMA_ORDER_P: p,
+                                  PEOPLE_ARIMA_ORDER_D: d,
+                                  PEOPLE_ARIMA_ORDER_Q: q})
+
 # for waterVariance in [0.1, 0.05, 0.01]:
 #     scenarios.append({TIME_SERIES_MODE: TS_MODE_NONE,
 #                            WATER_THRESHOLD: 1000,
@@ -164,44 +190,44 @@ scenarios = []
 #                           WIND_DEFINED_TARGET_PROBABILITY: 0.3,
 #                           WIND_DEFINED_TARGET_DISTANCE: 50000})
     
-for fireThreshold in [0.4, 0.7, 0.9]:
-    scenarios.append({TIME_SERIES_MODE: TS_MODE_NONE,
-                           WATER_THRESHOLD: 1000,
-                           WATER_NOISE_VARIANCE: 0.01,
-                           FIRE_MAX_DISTANCE_DETECTABILITY: 0.95,
-                           FIRE_MAX_DETECTABLE_DISTANCE: 40000,
-                           FIRE_UNERRING_DETECTABLE_DISTANCE: 38000,
-                           FIRE_NOISE_VARIANCE: 0.1,
-                           FIRE_PROBABILITY_THRESHOLD: fireThreshold,
-                           FALSE_POSITIV_FIRE_PROBABILITY: 0.2,
-                           WIND_DEFINED_TARGET_PROBABILITY: 0.3,
-                           WIND_DEFINED_TARGET_DISTANCE: 50000})
-    scenarios.append({TIME_SERIES_MODE: TS_MODE_LR,
-                          TS_WINDOW_CNT: 2,
-                          TS_WINDOW_SIZE: 4,
-                          WATER_THRESHOLD: 1000,
-                          WATER_NOISE_VARIANCE: 0.01,
-                          FIRE_MAX_DISTANCE_DETECTABILITY: 0.95,
-                          FIRE_MAX_DETECTABLE_DISTANCE: 40000,
-                          FIRE_UNERRING_DETECTABLE_DISTANCE: 38000,
-                          FIRE_NOISE_VARIANCE: 0.1,
-                          FIRE_PROBABILITY_THRESHOLD: fireThreshold,
-                          FALSE_POSITIV_FIRE_PROBABILITY: 0.2,
-                          WIND_DEFINED_TARGET_PROBABILITY: 0.3,
-                          WIND_DEFINED_TARGET_DISTANCE: 50000})
-    scenarios.append({TIME_SERIES_MODE: TS_MODE_ARIMA,
-                          TS_WINDOW_CNT: 2,
-                          TS_WINDOW_SIZE: 4,
-                          WATER_THRESHOLD: 1000,
-                          WATER_NOISE_VARIANCE: 0.01,
-                          FIRE_MAX_DISTANCE_DETECTABILITY: 0.95,
-                          FIRE_MAX_DETECTABLE_DISTANCE: 40000,
-                          FIRE_UNERRING_DETECTABLE_DISTANCE: 38000,
-                          FIRE_NOISE_VARIANCE: 0.1,
-                          FIRE_PROBABILITY_THRESHOLD: fireThreshold,
-                          FALSE_POSITIV_FIRE_PROBABILITY: 0.2,
-                          WIND_DEFINED_TARGET_PROBABILITY: 0.3,
-                          WIND_DEFINED_TARGET_DISTANCE: 50000})
+# for fireThreshold in [0.4, 0.7, 0.9]:
+#     scenarios.append({TIME_SERIES_MODE: TS_MODE_NONE,
+#                            WATER_THRESHOLD: 1000,
+#                            WATER_NOISE_VARIANCE: 0.01,
+#                            FIRE_MAX_DISTANCE_DETECTABILITY: 0.95,
+#                            FIRE_MAX_DETECTABLE_DISTANCE: 40000,
+#                            FIRE_UNERRING_DETECTABLE_DISTANCE: 38000,
+#                            FIRE_NOISE_VARIANCE: 0.1,
+#                            FIRE_PROBABILITY_THRESHOLD: fireThreshold,
+#                            FALSE_POSITIV_FIRE_PROBABILITY: 0.2,
+#                            WIND_DEFINED_TARGET_PROBABILITY: 0.3,
+#                            WIND_DEFINED_TARGET_DISTANCE: 50000})
+#     scenarios.append({TIME_SERIES_MODE: TS_MODE_LR,
+#                           TS_WINDOW_CNT: 2,
+#                           TS_WINDOW_SIZE: 4,
+#                           WATER_THRESHOLD: 1000,
+#                           WATER_NOISE_VARIANCE: 0.01,
+#                           FIRE_MAX_DISTANCE_DETECTABILITY: 0.95,
+#                           FIRE_MAX_DETECTABLE_DISTANCE: 40000,
+#                           FIRE_UNERRING_DETECTABLE_DISTANCE: 38000,
+#                           FIRE_NOISE_VARIANCE: 0.1,
+#                           FIRE_PROBABILITY_THRESHOLD: fireThreshold,
+#                           FALSE_POSITIV_FIRE_PROBABILITY: 0.2,
+#                           WIND_DEFINED_TARGET_PROBABILITY: 0.3,
+#                           WIND_DEFINED_TARGET_DISTANCE: 50000})
+#     scenarios.append({TIME_SERIES_MODE: TS_MODE_ARIMA,
+#                           TS_WINDOW_CNT: 2,
+#                           TS_WINDOW_SIZE: 4,
+#                           WATER_THRESHOLD: 1000,
+#                           WATER_NOISE_VARIANCE: 0.01,
+#                           FIRE_MAX_DISTANCE_DETECTABILITY: 0.95,
+#                           FIRE_MAX_DETECTABLE_DISTANCE: 40000,
+#                           FIRE_UNERRING_DETECTABLE_DISTANCE: 38000,
+#                           FIRE_NOISE_VARIANCE: 0.1,
+#                           FIRE_PROBABILITY_THRESHOLD: fireThreshold,
+#                           FALSE_POSITIV_FIRE_PROBABILITY: 0.2,
+#                           WIND_DEFINED_TARGET_PROBABILITY: 0.3,
+#                           WIND_DEFINED_TARGET_DISTANCE: 50000})
 
 # for avgPeople in [20, 50, 100]:
 #     for varPeople in [5, 20, 50]:

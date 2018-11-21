@@ -87,6 +87,12 @@ public class Configuration {
 	public static int WIND_ARIMA_ORDER_D = 1;
 	
 	public static int WIND_ARIMA_ORDER_Q = 0;
+	
+	public static int PEOPLE_ARIMA_ORDER_P = 0;
+	
+	public static int PEOPLE_ARIMA_ORDER_D = 0;
+	
+	public static int PEOPLE_ARIMA_ORDER_Q = 0;
 		
 	
 	///////////////////////////////////////////////////////////////////////////
