@@ -23,7 +23,7 @@ public class Configuration {
 	///////////////////////////////////////////////////////////////////////////
 
 	public enum TimeSeriesMode {
-		None, LR, ARIMA;
+		On, Off;
 	}
 	
 	public static String LOG_DIR = null;
@@ -36,7 +36,7 @@ public class Configuration {
 	public static TTable.ALPHAS TS_ALPHA = TTable.ALPHAS.ALPHA_0_05;
 		
 	
-	public static TimeSeriesMode TIME_SERIES_MODE = TimeSeriesMode.None;
+	public static TimeSeriesMode TIME_SERIES_MODE = TimeSeriesMode.Off;
 
 	public static int MAX_SEPARATION_DISTANCE = 70_000;
 	
@@ -61,38 +61,22 @@ public class Configuration {
 	public static double WIND_DEFINED_TARGET_PROBABILITY = 0.2;
 	
 	public static int WIND_DEFINED_TARGET_DISTANCE = 100000;
-
-	public static double PEOPLE_NOISE_VARIANCE = 0.3;
 	
-	public static int AVG_PEOPLE_PER_FLOOR = 50;
+	public static int AVG_RESIDENTIAL_PEOPLE = 4;
 	
-	public static int VAR_PEOPLE_PER_FLOOR = 20;
+	public static int VAR_RESIDENTIAL_PEOPLE = 2;
 	
-	public static int ARIMA_FORECAST_LENGTH = 1;
+	public static int AVG_COMMERCIAL_PEOPLE_PER_FLOOR = 50;
 	
-	public static int FIRE_ARIMA_ORDER_P = 0;
+	public static int VAR_COMMERTIAL_PEOPLE_PER_FLOOR = 20;
 	
-	public static int FIRE_ARIMA_ORDER_D = 1;
-	
-	public static int FIRE_ARIMA_ORDER_Q = 1;
-	
-	public static int WATER_ARIMA_ORDER_P = 1;
-	
-	public static int WATER_ARIMA_ORDER_D = 0;
-	
-	public static int WATER_ARIMA_ORDER_Q = 0;
-
-	public static int WIND_ARIMA_ORDER_P = 0;
-	
-	public static int WIND_ARIMA_ORDER_D = 1;
-	
-	public static int WIND_ARIMA_ORDER_Q = 0;
-	
-	public static int PEOPLE_ARIMA_ORDER_P = 0;
+	public static int PEOPLE_ARIMA_ORDER_P = 1;
 	
 	public static int PEOPLE_ARIMA_ORDER_D = 0;
 	
-	public static int PEOPLE_ARIMA_ORDER_Q = 0;
+	public static int PEOPLE_ARIMA_ORDER_Q = 1;
+	
+	public static int SIMULATION_HOUR = -1;
 		
 	
 	///////////////////////////////////////////////////////////////////////////

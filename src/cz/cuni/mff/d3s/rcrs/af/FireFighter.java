@@ -8,7 +8,6 @@ import static cz.cuni.mff.d3s.rcrs.af.Configuration.WIND_DEFINED_TARGET_PROBABIL
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import cz.cuni.mff.d3s.rcrs.af.buildings.BuildingRegistry;
 import cz.cuni.mff.d3s.rcrs.af.comm.BuildingsMsg;
 import cz.cuni.mff.d3s.rcrs.af.comm.KnowledgeMsg;
 import cz.cuni.mff.d3s.rcrs.af.comm.Msg;
@@ -64,9 +64,8 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 	private WaterSensor waterSensor;
 	private WindDirectionSensor windDirectionSensor;
 	private WindSpeedSensor windSpeedSensor;
-	private Map<Building, PeopleSensor> peopleSensor;
+	private PeopleSensor peopleSensor;
 
-	private final BuildingRegistry buildingRegistry;
 	private StandardEntity[] roads;
 	private Set<EntityID> refillStations = new HashSet<>();
 
@@ -112,13 +111,12 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 
 	public FireFighter(int id, BuildingRegistry buildingRegistry) {
 		this.id = id;
-		this.buildingRegistry = buildingRegistry;
 		
 		sid = String.format("FF%d", id);
 		log = new Log(sid, MsgClass.General);
 		maxWater = -1;
 		fireSensor = new HashMap<>();
-		peopleSensor = new HashMap<>();
+		peopleSensor = new PeopleSensor(buildingRegistry);
 	}
 
 	@Override
@@ -142,7 +140,6 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			}
 			if (entity instanceof Building) {
 				fireSensor.put((Building) entity, new FireSensor(this, (Building) entity));
-				peopleSensor.put((Building) entity, new PeopleSensor(buildingRegistry, (Building) entity)); 
 			}
 		}
 
@@ -174,13 +171,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			fireSensor.get(building).sense(time);
 		}
 		senseBurningBuildings();
-		for (Building building : peopleSensor.keySet()) {
-			peopleSensor.get(building).sense(time);
-			if (model.getDistance(location(), building) < maxDistance) {
-				buildingRegistry.updateBuilding(building);
-			}
-		}
-		
+		updateBuildingInfo();
 
 		processCommands(time, heard);
 		switchMode(time);
@@ -265,11 +256,6 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 				mode = Mode.MoveToRefill;
 				break;
 			}
-			if(!waterSensor.isLevel(Quantity.LESS_THAN, WATER_THRESHOLD)
-					&& !waterSensor.isLevel(Quantity.GREATER_THAN, WATER_THRESHOLD)) {
-				mode = Mode.SearchTowardsRefill;
-				break;
-			}
 			// Not next a building on fire?
 			// Water above threshold
 			if (findCloseBurningBuilding() == null) {
@@ -299,21 +285,12 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			// Otherwise keep moving
 			modeSwitched = false;
 			break;
-		case SearchTowardsRefill:
-			// Target reached?
-			if (refillTarget != null && refillTarget.equals(location().getID())) {
-				mode = Mode.Refill;
-				break;
-			}
-			// Water depleted?
-			if (waterSensor.isLevel(Quantity.LESS_THAN, WATER_THRESHOLD)) {
+		case Refill:
+			// Not at refill station?
+			if(!atRefill()) {
 				mode = Mode.MoveToRefill;
 				break;
 			}
-			// Otherwise keep moving
-			modeSwitched = false;
-			break;
-		case Refill:
 			// Still not full?
 			if (waterSensor.isLevel(Quantity.LESS_THAN, maxWater - WATER_THRESHOLD)) {
 				modeSwitched = false;
@@ -391,21 +368,6 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 				log.w(time, MsgClass.General, "in MoveToRefillMode missing refillTarget");
 			}
 			break;
-		case SearchTowardsRefill:
-			log.i(time, MsgClass.Modes, "searching towards refill");
-			{
-				EntityID building = findCloseBurningBuilding();
-				if (building != null) {
-					log.i(time, MsgClass.Action, "extinguishing(%s)[%d]", building, getWater());
-					sendExtinguish(time, building, maxPower);
-				} else if (refillTarget != null) {
-					log.i(time, MsgClass.Action, "searching towards refill target: %s", refillTarget);
-					sendMove(time, planShortestRoute(time, refillTarget));
-				} else {
-					log.w(time, MsgClass.General, "in MoveToRefillMode missing refillTarget");
-				}
-			}
-			break;
 		case Extinguish:
 			log.i(time, MsgClass.Modes, "extinguishing");
 			{
@@ -469,6 +431,17 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 	}
 
 	///////////////////////////////////////////////////////////////////////////
+	
+	private void updateBuildingInfo() {
+		for (StandardEntity entity : model.getAllEntities()) {
+			if((!(entity instanceof Building))
+					|| model.getDistance(location(), entity) > maxDistance) {
+				continue;
+			}
+			Building building = (Building) entity;
+			peopleSensor.updateBuilding(building);
+		}
+	}
 
 	private EntityID randomTarget() {
 		return roads[random.nextInt(roads.length)].getID();
@@ -497,11 +470,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 		}
 
 		// Sort them according to the people inside
-		Collections.sort(closeBuildings, new Comparator<Building>() {
-			@Override
-			public int compare(Building b1, Building b2) {
-				return peopleSensor.get(b1).compareTo(peopleSensor.get(b2));
-			}});
+		Collections.sort(closeBuildings, peopleSensor);
 		
 		return closeBuildings.get(closeBuildings.size()-1).getID();
 	}

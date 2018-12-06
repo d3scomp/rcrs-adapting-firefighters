@@ -11,7 +11,7 @@ public class FFDistanceSensor extends Sensor {
 	
 	
 	public FFDistanceSensor(FireStation fireStation, FFComponent fireFighter1, FFComponent fireFighter2) {
-		super(new NoiseFilter(0), 0, 0, 0);
+		super(new NoiseFilter(0));
 		this.fireStation = fireStation;
 		this.fireFighter1 = fireFighter1;
 		this.fireFighter2 = fireFighter2;

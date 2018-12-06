@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import cz.cuni.mff.d3s.rcrs.af.buildings.BuildingRegistry;
 import cz.cuni.mff.d3s.rcrs.af.comm.KnowledgeMsg;
 import cz.cuni.mff.d3s.rcrs.af.comm.Msg;
 import cz.cuni.mff.d3s.rcrs.af.components.FFComponent;
@@ -74,12 +75,22 @@ public class FireStation extends StandardAgent<Building> {
 				components.put(c.getSid(), c);
 			}
 		}
+		
+		// Register buildings
+		for (StandardEntity entity : model) {
+			if (entity instanceof Building) {
+				buildingRegistry.registerBuilding((Building) entity);
+			}
+		}
+		buildingRegistry.trainModels();
 
 		//ensembles.add(TargetFireZoneEnsemble.getInstance(model, this));
 		ensembles.add(TargetFireZoneEnsemble2.getInstance(model, this));
 		ensembles.add(RefillStationEnsemble.getInstance(model));
 		ensembles.add(BurningBuildingsEnsemble.getInstance());
 	}
+	
+	
 
 	@Override
 	protected EnumSet<StandardEntityURN> getRequestedEntityURNsEnum() {
@@ -180,6 +191,12 @@ public class FireStation extends StandardAgent<Building> {
 		buildingRegistry.calculate();
 		log.i(time, MsgClass.Stat, "Survivors: %d; Casualties: %d;",
 				buildingRegistry.getSurvivors(), buildingRegistry.getCasualties());
+		
+		if(time == 59) {
+			//log.i(time, MsgClass.Stat, "\n%s", buildingRegistry.dumpBuildings());
+			log.i(time, MsgClass.Stat, "\n%s", buildingRegistry.dumpPeople());
+			log.i(time, MsgClass.Stat, "\n%s", buildingRegistry.dumpModels());
+		}
 		
 		sendRest(time);
 	}

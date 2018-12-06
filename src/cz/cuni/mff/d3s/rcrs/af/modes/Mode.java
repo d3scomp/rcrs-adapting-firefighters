@@ -5,8 +5,7 @@ public enum Mode {
 	MoveToFire((byte) 1),
 	MoveToRefill((byte) 2),
 	Extinguish((byte) 3),
-	Refill((byte) 4),
-	SearchTowardsRefill((byte) 5);
+	Refill((byte) 4);
 	
 	private byte value;
 	

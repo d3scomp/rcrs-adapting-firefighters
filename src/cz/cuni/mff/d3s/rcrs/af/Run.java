@@ -1,11 +1,16 @@
 package cz.cuni.mff.d3s.rcrs.af;
 
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.SIMULATION_HOUR;
+import static cz.cuni.mff.d3s.rcrs.af.buildings.OccupancyData.DAY_LENGTH;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.Random;
 
 import org.apache.log4j.PropertyConfigurator;
 
+import cz.cuni.mff.d3s.rcrs.af.buildings.BuildingRegistry;
 import rescuecore2.Constants;
 import rescuecore2.components.ComponentConnectionException;
 import rescuecore2.components.ComponentLauncher;
@@ -64,7 +69,11 @@ public class Run {
 
 	private static void connect(ComponentLauncher launcher, Config config)
 			throws InterruptedException, ConnectionException {
-		BuildingRegistry buildingRegistry = new BuildingRegistry();
+		int hour = SIMULATION_HOUR;
+		if(hour == -1) {
+			hour = (new Random()).nextInt(DAY_LENGTH);
+		}
+		BuildingRegistry buildingRegistry = new BuildingRegistry(hour);
 
 		int unit_number = 0;
 		try {

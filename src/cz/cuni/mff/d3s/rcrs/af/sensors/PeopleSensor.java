@@ -1,41 +1,42 @@
 package cz.cuni.mff.d3s.rcrs.af.sensors;
 
-import static cz.cuni.mff.d3s.rcrs.af.Configuration.PEOPLE_NOISE_VARIANCE;
-import static cz.cuni.mff.d3s.rcrs.af.Configuration.AVG_PEOPLE_PER_FLOOR;
-import static cz.cuni.mff.d3s.rcrs.af.Configuration.PEOPLE_ARIMA_ORDER_P;
-import static cz.cuni.mff.d3s.rcrs.af.Configuration.PEOPLE_ARIMA_ORDER_D;
-import static cz.cuni.mff.d3s.rcrs.af.Configuration.PEOPLE_ARIMA_ORDER_Q;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.TIME_SERIES_MODE;
 
-import cz.cuni.mff.d3s.rcrs.af.BuildingRegistry;
+import java.util.Comparator;
+
+import cz.cuni.mff.d3s.rcrs.af.Configuration.TimeSeriesMode;
+import cz.cuni.mff.d3s.rcrs.af.buildings.BuildingRegistry;
 import rescuecore2.standard.entities.Building;
 
-public class PeopleSensor extends Sensor {
 
-	private BuildingRegistry buildings;
-	public final Building building;
+public class PeopleSensor implements Comparator<Building> {
+
+	private final BuildingRegistry buildingRegistry;
 	
-	public PeopleSensor(BuildingRegistry buildingRegistry, Building building) {
-		super(new NoiseFilter(PEOPLE_NOISE_VARIANCE * AVG_PEOPLE_PER_FLOOR),
-				PEOPLE_ARIMA_ORDER_P, PEOPLE_ARIMA_ORDER_D, PEOPLE_ARIMA_ORDER_Q);
-		this.buildings = buildingRegistry;
-		this.building = building;
+	public PeopleSensor(BuildingRegistry buildingRegistry) {
+		this.buildingRegistry = buildingRegistry;
 	}
 	
-	@Override
-	protected double getValue() {
-		return buildings.getPeopleInBuilding(building);
+	public void updateBuilding(Building building) {
+		buildingRegistry.updateBuilding(building);
 	}
 
-	@Override
-	protected double getMaxLimit() {
-		return Integer.MAX_VALUE;
-	}
-
-	@Override
-	protected double getMinLimit() {
+	public int getPredictedPeople(Building building) {
+		if(TIME_SERIES_MODE == TimeSeriesMode.On) {
+			return buildingRegistry.predictPeopleInBuilding(building);
+		}
 		return 0;
 	}
 	
-	
-
+	@Override
+	public int compare(Building b1, Building b2) {
+		if(TIME_SERIES_MODE == TimeSeriesMode.On) {
+			int p1 = buildingRegistry.predictPeopleInBuilding(b1);
+			int p2 = buildingRegistry.predictPeopleInBuilding(b2);
+			
+			return p1 - p2;
+		}
+		
+		return 0;
+	}
 }
