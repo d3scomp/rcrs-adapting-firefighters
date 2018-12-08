@@ -46,6 +46,8 @@ PEOPLE_ARIMA_ORDER_P = "PEOPLE_ARIMA_ORDER_P";
 PEOPLE_ARIMA_ORDER_D = "PEOPLE_ARIMA_ORDER_D";
 PEOPLE_ARIMA_ORDER_Q = "PEOPLE_ARIMA_ORDER_Q";
 
+MOVING_AVERAGE_LENGTH = "MOVING_AVERAGE_LENGTH";
+
 # Scenarios
 scenarios = []
 
@@ -105,6 +107,19 @@ for item in [{'fireProbabilityThreshold':0.4,
               'falsePositiveFireProbability':0.2,
               'variance':0.2}]:
     scenarios.append({TIME_SERIES_MODE: TS_MODE_OFF,
+                           MOVING_AVERAGE_LENGTH: 1,
+                           TS_WINDOW_CNT: 0,
+                           TS_WINDOW_SIZE: 0,
+                           WATER_THRESHOLD: 0,
+                           WATER_NOISE_VARIANCE: item['variance'],
+                           FIRE_MAX_DISTANCE_DETECTABILITY: item['maxDistanceDetectability'],
+                           FIRE_MAX_DETECTABLE_DISTANCE: 40000,
+                           FIRE_UNERRING_DETECTABLE_DISTANCE: 8000,
+                           FIRE_NOISE_VARIANCE: item['variance'],
+                           FIRE_PROBABILITY_THRESHOLD: item['fireProbabilityThreshold'],
+                           FALSE_POSITIV_FIRE_PROBABILITY: item['falsePositiveFireProbability']})
+    scenarios.append({TIME_SERIES_MODE: TS_MODE_OFF,
+                           MOVING_AVERAGE_LENGTH: 3,
                            TS_WINDOW_CNT: 0,
                            TS_WINDOW_SIZE: 0,
                            WATER_THRESHOLD: 0,

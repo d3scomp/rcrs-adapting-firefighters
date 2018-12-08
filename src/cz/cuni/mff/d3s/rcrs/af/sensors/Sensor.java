@@ -14,12 +14,14 @@ public abstract class Sensor {
 	}
 	
 	private TimeSeries timeSeries;
-	private double sample;
+	//private double sample;
+	private MovingAverage samples;
 	private int lastSampleTime;
 	private NoiseFilter noise;
 	
 	protected Sensor(NoiseFilter noise) {
 		this.noise = noise;
+		samples = new MovingAverage();
 		lastSampleTime = 0;
 		
 		switch(TIME_SERIES_MODE) {
@@ -39,7 +41,7 @@ public abstract class Sensor {
 		double value = getValue();
 		lastSampleTime = time;
 		
-		sample = noise.generateNoise(value);
+		double sample = noise.generateNoise(value);
 		if(sample > getMaxLimit()) {
 			sample = getMaxLimit();
 		}
@@ -50,6 +52,8 @@ public abstract class Sensor {
 		if(timeSeries != null) {
 			timeSeries.addSample(sample, time);
 		}
+		
+		samples.addValue(sample);
 	}
 	
 	public boolean isLevel(Quantity operation, double level) {
@@ -67,9 +71,9 @@ public abstract class Sensor {
 		
 		switch(operation) {
 		case GREATER_THAN:
-			return sample > level;
+			return samples.getAverage() > level;
 		case LESS_THAN:
-			return sample < level;
+			return samples.getAverage() < level;
 		default:
 			throw new UnsupportedOperationException("Operation " + operation + " not implemented");
 		}
@@ -80,7 +84,7 @@ public abstract class Sensor {
 			return timeSeries.getMean().getMean();
 		}
 		
-		return sample;
+		return samples.getAverage();
 	}
 	
 	public boolean isLrbAbove(double threshold) {
@@ -100,6 +104,6 @@ public abstract class Sensor {
 	}
 	
 	public double getLastSample() {
-		return sample;
+		return samples.getAverage();
 	}
 }

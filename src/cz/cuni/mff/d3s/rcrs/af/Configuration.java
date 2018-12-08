@@ -77,6 +77,8 @@ public class Configuration {
 	public static int PEOPLE_ARIMA_ORDER_Q = 1;
 	
 	public static int SIMULATION_HOUR = -1;
+	
+	public static int MOVING_AVERAGE_LENGTH = 3;
 		
 	
 	///////////////////////////////////////////////////////////////////////////
