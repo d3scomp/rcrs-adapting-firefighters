@@ -22,7 +22,7 @@ public class Configuration {
 	// SIMULATION CONFIGURATION
 	///////////////////////////////////////////////////////////////////////////
 
-	public enum TimeSeriesMode {
+	public enum FeatureSwitch {
 		On, Off;
 	}
 	
@@ -36,7 +36,9 @@ public class Configuration {
 	public static TTable.ALPHAS TS_ALPHA = TTable.ALPHAS.ALPHA_0_05;
 		
 	
-	public static TimeSeriesMode TIME_SERIES_MODE = TimeSeriesMode.Off;
+	public static FeatureSwitch TIME_SERIES_MODE = FeatureSwitch.Off;
+	
+	public static FeatureSwitch ARIMA_MODE = FeatureSwitch.Off;
 
 	public static int MAX_SEPARATION_DISTANCE = 70_000;
 	
@@ -138,9 +140,9 @@ public class Configuration {
 			} catch (Exception e) {
 				Logger.error(e.getMessage());
 			}
-		} else if (type == TimeSeriesMode.class) {
+		} else if (type == FeatureSwitch.class) {
 			try {
-				field.set(null, TimeSeriesMode.valueOf(value));
+				field.set(null, FeatureSwitch.valueOf(value));
 			} catch(Exception e) {
 				Logger.error(e.getMessage());
 			}

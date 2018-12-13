@@ -1,10 +1,10 @@
 package cz.cuni.mff.d3s.rcrs.af.sensors;
 
-import static cz.cuni.mff.d3s.rcrs.af.Configuration.TIME_SERIES_MODE;
+import static cz.cuni.mff.d3s.rcrs.af.Configuration.ARIMA_MODE;
 
 import java.util.Comparator;
 
-import cz.cuni.mff.d3s.rcrs.af.Configuration.TimeSeriesMode;
+import cz.cuni.mff.d3s.rcrs.af.Configuration.FeatureSwitch;
 import cz.cuni.mff.d3s.rcrs.af.buildings.BuildingRegistry;
 import rescuecore2.standard.entities.Building;
 
@@ -22,7 +22,7 @@ public class PeopleSensor implements Comparator<Building> {
 	}
 
 	public int getPredictedPeople(Building building) {
-		if(TIME_SERIES_MODE == TimeSeriesMode.On) {
+		if(ARIMA_MODE == FeatureSwitch.On) {
 			return buildingRegistry.predictPeopleInBuilding(building);
 		}
 		return 0;
@@ -30,7 +30,7 @@ public class PeopleSensor implements Comparator<Building> {
 	
 	@Override
 	public int compare(Building b1, Building b2) {
-		if(TIME_SERIES_MODE == TimeSeriesMode.On) {
+		if(ARIMA_MODE == FeatureSwitch.On) {
 			int p1 = buildingRegistry.predictPeopleInBuilding(b1);
 			int p2 = buildingRegistry.predictPeopleInBuilding(b2);
 			
