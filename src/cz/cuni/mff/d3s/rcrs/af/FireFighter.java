@@ -61,7 +61,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 	private int maxPower;
 
 	private Map<Building, FireSensor> fireSensor;
-	private WaterSensor waterSensor;
+	//private WaterSensor waterSensor;
 	private WindDirectionSensor windDirectionSensor;
 	private WindSpeedSensor windSpeedSensor;
 	private PeopleSensor peopleSensor;
@@ -143,7 +143,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 			}
 		}
 
-		waterSensor = new WaterSensor(this);
+//		waterSensor = new WaterSensor(this);
 		windDirectionSensor = new WindDirectionSensor(model);
 		windSpeedSensor = new WindSpeedSensor(model);
 		burningBuildings.put(id, new HashSet<>());
@@ -166,7 +166,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 		// Sense
 		windDirectionSensor.sense(time);
 		windSpeedSensor.sense(time);
-		waterSensor.sense(time);
+//		waterSensor.sense(time);
 		for (Building building : fireSensor.keySet()) {
 			fireSensor.get(building).sense(time);
 		}
@@ -252,7 +252,8 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 		switch (mode) {
 		case Extinguish:
 			// Are we out of water?
-			if (waterSensor.isLevel(Quantity.LESS_THAN, WATER_THRESHOLD)) {
+//			if (waterSensor.isLevel(Quantity.LESS_THAN, WATER_THRESHOLD)) {
+			if (getWater() <= WATER_THRESHOLD) {
 				mode = Mode.MoveToRefill;
 				break;
 			}
@@ -292,7 +293,8 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 				break;
 			}
 			// Still not full?
-			if (waterSensor.isLevel(Quantity.LESS_THAN, maxWater - WATER_THRESHOLD)) {
+//			if (waterSensor.isLevel(Quantity.LESS_THAN, maxWater - WATER_THRESHOLD)) {
+			if(getWater() < (maxWater - WATER_THRESHOLD)) {
 				modeSwitched = false;
 				break;
 			}
