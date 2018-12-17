@@ -10,8 +10,8 @@ import cz.cuni.mff.d3s.tss.TimeSeries;
 public abstract class Sensor {
 	
 	public enum Quantity {
-		LESS_THAN, LESS_THAN_OR_EQUAL,
-		GREATER_THAN, GREATER_THAN_OR_EQUAL;
+		LESS_THAN, LESS_OR_EQUAL_TO,
+		GREATER_THAN, GREATER_OR_EQUAL_TO;
 	}
 	
 	private TimeSeries timeSeries;
@@ -63,11 +63,11 @@ public abstract class Sensor {
 			switch(operation) {
 			case GREATER_THAN:
 				return timeSeries.getLr(lastSampleTime).isGreaterThan(level, TS_ALPHA);
-			case GREATER_THAN_OR_EQUAL:
+			case GREATER_OR_EQUAL_TO:
 				return timeSeries.getLr(lastSampleTime).isGreaterOrEqualTo(level, TS_ALPHA);
 			case LESS_THAN:
 				return timeSeries.getLr(lastSampleTime).isLessThan(level, TS_ALPHA);
-			case LESS_THAN_OR_EQUAL:
+			case LESS_OR_EQUAL_TO:
 				return timeSeries.getLr(lastSampleTime).isLessOrEqualTo(level, TS_ALPHA);
 			default:
 				throw new UnsupportedOperationException("Operation " + operation + " not implemented");
@@ -77,8 +77,12 @@ public abstract class Sensor {
 		switch(operation) {
 		case GREATER_THAN:
 			return samples.getAverage() > level;
+		case GREATER_OR_EQUAL_TO:
+			return samples.getAverage() >= level;
 		case LESS_THAN:
 			return samples.getAverage() < level;
+		case LESS_OR_EQUAL_TO:
+			return samples.getAverage() <= level;
 		default:
 			throw new UnsupportedOperationException("Operation " + operation + " not implemented");
 		}

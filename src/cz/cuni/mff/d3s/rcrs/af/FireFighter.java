@@ -252,7 +252,7 @@ public class FireFighter extends AbstractSampleAgent<FireBrigade> {
 		switch (mode) {
 		case Extinguish:
 			// Are we out of water?
-			if (waterSensor.isLevel(Quantity.LESS_THAN_OR_EQUAL, WATER_THRESHOLD)) {
+			if (waterSensor.isLevel(Quantity.LESS_OR_EQUAL_TO, WATER_THRESHOLD)) {
 //			if (getWater() <= WATER_THRESHOLD) {
 				mode = Mode.MoveToRefill;
 				break;
